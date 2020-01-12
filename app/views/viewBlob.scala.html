@@ -1,0 +1,8 @@
+@(owner: Account, repositoryName: String, blob:Blob)(implicit request: RepositoryRequestHeader)
+
+@main {
+<h1>@repositoryName</h1>
+<p>@blob.content.size</p>
+<p>@blob.content.content</p>
+}
+

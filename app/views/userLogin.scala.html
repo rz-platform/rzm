@@ -1,0 +1,20 @@
+@(loginForm: Form[AccountLoginData])(implicit request: MessagesRequestHeader)
+@import views.html.helper._
+@main {
+<h1>Login</h1>
+@request.flash.get("error").map { message =>
+<div class="alert-message warning">
+    <strong>Error!</strong> @message
+</div>
+}
+@form(routes.AuthController.authenticate()) {
+<fieldset>
+    @CSRF.formField
+    @inputText(loginForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "")
+    @inputPassword(loginForm("password"), Symbol("_label") -> "Password", Symbol("_help") -> "")
+</fieldset>
+<div class="actions">
+    <input type="submit" value="Login" class="btn primary"/></div>
+<a class="button button-outline" href="@routes.AuthController.register">Register</a>
+}
+}

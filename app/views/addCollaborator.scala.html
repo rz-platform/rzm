@@ -1,0 +1,33 @@
+@(addCollaboratorForm: Form[NewCollaboratorData], owner: Account, repository: Repository, collaborators: List[Account])(implicit request: RepositoryRequestHeader )
+@import views.html.helper._
+
+@main {
+    <h1>@repository.name</h1>
+
+@request.flash.get("success").map { message =>
+<div class="alert-message warning">
+    <strong>Done!</strong> @message
+</div>
+}
+@request.flash.get("error").map { message =>
+<div class="alert-message warning">
+    <strong>Error!</strong> @message
+</div>
+}
+
+    @collaborators.map {
+    case (collaborator) => {
+    <p>@collaborator.userName</p>
+    }
+    }
+    @form(routes.RepositoryController.addCollaborator(owner.userName, repository.name)) {
+    <fieldset>
+        @CSRF.formField
+        @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> "User login or email", Symbol("_help") -> "")
+        @select(field = addCollaboratorForm("accessLevel"),options = Seq( "1" -> "Write", "2" -> "Edit"))
+    </fieldset>
+    <div class="actions">
+        <input type="submit" value="Add collaborator" class="btn primary"/>
+    </div>
+    }
+}

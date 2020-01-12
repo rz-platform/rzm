@@ -1,0 +1,18 @@
+@(currentPage: List[Repository])(implicit request: MessagesRequestHeader)
+
+@main {
+<a class="button" href="@routes.RepositoryController.createRepository">Create new repository</a>
+
+    @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
+                @repositories.map {
+                    case (repository) => {
+<p>@repository.name - @repository.lastActivityDate</p>
+                    }
+                }
+    }.getOrElse {
+        <div class="well">
+            <em>Nothing to display</em>
+        </div>
+
+    }
+}

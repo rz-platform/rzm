@@ -1,0 +1,39 @@
+# general
+*~
+*.log
+tmp
+dump
+
+# IDE
+.settings
+.cache
+.project
+.classpath
+.scala_dependencies
+bin
+.idea
+.vscode
+
+# SBT
+dist
+project/boot
+project/target
+project/plugins/target
+target
+.target
+
+# Play
+logs
+RUNNING_PID
+
+# NPM
+node_modules/
+jspm_packages/
+package-lock.json
+.npm
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+
+# project custom
+public/dist

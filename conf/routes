@@ -1,0 +1,51 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Default path
+# GET     /                           controllers.HomeController.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+# Login
+GET     /signin              controllers.AuthController.login
+POST     /signin              controllers.AuthController.authenticate
+
+# Sign up
+GET     /signup              controllers.AuthController.register
+POST     /signup              controllers.AuthController.saveUser
+
+# Repositories list
+
+GET /repositories      controllers.RepositoryController.list
+
+# Repositories creation
+
+GET /repositories/create controllers.RepositoryController.createRepository
+POST /repositories/create controllers.RepositoryController.saveRepository
+
+# Repository view
+
+GET /repositories/:account/:repository/tree/ controllers.RepositoryController.view(account:String, repository:String, path: String = ".")
+GET /repositories/:account/:repository/tree/*path controllers.RepositoryController.view(account:String, repository:String, path: String)
+
+# Blob view
+
+GET /repositories/:account/:repository/blob/:rev/*path controllers.RepositoryController.blob(account:String, repository:String, rev: String, path: String)
+
+# File upload
+
+GET /repositories/:account/:repository/upload controllers.RepositoryController.uploadPage(account:String, repository:String)
+POST /repositories/:account/:repository/upload controllers.RepositoryController.upload(account:String, repository:String)
+
+# Add collaborators
+
+GET /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaboratorPage(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaborator(account:String, repository:String)
+
+# Creation / Editing
+
+GET /repositories/:account/:repository/edit/*path controllers.RepositoryController.editFilePage(account:String, repository:String, path: String)
+POST /repositories/:account/:repository/edit/*path controllers.RepositoryController.edit(account:String, repository:String, path: String)
+POST /repositories/:account/:repository/createItem controllers.RepositoryController.addNewItem(account: String, repository: String, path: String, isFolder: Boolean)

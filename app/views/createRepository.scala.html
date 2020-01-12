@@ -1,0 +1,22 @@
+@(repositoryForm: Form[RepositoryData])(implicit request: UserRequestHeader)
+@import views.html.helper._
+
+@main {
+
+<h1>Add a computer</h1>
+
+@form(routes.RepositoryController.saveRepository()) {
+
+<fieldset>
+    @CSRF.formField
+    @inputText(repositoryForm("name"), Symbol("_label") -> "Repository name", Symbol("_help") -> "")
+    @inputText(repositoryForm("description"), Symbol("_label") -> "Repository description", Symbol("_help") -> "")
+</fieldset>
+
+<div class="actions">
+    <input type="submit" value="Create repository" class="btn primary">
+</div>
+
+}
+
+}

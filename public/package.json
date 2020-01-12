@@ -1,0 +1,19 @@
+{
+  "name": "razam-front",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "parcel build stylesheets/* js/*  --no-source-maps",
+    "watch": "parcel watch stylesheets/main.scss js/*"
+  },
+  "author": "Eugene Bosiakov",
+  "license": "MIT",
+  "devDependencies": {
+    "cssnano": "^4.1.10",
+    "parcel-bundler": "^1.12.4",
+    "sass": "^1.23.7"
+  },
+  "dependencies": {
+    "milligram": "^1.3.0"
+  }
+}

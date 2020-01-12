@@ -1,0 +1,64 @@
+@(addNewItemToRepForm: Form[NewItem], owner: Account, repository: Repository, gitData:RepositoryGitData, path: String)(implicit request: RepositoryRequestHeader )
+
+@import views.html.helper._
+
+@main {
+    <h1>@repository.name</h1>
+
+@request.flash.get("success").map { message =>
+<div class="alert-message warning">
+    <strong>Done!</strong> @message
+</div>
+}
+
+@request.flash.get("error").map { message =>
+<div class="alert-message warning">
+    <strong>Error!</strong> @message
+</div>
+}
+
+
+<a class="button" href="@routes.RepositoryController.uploadPage(owner.userName, repository.name)">Upload files</a>
+<a class="button" href="@routes.RepositoryController.addCollaboratorPage(owner.userName, repository.name)">Collaborators</a>
+
+
+<div class="add-folder-form">
+    @form(routes.RepositoryController.addNewItem(owner.userName, repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
+    <fieldset>
+        @CSRF.formField
+        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
+    </fieldset>
+    <div class="actions">
+        <input type="submit" value="Create folder" class="btn primary"/></div>
+    }
+</div>
+
+<div class="add-file-form">
+    @form(routes.RepositoryController.addNewItem(owner.userName, repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
+    <fieldset>
+        @CSRF.formField
+        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
+    </fieldset>
+    <div class="actions">
+        <input type="submit" value="Create file" class="btn primary"/></div>
+    }
+</div>
+
+<a class="button" href="@routes.RepositoryController.uploadPage(owner.userName, repository.name)">Upload files</a>
+    @gitData.files.map {
+        case (file) => {
+            @if(file.isDirectory) {
+                <p>
+                    FLDR: <a href="@routes.RepositoryController.view(owner.userName, repository.name, file.path)">@file.name</a>
+                </p>
+            } else {
+                <p>
+                    FILE: <a href="@routes.RepositoryController.blob(owner.userName, repository.name, repository.defaultBranch, file.path)">
+                    @file.name
+                </a></p>
+            }
+            <p>@file.time</p>
+            <p>---</p>
+        }
+    }
+}

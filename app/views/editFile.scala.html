@@ -1,0 +1,21 @@
+@(editorForm: Form[EditedItem], owner: Account, repositoryName: String, blob:Blob)(implicit request: RepositoryRequestHeader)
+
+@import views.html.helper._
+
+@main {
+
+@request.flash.get("success").map { message =>
+<div class="alert-message warning">
+    <strong>Done!</strong> @message
+</div>
+}
+
+@request.flash.get("error").map { message =>
+<div class="alert-message warning">
+    <strong>Error!</strong> @message
+</div>
+}
+
+<h1>@repositoryName</h1>
+<p>@blob.content.content</p>
+}
