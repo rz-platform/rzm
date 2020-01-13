@@ -58,7 +58,6 @@ Open localhost:9000
 * Checking if user exists before creation
 * Checking if repo exists before creation
 * Checking access to Repo
-* Proper unsucess login handle
 
 * Return to file list from file view
 * User profile at top

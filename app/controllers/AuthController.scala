@@ -63,9 +63,13 @@ class AuthController @Inject()(accountService: AccountRepository,
                 Future(Redirect(routes.RepositoryController.list)
                   .withSession(AuthController.SESSION_NAME -> account.id.toString))
               } else {
-                Future.successful(NotFound)
+                Future.successful(Redirect(routes.AuthController.login).withNewSession.flashing(
+                  "error" -> "Incorrect password."
+                ))
               }
-            case other => Future.successful(NotFound)
+            case other => Future.successful(Redirect(routes.AuthController.login).withNewSession.flashing(
+              "error" -> "Account does not exist."
+            ))
           }
         }
       )
@@ -77,6 +81,7 @@ class AuthController @Inject()(accountService: AccountRepository,
     )
   }
 }
+
 object AuthController {
   val SESSION_NAME = "user_id"
 }
