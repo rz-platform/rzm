@@ -134,7 +134,7 @@ class RepositoryController @Inject()(repRepository: RepRepository,
       val rev = "master" // TODO: Replace with the default branch
       val git = new GitRepository(request.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(path, rev).get
-      Ok(html.editFile(editorForm, request.owner, repositoryName, blobInfo))
+      Ok(html.editFile(editorForm, request.owner, repositoryName, blobInfo, path))
   }
 
   def edit(accountName: String, repositoryName: String, path: String) =
@@ -144,9 +144,8 @@ class RepositoryController @Inject()(repRepository: RepRepository,
       val blobInfo = gitRepository.blobFile(path, rev).get
 
       editorForm.bindFromRequest.fold(
-        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, request.owner, repositoryName, blobInfo))),
+        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, request.owner, repositoryName, blobInfo, path))),
         editedFile => {
-
           val fName = editedFile.oldFileName
           val content = if (editedFile.content.nonEmpty) { editedFile.content.getBytes() } else { Array.emptyByteArray }
           gitRepository.commitFiles("master", ".", "Added file", request.account) {
