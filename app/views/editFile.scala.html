@@ -20,13 +20,11 @@
 
 @form(routes.RepositoryController.edit(owner.userName, repositoryName, path), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
-@inputText(editorForm("newFileName"), Symbol("_value") -> "filename", Symbol("_label") -> "File name", Symbol("_help") -> "")
+<input type="text" id="newFileName" name="newFileName" value="@path" />
+<textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 
-<textarea id="code" class="editor">@blob.content.content</textarea>
-
-@inputText(editorForm("message"), Symbol("_label") -> "Commit message", Symbol("_help") -> "", Symbol("_value") -> "Edited in web interface")
-
-@inputText(editorForm("oldFileName"),  Symbol("hidden") -> "hidden", Symbol("_label") -> "", Symbol("_help") -> "")
+<input type="text" id="message" name="message" value="Edited in web version" />
+<input type="text" id="oldFileName" name="oldFileName" value="@path" />
 <input type="submit" />
 }
 <link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/edit.css")"/>

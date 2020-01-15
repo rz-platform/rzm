@@ -148,7 +148,7 @@ class RepositoryController @Inject()(repRepository: RepRepository,
         editedFile => {
           val fName = editedFile.oldFileName
           val content = if (editedFile.content.nonEmpty) { editedFile.content.getBytes() } else { Array.emptyByteArray }
-          gitRepository.commitFiles("master", ".", "Added file", request.account) {
+          gitRepository.commitFiles("master", ".", editedFile.message, request.account) {
             case (git, headTip, builder, inserter) =>
               gitRepository.processTree(git, headTip) { (path, tree) =>
                 if (!fName.contains(path)) {
@@ -165,8 +165,6 @@ class RepositoryController @Inject()(repRepository: RepRepository,
       )
       Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path))
     }
-
-
 
   /**
     * Uses a custom FilePartHandler to return a type of "File" rather than
