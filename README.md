@@ -51,6 +51,7 @@ Open localhost:9000
 * File upload
 * Add collaborators
 * Folder/file creation
+* Add editing
 
 # Current minor features
 
@@ -59,13 +60,13 @@ Open localhost:9000
 * Checking if repo exists before creation
 * Checking access to Repo
 
+* File renaming
 * Return to file list from file view
 * User profile at top
 * Repo with creator
 
 # Current major features
 
-* Add editing
 * User profile editing
 * Repository downloading
 * TeX creation Wizard
