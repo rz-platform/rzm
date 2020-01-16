@@ -6,4 +6,5 @@ var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     styleActiveLine: true,
     matchBrackets: true,
     mode: "text/x-stex",
+    readOnly: true
 });
