@@ -72,7 +72,6 @@ class RepositoryController @Inject()(repRepository: RepRepository,
       def executionContext: ExecutionContext = ec
 
       def refine[A](request: UserRequest[A]) = {
-        // TODO: acces check
         repRepository.getByAuthorAndName(username, repositoryName).map {
           case Some(repositoryWithAccount) => {
             val account: Account = repositoryWithAccount._2.get
@@ -83,6 +82,17 @@ class RepositoryController @Inject()(repRepository: RepRepository,
         }
       }
     }
+
+  def haveAccess[A](action: Action[A]) = Action.async(action.parser) { request: RepositoryRequest[A] =>
+    repRepository.isUserCollaborator(request.repository, request.account.id).map {
+      isUserCollaborator: Boolean =>
+        if (isUserCollaborator) {
+          action(request)
+        } else {
+          Future.successful(Forbidden("Not enough access"))
+        }
+    }
+  }
 
   /**
     * Display list of repositories.
