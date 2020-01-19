@@ -58,7 +58,6 @@ Open localhost:9000
 * Handle repo not exist in FS exception
 * Checking if user exists before creation
 * Checking if repo exists before creation
-* Checking access to Repo
 
 * File renaming
 * Return to file list from file view
