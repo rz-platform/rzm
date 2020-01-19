@@ -95,6 +95,8 @@ case class Blob(
                  isLfsFile: Boolean
                )
 
+case class RepositoryWithOwner(repository: Repository, owner: Account)
+
 /**
   * The commit data.
   *
@@ -175,11 +177,11 @@ class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
   /**
     * Parse a (Computer,Company) from a ResultSet
     */
-  private val withOwner = simple ~ (accountRepository.simple.?) map {
-    case repository ~ account => repository -> account
+  private val withOwner = simple ~ accountRepository.simple map {
+    case repository ~ account => RepositoryWithOwner(repository, account)// repository -> account
   }
 
-  def getByAuthorAndName(author: String, repName: String): Future[Option[(Repository, Option[Account])]] = Future {
+  def getByAuthorAndName(author: String, repName: String): Future[Option[RepositoryWithOwner]] = Future {
     db.withConnection { implicit connection =>
       SQL"""
         select * from repository
@@ -263,14 +265,16 @@ class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
     }
   }(ec)
 
-  def listRepositories(accountId: Long): Future[List[Repository]] = Future {
+  def listRepositories(accountId: Long): Future[List[RepositoryWithOwner]] = Future {
     db.withConnection { implicit connection =>
       SQL"""
         select * from repository
         join collaborator
         on collaborator.repositoryId = repository.id
         and collaborator.userId = $accountId
-      """.as(simple.*)
+        join account
+        on account.id = collaborator.userid
+      """.as(withOwner.*)
     }
   }(ec)
 }

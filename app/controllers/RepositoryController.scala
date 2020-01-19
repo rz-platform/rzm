@@ -79,19 +79,18 @@ class RepositoryController @Inject()(
         request: UserRequest[A]
       ): Future[Either[Result, controllers.RepositoryRequest[A]]] = {
         val items = for {
-          repository <- getOrElse(new NoRepo)(gitEntitiesRepository.getByAuthorAndName(username, repositoryName))
+          repositoryWithOwner <- getOrElse(new NoRepo)(gitEntitiesRepository.getByAuthorAndName(username, repositoryName))
           collaborator <- getOrElse(new NoCollaborator)(
-            gitEntitiesRepository.isUserCollaborator(repository._1, request.account.id)
+            gitEntitiesRepository.isUserCollaborator(repositoryWithOwner.repository, request.account.id)
           )
-        } yield (repository, collaborator)
+        } yield (repositoryWithOwner, collaborator)
 
         items
           .map(data => {
             Right(
               new RepositoryRequest[A](
                 request,
-                data._1._1,
-                data._1._2.get,
+                data._1,
                 request.account,
                 data._2,
                 messagesApi
@@ -150,15 +149,14 @@ class RepositoryController @Inject()(
   def view(accountName: String, repositoryName: String, path: String = ".") =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
       implicit request =>
-        val git = new GitRepository(request.owner, repositoryName, gitHome)
+        val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
         val gitData = git
-          .fileList(request.repository, path = path)
+          .fileList(request.repositoryWithOwner.repository, path = path)
           .getOrElse(RepositoryGitData(List(), None))
         Ok(
           html.viewRepository(
             addNewItemToRepForm,
-            request.owner,
-            request.repository,
+            request.repositoryWithOwner,
             gitData,
             path
           )
@@ -171,20 +169,20 @@ class RepositoryController @Inject()(
            path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
       implicit request =>
-        val git = new GitRepository(request.owner, repositoryName, gitHome)
+        val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
         val blobInfo = git.blobFile(path, rev).get
-        Ok(html.viewBlob(request.owner, repositoryName, blobInfo))
+        Ok(html.viewBlob(request.repositoryWithOwner, blobInfo, path))
     }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
       implicit request =>
         val rev = "master" // TODO: Replace with the default branch
-        val git = new GitRepository(request.owner, repositoryName, gitHome)
+        val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
         val blobInfo = git.blobFile(path, rev).get
         Ok(
           html
-            .editFile(editorForm, request.owner, repositoryName, blobInfo, path)
+            .editFile(editorForm, request.repositoryWithOwner, blobInfo, path)
         )
     }
 
@@ -193,7 +191,7 @@ class RepositoryController @Inject()(
       implicit request =>
         val rev = "master" // TODO: Replace with the default branch
         val gitRepository =
-          new GitRepository(request.owner, repositoryName, gitHome)
+          new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
         val blobInfo = gitRepository.blobFile(path, rev).get
 
         editorForm.bindFromRequest.fold(
@@ -202,8 +200,7 @@ class RepositoryController @Inject()(
               BadRequest(
                 html.editFile(
                   formWithErrors,
-                  request.owner,
-                  repositoryName,
+                  request.repositoryWithOwner,
                   blobInfo,
                   path
                 )
@@ -281,7 +278,7 @@ class RepositoryController @Inject()(
               ).flashing("error" -> s"Name is required"),
             newItem => {
               val gitRepository =
-                new GitRepository(request.owner, repositoryName, gitHome)
+                new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
               var fName = newItem.name
               if (isFolder) {
                 fName += "/.gitkeep"
@@ -341,7 +338,7 @@ class RepositoryController @Inject()(
           })
 
           val gitRepository =
-            new GitRepository(request.owner, repositoryName, gitHome)
+            new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
 
           // TODO: replace with default branch
           gitRepository.commitFiles(
@@ -382,21 +379,21 @@ class RepositoryController @Inject()(
           ).flashing("success" -> s"Uploaded $files.length files")
       }
 
-  def uploadPage(accountName: String, repositoryName: String) = userAction {
+  def uploadPage(accountName: String, repositoryName: String) =
+    userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
     implicit request =>
-      Ok(html.uploadFile(accountName, repositoryName))
+      Ok(html.uploadFile(request.repositoryWithOwner))
   }
 
   def addCollaboratorPage(accountName: String, repositoryName: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)).async {
       implicit request =>
-        gitEntitiesRepository.getCollaborators(request.repository).map {
+        gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map {
           collaborators =>
             Ok(
               html.addCollaborator(
                 addCollaboratorForm,
-                request.owner,
-                request.repository,
+                request.repositoryWithOwner,
                 collaborators
               )
             )
@@ -408,13 +405,12 @@ class RepositoryController @Inject()(
       implicit request =>
         addCollaboratorForm.bindFromRequest.fold(
           formWithErrors =>
-            gitEntitiesRepository.getCollaborators(request.repository).map {
+            gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map {
               collaborators =>
                 BadRequest(
                   html.addCollaborator(
                     formWithErrors,
-                    request.owner,
-                    request.repository,
+                    request.repositoryWithOwner,
                     collaborators
                   )
                 )
@@ -425,11 +421,11 @@ class RepositoryController @Inject()(
               .flatMap {
                 case Some(account) =>
                   gitEntitiesRepository
-                    .isUserCollaborator(request.repository, account.id)
+                    .isUserCollaborator(request.repositoryWithOwner.repository, account.id)
                     .map {
                       case None =>
                         gitEntitiesRepository.createCollaborator(
-                          request.repository.id,
+                          request.repositoryWithOwner.repository.id,
                           account.id,
                           1
                         )
@@ -437,8 +433,8 @@ class RepositoryController @Inject()(
                     }
                   Future.successful {
                     Redirect(routes.RepositoryController.addCollaborator(
-                        request.owner.userName,
-                        request.repository.name
+                        request.repositoryWithOwner.owner.userName,
+                        request.repositoryWithOwner.repository.name
                       )
                     )
                   }
@@ -446,8 +442,8 @@ class RepositoryController @Inject()(
                   Future.successful {
                     Redirect(
                       routes.RepositoryController.addCollaborator(
-                        request.owner.userName,
-                        request.repository.name
+                        request.repositoryWithOwner.owner.userName,
+                        request.repositoryWithOwner.repository.name
                       )
                     ).flashing("error" -> s"No such user")
                   }

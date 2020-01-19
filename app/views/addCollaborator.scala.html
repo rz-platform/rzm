@@ -1,9 +1,7 @@
-@(addCollaboratorForm: Form[NewCollaboratorData], owner: Account, repository: Repository, collaborators: List[Account])(implicit request: RepositoryRequestHeader )
+@(addCollaboratorForm: Form[NewCollaboratorData], repo: RepositoryWithOwner, collaborators: List[Account])(implicit request: RepositoryRequestHeader )
 @import views.html.helper._
 
 @main {
-    <h1>@repository.name</h1>
-
 @request.flash.get("success").map { message =>
 <div class="alert-message warning">
     <strong>Done!</strong> @message
@@ -20,7 +18,7 @@
     <p>@collaborator.userName</p>
     }
     }
-    @form(routes.RepositoryController.addCollaborator(owner.userName, repository.name)) {
+    @form(routes.RepositoryController.addCollaborator(repo.owner.userName, repo.repository.name)) {
     <fieldset>
         @CSRF.formField
         @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> "User login or email", Symbol("_help") -> "")

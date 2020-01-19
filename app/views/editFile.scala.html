@@ -1,4 +1,4 @@
-@(editorForm: Form[EditedItem], owner: Account, repositoryName: String, blob:Blob, path: String)(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], repo: RepositoryWithOwner, blob:Blob, path: String)(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 
@@ -16,9 +16,7 @@
 </div>
 }
 
-<h1>@repositoryName</h1>
-
-@form(routes.RepositoryController.edit(owner.userName, repositoryName, path), Symbol("enctype") -> "multipart/form-data") {
+@form(routes.RepositoryController.edit(repo.owner.userName, repo.repository.name, path), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 <input type="text" id="newFileName" name="newFileName" value="@path" />
 <textarea id="code" name="content" class="editor">@blob.content.content</textarea>

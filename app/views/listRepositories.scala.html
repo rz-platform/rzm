@@ -1,12 +1,13 @@
-@(currentPage: List[Repository])(implicit request: MessagesRequestHeader)
+@(currentPage: List[RepositoryWithOwner])(implicit request: MessagesRequestHeader)
 
 @main {
 <a class="button" href="@routes.RepositoryController.createRepository">Create new repository</a>
 
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
                 @repositories.map {
-                    case (repository) => {
-<p>@repository.name - @repository.lastActivityDate</p>
+                    case (repoAndOwn) => {
+<p><a href="@routes.RepositoryController.view(repoAndOwn.owner.userName, repoAndOwn.repository.name, ".")">
+    @repoAndOwn.owner.userName / @repoAndOwn.repository.name</a>  - @repoAndOwn.repository.lastActivityDate</p>
                     }
                 }
     }.getOrElse {

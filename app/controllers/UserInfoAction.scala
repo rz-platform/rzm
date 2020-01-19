@@ -1,6 +1,6 @@
 package controllers
 
-import models.{Account, AccountRepository, Repository}
+import models.{Account, AccountRepository, Repository, RepositoryWithOwner}
 import javax.inject.{Inject, Singleton}
 import play.api.i18n.MessagesApi
 import play.api.mvc._
@@ -22,13 +22,12 @@ trait RepositoryRequestHeader
     extends PreferredMessagesProvider
     with MessagesRequestHeader {
   def account: Account
-  def repository: Repository
-  def owner: Account
+  def repositoryWithOwner: RepositoryWithOwner
+  def role: Int
 }
 
 class RepositoryRequest[A](request: UserRequest[A],
-                           val repository: Repository,
-                           val owner: Account,
+                           val repositoryWithOwner: RepositoryWithOwner,
                            val account: Account,
                            val role: Int,
                            val messagesApi: MessagesApi)

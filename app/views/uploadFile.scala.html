@@ -1,9 +1,9 @@
-@(author: String, repoName: String)(implicit request: MessagesRequestHeader)
+@(repo: RepositoryWithOwner)(implicit request: MessagesRequestHeader)
 @import views.html.helper._
 @main {
 <h1>File upload</h1>
 
-@form(routes.RepositoryController.upload(author, repoName), Symbol("enctype") -> "multipart/form-data") {
+@form(routes.RepositoryController.upload(repo.owner.userName, repo.repository.name), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 <input type="file" id="filepicker" name="fileList" multiple />
 <ul id="listing"></ul>
