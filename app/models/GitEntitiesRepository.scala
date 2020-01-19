@@ -191,7 +191,7 @@ class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
         on account.id = collaborator.userid
         where repository.name = $repName
         and account.username = $author
-        and collaborator.role = 0
+        and collaborator.role = ${AccessLevel.owner}
       """
         .as(withOwner.singleOpt)
 
@@ -208,7 +208,7 @@ class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
         on account.id = collaborator.userid
         where repository.name = $repName
         and account.username = $author
-        and collaborator.role = 0
+        and collaborator.role = ${AccessLevel.owner}
       """
         .as(SqlParser.int("repository.id").single)
 
@@ -268,12 +268,14 @@ class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
   def listRepositories(accountId: Long): Future[List[RepositoryWithOwner]] = Future {
     db.withConnection { implicit connection =>
       SQL"""
-        select * from repository
-        join collaborator
-        on collaborator.repositoryId = repository.id
-        and collaborator.userId = $accountId
+        select * from (
+          select * from repository
+          join collaborator
+          on collaborator.repositoryId = repository.id
+          and collaborator.userId = $accountId) as availableRepositories, collaborator
         join account
         on account.id = collaborator.userid
+        where collaborator.role = ${AccessLevel.owner}
       """.as(withOwner.*)
     }
   }(ec)

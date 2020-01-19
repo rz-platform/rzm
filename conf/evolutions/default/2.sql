@@ -7,6 +7,4 @@ insert into account(userName, fullName, mailAddress, password, isAdmin, register
 
 # --- !Downs
 
-delete from account;
-delete from repository;
-delete from collaborator;
+delete from collaborator, account, repository;

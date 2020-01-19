@@ -55,14 +55,12 @@ Open localhost:9000
 
 # Current minor features
 
-* Handle repo not exist in FS exception
 * Checking if user exists before creation
 * Checking if repo exists before creation
 
 * File renaming
 * Return to file list from file view
 * User profile at top
-* Repo with creator
 
 # Current major features
 

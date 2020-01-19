@@ -25,6 +25,13 @@ object Account {
     Macro.toParameters[Account]
 }
 
+
+object AccessLevel {
+  val owner = 0
+  val canEdit = 20
+  val canView = 30
+ }
+
 case class AccountRegistrationData(userName: String,
                                    fullName: Option[String],
                                    password: String,

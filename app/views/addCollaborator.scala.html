@@ -22,7 +22,7 @@
     <fieldset>
         @CSRF.formField
         @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> "User login or email", Symbol("_help") -> "")
-        @select(field = addCollaboratorForm("accessLevel"),options = Seq( "1" -> "Write", "2" -> "Edit"))
+        @select(field = addCollaboratorForm("accessLevel"),options = Seq( "1" -> "Read", "2" -> "Edit"))
     </fieldset>
     <div class="actions">
         <input type="submit" value="Add collaborator" class="btn primary"/>

@@ -71,7 +71,7 @@ class RepositoryController @Inject()(
 
   def getOrElse[T](ifNot: Exception)(what: => Future[Option[T]]) = what.map(_.getOrElse(throw ifNot))
 
-  def repositoryActionOn(username: String, repositoryName: String) =
+  def repositoryActionOn(username: String, repositoryName: String, minimumAccessLevel:Int = AccessLevel.canView) =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
@@ -87,15 +87,21 @@ class RepositoryController @Inject()(
 
         items
           .map(data => {
-            Right(
-              new RepositoryRequest[A](
-                request,
-                data._1,
-                request.account,
-                data._2,
-                messagesApi
+            val accessLevel = data._2
+
+            if (accessLevel <= minimumAccessLevel) {
+              Right(
+                new RepositoryRequest[A](
+                  request,
+                  data._1,
+                  request.account,
+                  accessLevel,
+                  messagesApi
+                )
               )
-            )
+            } else {
+              Left(NotFound((new NoCollaborator).getMessage))
+            }
           })
           .recover { case e: Exception => Left(NotFound(e.getMessage)) }
       }
@@ -117,7 +123,7 @@ class RepositoryController @Inject()(
       repository => {
         val now = Calendar.getInstance().getTime
         val repo = Repository(
-          0,
+          AccessLevel.owner,
           repository.name,
           true,
           repository.description,
@@ -175,7 +181,7 @@ class RepositoryController @Inject()(
     }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
       implicit request =>
         val rev = "master" // TODO: Replace with the default branch
         val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
@@ -187,7 +193,7 @@ class RepositoryController @Inject()(
     }
 
   def edit(accountName: String, repositoryName: String, path: String) =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
       implicit request =>
         val rev = "master" // TODO: Replace with the default branch
         val gitRepository =
@@ -268,7 +274,7 @@ class RepositoryController @Inject()(
                  path: String,
                  isFolder: Boolean) =
     userAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryActionOn(accountName, repositoryName)) {
+      .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
         implicit request =>
           addNewItemToRepForm.bindFromRequest.fold(
             formWithErrors =>
@@ -324,7 +330,7 @@ class RepositoryController @Inject()(
     */
   def upload(accountName: String, repositoryName: String) =
     userAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryActionOn(accountName, repositoryName)) {
+      .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
         implicit request =>
           val path = ""
           val files = request.body.files.map(filePart => {
@@ -380,13 +386,13 @@ class RepositoryController @Inject()(
       }
 
   def uploadPage(accountName: String, repositoryName: String) =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)) {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
     implicit request =>
       Ok(html.uploadFile(request.repositoryWithOwner))
   }
 
   def addCollaboratorPage(accountName: String, repositoryName: String) =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)).async {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
       implicit request =>
         gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map {
           collaborators =>
@@ -401,7 +407,7 @@ class RepositoryController @Inject()(
     }
 
   def addCollaborator(accountName: String, repositoryName: String) =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)).async {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
       implicit request =>
         addCollaboratorForm.bindFromRequest.fold(
           formWithErrors =>
@@ -419,15 +425,15 @@ class RepositoryController @Inject()(
             accountRepository
               .findByLoginOrEmail(collaboratorData.emailOrLogin)
               .flatMap {
-                case Some(account) =>
+                case Some(accountToCollab) =>
                   gitEntitiesRepository
-                    .isUserCollaborator(request.repositoryWithOwner.repository, account.id)
+                    .isUserCollaborator(request.repositoryWithOwner.repository, accountToCollab.id)
                     .map {
                       case None =>
                         gitEntitiesRepository.createCollaborator(
                           request.repositoryWithOwner.repository.id,
-                          account.id,
-                          1
+                          accountToCollab.id,
+                          collaboratorData.accessLevel.toInt
                         )
                       case Some(collaborator) => ()
                     }

@@ -29,20 +29,10 @@ create table collaborator (
  id bigserial primary key,
  userId bigint not null REFERENCES account(id),
  repositoryId bigint not null REFERENCES repository(id),
- role int not null,
+ role smallint not null,
  unique (userId, repositoryId)
 );
 
--- roles:
--- 1 - creator
--- 2 - admin
--- 3 - developer
--- 4 - guest
-
 # --- !Downs
 
-drop table if exists account;
-
-drop table if exists repository;
-
-drop table if exists collaborator;
+drop table if exists collaborator, account, repository;
