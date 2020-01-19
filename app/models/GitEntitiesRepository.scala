@@ -151,9 +151,9 @@ object Collaborator {
 }
 
 @javax.inject.Singleton
-class RepRepository @Inject()(accountRepository: AccountRepository,
-                              dbapi: DBApi)
-                             (implicit ec: DatabaseExecutionContext) {
+class GitEntitiesRepository @Inject()(accountRepository: AccountRepository,
+                                      dbapi: DBApi)
+                                     (implicit ec: DatabaseExecutionContext) {
   private val db = dbapi.database("default")
 
   /**
@@ -237,14 +237,15 @@ class RepRepository @Inject()(accountRepository: AccountRepository,
     }
   }(ec)
 
-  def isUserCollaborator(repository: Repository, userId: Long): Future[Boolean] = Future {
+  def isUserCollaborator(repository: Repository, userId: Long): Future[Option[Int]] = Future {
     db.withConnection { implicit connection =>
       SQL(
-        s"""select exists(select from collaborator
+        s"""select role from collaborator
         where collaborator.userId = {collaboratorId}
-        and repositoryId = {repositoryId})""")
+        and repositoryId = {repositoryId}
+          """)
         .on("collaboratorId" -> userId, "repositoryId" -> repository.id)
-        .as(SqlParser.scalar[Boolean].single)
+        .as(SqlParser.int("role").singleOpt)
     }
   }(ec)
 
