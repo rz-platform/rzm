@@ -44,9 +44,14 @@ class AuthController @Inject()(accountService: AccountRepository,
       registerForm.bindFromRequest.fold(
         formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
         user => {
-          val acc = Account(0, user.userName, user.fullName, user.mailAddress, EncryptionService.getHash(user.password), isAdmin = false, Calendar.getInstance().getTime, None, isRemoved = false, None)
-          accountService.insert(acc).map { accountId =>
-            Redirect(routes.RepositoryController.list).withSession(AuthController.SESSION_NAME -> accountId.get.toString)
+          accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
+            case None =>
+              val acc = Account(0, user.userName, user.fullName, user.mailAddress, EncryptionService.getHash(user.password),
+              isAdmin = false, Calendar.getInstance().getTime, None, isRemoved = false, None)
+              accountService.insert(acc).map { accountId =>
+                Redirect(routes.RepositoryController.list).withSession(AuthController.SESSION_NAME -> accountId.get.toString)
+              }
+            case (account) => Future(Redirect(routes.AuthController.register).flashing("error" -> "User already exist"))
           }
         }
       )

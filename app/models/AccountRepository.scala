@@ -30,7 +30,7 @@ object AccessLevel {
   val owner = 0
   val canEdit = 20
   val canView = 30
- }
+}
 
 case class AccountRegistrationData(userName: String,
                                    fullName: Option[String],
@@ -63,7 +63,7 @@ class AccountRepository @Inject()(dbapi: DBApi)(implicit ec: DatabaseExecutionCo
         Account(id, userName, fullName, mailAddress, password, isAdmin, registeredDate, image, isRemoved, description)
     }
   }
-
+  private val logger = play.api.Logger(this.getClass)
   /**
    * Retrieve a user from the id.
    */
@@ -76,12 +76,14 @@ class AccountRepository @Inject()(dbapi: DBApi)(implicit ec: DatabaseExecutionCo
   /**
    * Retrieve a user from login
    */
-  def findByLoginOrEmail(loginOrEmail: String): Future[Option[Account]] = Future {
+  def findByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[Account]] = Future {
     db.withConnection { implicit connection =>
-      SQL"select * from account where userName = $loginOrEmail or mailAddress = $loginOrEmail".as(simple.singleOpt)
+      SQL(s"""select * from account where userName= {usernameOrEmail} or mailAddress ={email}""")
+        .on("usernameOrEmail" -> usernameOrEmail,
+          "email" -> (if (email.isEmpty) usernameOrEmail else email))
+        .as(simple.singleOpt)
     }
   }(ec)
-
 
   /**
    * Insert a new user

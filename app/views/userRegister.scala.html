@@ -2,6 +2,11 @@
 @import views.html.helper._
 @main {
 <h1>Register</h1>
+@request.flash.get("error").map { message =>
+<div class="alert-message warning">
+    <strong>Error!</strong> @message
+</div>
+}
 @form(routes.AuthController.saveUser()) {
 <fieldset>
     @CSRF.formField

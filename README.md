@@ -55,7 +55,6 @@ Open localhost:9000
 
 # Current minor features
 
-* Checking if user exists before creation
 * Checking if repo exists before creation
 
 * File renaming
