@@ -121,30 +121,35 @@ class RepositoryController @Inject()(
       formWithErrors =>
         Future(BadRequest(html.createRepository(formWithErrors))),
       repository => {
-        val now = Calendar.getInstance().getTime
-        val repo = Repository(
-          AccessLevel.owner,
-          repository.name,
-          true,
-          repository.description,
-          "master",
-          now,
-          now
-        )
-        gitEntitiesRepository.insertRepository(repo).map { repositoryId: Option[Long] =>
-          gitEntitiesRepository
-            .createCollaborator(repositoryId.get, request.account.id, 0)
-            .map { collaboratorId =>
-              val git =
-                new GitRepository(request.account, repository.name, gitHome)
-              git.create()
+        gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap{
+          case None => {
+            val now = Calendar.getInstance().getTime
+            val repo = Repository(
+              AccessLevel.owner,
+              repository.name,
+              true,
+              repository.description,
+              "master",
+              now,
+              now
+            )
+            gitEntitiesRepository.insertRepository(repo).flatMap { repositoryId: Option[Long] =>
+              gitEntitiesRepository
+                .createCollaborator(repositoryId.get, request.account.id, 0)
+                .map { collaboratorId =>
+                  val git =
+                    new GitRepository(request.account, repository.name, gitHome)
+                  git.create()
+                    Redirect(routes.RepositoryController.list)
+                      .flashing("success" -> s"Repository created")
+                }
             }
+          }
+          case other => Future(Redirect(routes.RepositoryController.createRepository)
+              .flashing("error" -> s"Repository already exist"))
+
         }
       }
-    )
-    Future(
-      Redirect(routes.RepositoryController.list)
-        .flashing("success" -> s"Repository created")
     )
   }
 

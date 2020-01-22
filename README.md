@@ -54,9 +54,6 @@ Open localhost:9000
 * Add editing
 
 # Current minor features
-
-* Checking if repo exists before creation
-
 * File renaming
 * Return to file list from file view
 * User profile at top
