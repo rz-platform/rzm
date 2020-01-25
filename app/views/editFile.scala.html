@@ -1,9 +1,9 @@
-@(editorForm: Form[EditedItem], repo: RepositoryWithOwner, blob:Blob, path: String)(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path: String)(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
+@import base._
 
 @main {
-
 @request.flash.get("success").map { message =>
 <div class="alert-message warning">
     <strong>Done!</strong> @message
@@ -16,7 +16,8 @@
 </div>
 }
 
-@form(routes.RepositoryController.edit(repo.owner.userName, repo.repository.name, path), Symbol("enctype") -> "multipart/form-data") {
+@form(routes.RepositoryController.edit(request.repositoryWithOwner.owner.userName,
+    request.repositoryWithOwner.repository.name, path), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 <input type="text" id="newFileName" name="newFileName" value="@path" />
 <textarea id="code" name="content" class="editor">@blob.content.content</textarea>

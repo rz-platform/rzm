@@ -125,7 +125,7 @@ class RepositoryController @Inject()(
           case None => {
             val now = Calendar.getInstance().getTime
             val repo = Repository(
-              AccessLevel.owner,
+              0,
               repository.name,
               true,
               repository.description,
@@ -167,7 +167,6 @@ class RepositoryController @Inject()(
         Ok(
           html.viewRepository(
             addNewItemToRepForm,
-            request.repositoryWithOwner,
             gitData,
             path
           )
@@ -182,7 +181,7 @@ class RepositoryController @Inject()(
       implicit request =>
         val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
         val blobInfo = git.blobFile(path, rev).get
-        Ok(html.viewBlob(request.repositoryWithOwner, blobInfo, path))
+        Ok(html.viewBlob(blobInfo, path))
     }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
@@ -193,7 +192,7 @@ class RepositoryController @Inject()(
         val blobInfo = git.blobFile(path, rev).get
         Ok(
           html
-            .editFile(editorForm, request.repositoryWithOwner, blobInfo, path)
+            .editFile(editorForm, blobInfo, path)
         )
     }
 
@@ -211,7 +210,6 @@ class RepositoryController @Inject()(
               BadRequest(
                 html.editFile(
                   formWithErrors,
-                  request.repositoryWithOwner,
                   blobInfo,
                   path
                 )
@@ -393,7 +391,7 @@ class RepositoryController @Inject()(
   def uploadPage(accountName: String, repositoryName: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
     implicit request =>
-      Ok(html.uploadFile(request.repositoryWithOwner))
+      Ok(html.uploadFile())
   }
 
   def addCollaboratorPage(accountName: String, repositoryName: String) =
@@ -404,7 +402,6 @@ class RepositoryController @Inject()(
             Ok(
               html.addCollaborator(
                 addCollaboratorForm,
-                request.repositoryWithOwner,
                 collaborators
               )
             )
@@ -421,7 +418,6 @@ class RepositoryController @Inject()(
                 BadRequest(
                   html.addCollaborator(
                     formWithErrors,
-                    request.repositoryWithOwner,
                     collaborators
                   )
                 )

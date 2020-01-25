@@ -1,8 +1,8 @@
 @(repositoryForm: Form[RepositoryData])(implicit request: UserRequestHeader)
 @import views.html.helper._
+@import base._
 
 @main {
-
 <h1>Add a computer</h1>
 @request.flash.get("error").map { message =>
 <div class="alert-message warning">

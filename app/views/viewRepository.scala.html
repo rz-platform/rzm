@@ -1,6 +1,6 @@
-@(addNewItemToRepForm: Form[NewItem], repo: RepositoryWithOwner, gitData:RepositoryGitData, path: String)(implicit request: RepositoryRequestHeader )
-
+@(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String)(implicit request: RepositoryRequestHeader )
 @import views.html.helper._
+@import base._
 
 @main {
 @request.flash.get("success").map { message =>
@@ -16,12 +16,12 @@
 }
 
 
-<a class="button" href="@routes.RepositoryController.uploadPage(repo.owner.userName, repo.repository.name)">Upload files</a>
-<a class="button" href="@routes.RepositoryController.addCollaboratorPage(repo.owner.userName, repo.repository.name)">Collaborators</a>
+<a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
+<a class="button" href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Collaborators</a>
 
 
 <div class="add-folder-form">
-    @form(routes.RepositoryController.addNewItem(repo.owner.userName, repo.repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
+    @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
     <fieldset>
         @CSRF.formField
         @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
@@ -32,7 +32,7 @@
 </div>
 
 <div class="add-file-form">
-    @form(routes.RepositoryController.addNewItem(repo.owner.userName, repo.repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
+    @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
     <fieldset>
         @CSRF.formField
         @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
@@ -42,16 +42,16 @@
     }
 </div>
 
-<a class="button" href="@routes.RepositoryController.uploadPage(repo.owner.userName, repo.repository.name)">Upload files</a>
+<a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
     @gitData.files.map {
         case (file) => {
             @if(file.isDirectory) {
                 <p>
-                    FLDR: <a href="@routes.RepositoryController.view(repo.owner.userName, repo.repository.name, file.path)">@file.name</a>
+                    FLDR: <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">@file.name</a>
                 </p>
             } else {
                 <p>
-                    FILE: <a href="@routes.RepositoryController.blob(repo.owner.userName, repo.repository.name, repo.repository.defaultBranch, file.path)">
+                    FILE: <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
                     @file.name
                 </a></p>
             }

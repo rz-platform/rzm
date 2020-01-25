@@ -1,5 +1,7 @@
 @(currentPage: List[RepositoryWithOwner])(implicit request: MessagesRequestHeader)
 
+@import base._
+
 @main {
 <a class="button" href="@routes.RepositoryController.createRepository">Create new repository</a>
 

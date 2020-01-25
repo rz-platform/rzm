@@ -1,9 +1,9 @@
-@(repo: RepositoryWithOwner, blob:Blob, path:String)(implicit request: RepositoryRequestHeader)
+@(blob:Blob, path:String)(implicit request: RepositoryRequestHeader)
+@import base._
 
 @main {
 
-
-<p><a  class="button" href="@routes.RepositoryController.editFilePage(repo.owner.userName, repo.repository.name, path)">Edit</a></p>
+<p><a  class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">Edit</a></p>
 
 <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 

@@ -1,5 +1,7 @@
 @(loginForm: Form[AccountLoginData])(implicit request: MessagesRequestHeader)
 @import views.html.helper._
+@import base._
+
 @main {
 <h1>Login</h1>
 @request.flash.get("error").map { message =>
