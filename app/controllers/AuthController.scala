@@ -1,8 +1,8 @@
 package controllers
 
 import java.util.Calendar
-import javax.inject.{Inject, Singleton}
-import models.{AccountLoginData, AccountRegistrationData, Account, AccountRepository}
+import javax.inject.Inject
+import models.{Account, AccountLoginData, AccountRegistrationData, AccountRepository}
 import services.encryption._
 import play.api.data.Forms._
 import play.api.data._

@@ -1,6 +1,6 @@
 package controllers
 
-import models.{Account, AccountRepository, Repository, RepositoryWithOwner}
+import models.{Account, AccountRepository, RepositoryWithOwner}
 import javax.inject.{Inject, Singleton}
 import play.api.i18n.MessagesApi
 import play.api.mvc._

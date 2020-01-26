@@ -42,20 +42,16 @@ class RepositoryController @Inject() (
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
   val createRepositoryForm = Form(
-    mapping("name" -> nonEmptyText, "description" -> optional(text))(
-      RepositoryData.apply
-    )(RepositoryData.unapply)
+    mapping("name" -> nonEmptyText, "description" -> optional(text))(RepositoryData.apply)(RepositoryData.unapply)
   )
 
   val addCollaboratorForm = Form(
-    mapping("emailOrLogin" -> nonEmptyText, "accessLevel" -> nonEmptyText)(
-      NewCollaboratorData.apply
-    )(NewCollaboratorData.unapply)
+    mapping("emailOrLogin" -> nonEmptyText, "accessLevel" -> nonEmptyText)(NewCollaboratorData.apply)(
+      NewCollaboratorData.unapply
+    )
   )
 
-  val addNewItemToRepForm = Form(
-    mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply)
-  )
+  val addNewItemToRepForm = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply))
 
   val editorForm = Form(
     mapping(
@@ -92,15 +88,7 @@ class RepositoryController @Inject() (
             val accessLevel = data._2
 
             if (accessLevel <= minimumAccessLevel) {
-              Right(
-                new RepositoryRequest[A](
-                  request,
-                  data._1,
-                  request.account,
-                  accessLevel,
-                  messagesApi
-                )
-              )
+              Right(new RepositoryRequest[A](request, data._1, request.account, accessLevel, messagesApi))
             } else {
               Left(NotFound((new NoCollaborator).getMessage))
             }
@@ -125,15 +113,7 @@ class RepositoryController @Inject() (
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None => {
             val now = Calendar.getInstance().getTime
-            val repo = Repository(
-              0,
-              repository.name,
-              true,
-              repository.description,
-              "master",
-              now,
-              now
-            )
+            val repo = Repository(0, repository.name, true, repository.description, "master", now, now)
             gitEntitiesRepository.insertRepository(repo).flatMap { repositoryId: Option[Long] =>
               gitEntitiesRepository
                 .createCollaborator(repositoryId.get, request.account.id, 0)
@@ -178,7 +158,7 @@ class RepositoryController @Inject() (
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      val rev = "master" // TODO: Replace with the default branch
+      val rev = "master" // TODO: Replace with rev
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(path, rev).get
       Ok(html.editFile(editorForm, blobInfo, path))
@@ -186,16 +166,13 @@ class RepositoryController @Inject() (
 
   def edit(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      val rev = "master" // TODO: Replace with the default branch
+      val rev = "master" // TODO: Replace with rev
       val gitRepository =
         new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = gitRepository.blobFile(path, rev).get
 
       editorForm.bindFromRequest.fold(
-        formWithErrors =>
-          Future(
-            BadRequest(html.editFile(formWithErrors, blobInfo, path))
-          ),
+        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blobInfo, path))),
         editedFile => {
           val fName = editedFile.oldFileName
           val content = if (editedFile.content.nonEmpty) {
@@ -204,7 +181,7 @@ class RepositoryController @Inject() (
             Array.emptyByteArray
           }
           gitRepository
-            .commitFiles("master", ".", editedFile.message, request.account) {
+            .commitFiles(rev, ".", editedFile.message, request.account) {
               case (git, headTip, builder, inserter) =>
                 gitRepository.processTree(git, headTip) { (path, tree) =>
                   if (!fName.contains(path)) {
@@ -294,13 +271,11 @@ class RepositoryController @Inject() (
   def upload(accountName: String, repositoryName: String) =
     userAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-        val path = ""
+        val path = "" // TODO
         val files = request.body.files.map(filePart => {
           CommitFile(
             filePart.filename,
-            name =
-              if (path.length == 0) filePart.filename
-              else s"${path}/${filePart.filename}",
+            name = if (path.length == 0) filePart.filename else s"${path}/${filePart.filename}",
             filePart.ref
           )
         })
@@ -309,12 +284,7 @@ class RepositoryController @Inject() (
           new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
 
         // TODO: replace with rev
-        gitRepository.commitFiles(
-          "master",
-          ".",
-          "Add files via upload",
-          request.account
-        ) {
+        gitRepository.commitFiles("master", ".", "Add files via upload", request.account) {
           case (git, headTip, builder, inserter) =>
             gitRepository.processTree(git, headTip) { (path, tree) =>
               if (!files.exists(_.name.contains(path))) {
