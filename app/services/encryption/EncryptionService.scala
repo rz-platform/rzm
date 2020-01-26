@@ -1,4 +1,4 @@
-package services
+package services.encryption
 
 import org.mindrot.jbcrypt.BCrypt
 

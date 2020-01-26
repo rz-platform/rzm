@@ -10,4 +10,5 @@ import play.api.libs.concurrent.CustomExecutionContext
  * in the "application.conf" file.
  */
 @Singleton
-class DatabaseExecutionContext @Inject()(system: ActorSystem) extends CustomExecutionContext(system, "database.dispatcher")
+class DatabaseExecutionContext @Inject() (system: ActorSystem)
+    extends CustomExecutionContext(system, "database.dispatcher")

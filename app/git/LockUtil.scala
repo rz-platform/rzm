@@ -5,6 +5,7 @@ import java.util.concurrent.locks.{Lock, ReentrantLock}
 
 object LockUtil {
   private def defining[A, B](value: A)(f: A => B): B = f(value)
+
   /**
    * lock objects
    */

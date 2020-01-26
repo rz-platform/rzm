@@ -25,10 +25,9 @@ import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-
 // Package contains parts of code inherited from GitBucket project
 
-class GitRepository (val owner: Account, val repositoryName: String, val gitHome: String) {
+class GitRepository(val owner: Account, val repositoryName: String, val gitHome: String) {
   def repositoryDir: File = new File(s"${gitHome}/${owner.userName}/${repositoryName}.git")
 
   implicit val objectDatabaseReleasable = new Releasable[ObjectDatabase] {
@@ -49,9 +48,10 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
               val parentPath = if (path == ".") Nil else path.split("/").toList
 
               // process README.md or README.markdown
-              val readme = files.find { file =>
-                !file.isDirectory && readmeFiles.contains(file.name.toLowerCase)
-              }
+              val readme = files
+                .find { file =>
+                  !file.isDirectory && readmeFiles.contains(file.name.toLowerCase)
+                }
                 .map { file =>
                   val path = (file.name :: parentPath.reverse).reverse
                   path -> convertFromByteArray(
@@ -120,7 +120,6 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
       }
     }
 
-
   def getLfsObjects(text: String): Map[String, String] = {
     if (text.startsWith("version https://git-lfs.github.com/spec/v1")) {
       // LFS objects
@@ -158,17 +157,16 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
   }
 
   def blobFile(path: String, rev: String): Option[Blob] = {
-    Using.resource(Git.open(repositoryDir)) {
-      git =>
-        val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
-        getPathObjectId(git, path, revCommit).map {
-          objectId => {
-            val content = getContentInfo(git, path, objectId)
-            val commitInfo = new CommitInfo(getLastModifiedCommit(git, revCommit, path))
-            val isLfs = isLfsFile(git, objectId)
-            Blob(content, commitInfo, isLfs)
-          }
+    Using.resource(Git.open(repositoryDir)) { git =>
+      val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
+      getPathObjectId(git, path, revCommit).map { objectId =>
+        {
+          val content = getContentInfo(git, path, objectId)
+          val commitInfo = new CommitInfo(getLastModifiedCommit(git, revCommit, path))
+          val isLfs = isLfsFile(git, objectId)
+          Blob(content, commitInfo, isLfs)
         }
+      }
     }
   }
 
@@ -199,7 +197,7 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
       detector.dataEnd()
       detector.getDetectedCharset match {
         case null => "UTF-8"
-        case e => e
+        case e    => e
       }
     }
 
@@ -229,7 +227,6 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
     } catch {
       case e: MissingObjectException => None
     }
-
 
   val readmeFiles = Seq("readme.txt", "readme")
 
@@ -263,10 +260,10 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
 
       @tailrec
       def simplifyPath(
-                        tuple: (ObjectId, FileMode, String, String, Option[String], RevCommit)
-                      ): (ObjectId, FileMode, String, String, Option[String], RevCommit) = tuple match {
+        tuple: (ObjectId, FileMode, String, String, Option[String], RevCommit)
+      ): (ObjectId, FileMode, String, String, Option[String], RevCommit) = tuple match {
         case (oid, FileMode.TREE, name, path, _, commit) =>
-          (Using.resource(new TreeWalk(git.getRepository)) { walk =>
+          Using.resource(new TreeWalk(git.getRepository)) { walk =>
             walk.addTree(oid)
             // single tree child, or None
             if (walk.next() && walk.getFileMode(0) == FileMode.TREE) {
@@ -283,9 +280,9 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
             } else {
               None
             }
-          }) match {
+          } match {
             case Some(child) => simplifyPath(child)
-            case _ => tuple
+            case _           => tuple
           }
         case _ => tuple
       }
@@ -296,10 +293,10 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
 
       @tailrec
       def findLastCommits(
-                           result: List[(ObjectId, FileMode, String, String, Option[String], RevCommit)],
-                           restList: List[((ObjectId, FileMode, String, String, Option[String]), Map[RevCommit, RevCommit])],
-                           revIterator: java.util.Iterator[RevCommit]
-                         ): List[(ObjectId, FileMode, String, String, Option[String], RevCommit)] = {
+        result: List[(ObjectId, FileMode, String, String, Option[String], RevCommit)],
+        restList: List[((ObjectId, FileMode, String, String, Option[String]), Map[RevCommit, RevCommit])],
+        revIterator: java.util.Iterator[RevCommit]
+      ): List[(ObjectId, FileMode, String, String, Option[String], RevCommit)] = {
         if (restList.isEmpty) {
           result
         } else if (!revIterator.hasNext) { // maybe, revCommit has only 1 log. other case, restList be empty
@@ -377,7 +374,7 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
           (file1.isDirectory, file2.isDirectory) match {
             case (true, false) => true
             case (false, true) => false
-            case _ => file1.name.compareTo(file2.name) < 0
+            case _             => file1.name.compareTo(file2.name) < 0
           }
         }
     }
@@ -404,21 +401,16 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
         Some(if (revstr.isEmpty) repository.defaultBranch else revstr),
         branchList.headOption
       ).flatMap {
-        case Some(rev) => Some((git.getRepository.resolve(rev), rev))
-        case None => None
-      }
+          case Some(rev) => Some((git.getRepository.resolve(rev), rev))
+          case None      => None
+        }
         .find(_._1 != null)
     }
   }
 
-
-  def commitFiles(branch: String,
-                  path: String,
-                  message: String,
-                  loginAccount: Account
-                 )(
-                   f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
-                 ) = {
+  def commitFiles(branch: String, path: String, message: String, loginAccount: Account)(
+    f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
+  ) = {
     LockUtil.lock(s"${owner.userName}/${repositoryName}") {
       Using.resource(Git.open(repositoryDir)) { git =>
         val builder = DirCache.newInCore.builder()
@@ -523,15 +515,15 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
   def isEmpty(git: Git): Boolean = git.getRepository.resolve(Constants.HEAD) == null
 
   def createNewCommit(
-                       git: Git,
-                       inserter: ObjectInserter,
-                       headId: AnyObjectId,
-                       treeId: AnyObjectId,
-                       ref: String,
-                       fullName: String,
-                       mailAddress: String,
-                       message: String
-                     ): ObjectId = {
+    git: Git,
+    inserter: ObjectInserter,
+    headId: AnyObjectId,
+    treeId: AnyObjectId,
+    ref: String,
+    fullName: String,
+    mailAddress: String,
+    message: String
+  ): ObjectId = {
     val newCommit = new CommitBuilder()
     newCommit.setCommitter(new PersonIdent(fullName, mailAddress))
     newCommit.setAuthor(new PersonIdent(fullName, mailAddress))
@@ -548,7 +540,6 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
     val refUpdate = git.getRepository.updateRef(ref)
     refUpdate.setNewObjectId(newHeadId)
     refUpdate.update()
-
 
     newHeadId
   }
@@ -576,7 +567,7 @@ class GitRepository (val owner: Account, val repositoryName: String, val gitHome
     val revWalk = new RevWalk(git.getRepository)
     val revCommit = revWalk.parseAny(objectId) match {
       case r: RevTag => revWalk.parseCommit(r.getObject)
-      case _ => revWalk.parseCommit(objectId)
+      case _         => revWalk.parseCommit(objectId)
     }
     revWalk.dispose
     revCommit

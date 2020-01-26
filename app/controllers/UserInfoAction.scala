@@ -7,39 +7,34 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait UserRequestHeader
-    extends PreferredMessagesProvider
-    with MessagesRequestHeader {
+trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader {
   def account: Account
 }
-class UserRequest[A](request: Request[A],
-                     val account: Account,
-                     val messagesApi: MessagesApi)
+class UserRequest[A](request: Request[A], val account: Account, val messagesApi: MessagesApi)
     extends WrappedRequest[A](request)
     with UserRequestHeader
 
-trait RepositoryRequestHeader
-    extends PreferredMessagesProvider
-    with MessagesRequestHeader {
+trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader {
   def account: Account
   def repositoryWithOwner: RepositoryWithOwner
   def role: Int
 }
 
-class RepositoryRequest[A](request: UserRequest[A],
-                           val repositoryWithOwner: RepositoryWithOwner,
-                           val account: Account,
-                           val role: Int,
-                           val messagesApi: MessagesApi)
-    extends WrappedRequest[A](request)
+class RepositoryRequest[A](
+  request: UserRequest[A],
+  val repositoryWithOwner: RepositoryWithOwner,
+  val account: Account,
+  val role: Int,
+  val messagesApi: MessagesApi
+) extends WrappedRequest[A](request)
     with RepositoryRequestHeader
 
 /**
-  * An action that pulls everything together to show user info that is in an encrypted cookie,
-  * with only the secret key stored on the server.
-  */
+ * An action that pulls everything together to show user info that is in an encrypted cookie,
+ * with only the secret key stored on the server.
+ */
 @Singleton
-class UserInfoAction @Inject()(
+class UserInfoAction @Inject() (
   accountService: AccountRepository,
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
@@ -51,7 +46,7 @@ class UserInfoAction @Inject()(
 
   override def invokeBlock[A](
     request: Request[A],
-    block: (UserRequest[A]) => Future[Result]
+    block: UserRequest[A] => Future[Result]
   ): Future[Result] = {
     // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {
@@ -62,16 +57,14 @@ class UserInfoAction @Inject()(
           block(new UserRequest[A](request, account, messagesApi))
         case None =>
           Future.successful {
-            Redirect(routes.AuthController.login).withNewSession
-              .flashing("error" -> "unauthorized")
+            Redirect(routes.AuthController.login).withNewSession.flashing("error" -> "unauthorized")
           }
       }
     }
 
     maybeFutureResult.getOrElse {
       Future.successful {
-        Redirect(routes.AuthController.login).withNewSession
-          .flashing("error" -> "unauthorized")
+        Redirect(routes.AuthController.login).withNewSession.flashing("error" -> "unauthorized")
       }
     }
   }
