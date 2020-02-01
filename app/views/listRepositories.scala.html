@@ -1,8 +1,8 @@
-@(currentPage: List[RepositoryWithOwner])(implicit request: MessagesRequestHeader)
+@(currentPage: List[RepositoryWithOwner])(implicit request: UserRequestHeader)
 
 @import base._
 
-@main {
+@auth("My repositories") {
 <a class="button" href="@routes.RepositoryController.createRepository">Create new repository</a>
 
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>

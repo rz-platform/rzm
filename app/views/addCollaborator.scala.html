@@ -3,7 +3,7 @@
 @import views.html.helper._
 @import base._
 
-@main {
+@auth("Repository collaborators") {
 @request.flash.get("success").map { message =>
 <div class="alert-message warning">
     <strong>Done!</strong> @message

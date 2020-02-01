@@ -2,7 +2,7 @@
 @import views.html.helper._
 @import base._
 
-@main {
+@auth(request.repositoryWithOwner.repository.name) {
 @request.flash.get("success").map { message =>
 <div class="alert-message warning">
     <strong>Done!</strong> @message

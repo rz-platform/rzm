@@ -1,8 +1,8 @@
-@(body: Html)(implicit request: MessagesRequestHeader)
+@(title: String)(body: Html)(implicit request: MessagesRequestHeader)
 <!DOCTYPE html>
 <html>
     <head>
-        <title>RAZAM</title>
+        <title>@title - RAZAM</title>
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/main.css")"/>
     </head>
     <body>

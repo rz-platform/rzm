@@ -7,14 +7,18 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader {
+trait RequestWithUser extends PreferredMessagesProvider with MessagesRequestHeader {
+  def account: Account
+}
+
+trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
   def account: Account
 }
 class UserRequest[A](request: Request[A], val account: Account, val messagesApi: MessagesApi)
     extends WrappedRequest[A](request)
     with UserRequestHeader
 
-trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader {
+trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
   def account: Account
   def repositoryWithOwner: RepositoryWithOwner
   def role: Int

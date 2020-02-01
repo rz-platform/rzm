@@ -1,7 +1,7 @@
 @(blob:Blob, path:String)(implicit request: RepositoryRequestHeader)
 @import base._
 
-@main {
+@auth("View file") {
 
 <p><a  class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">Edit</a></p>
 

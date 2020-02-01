@@ -56,7 +56,6 @@ Open localhost:9000
 # Current minor features
 * File renaming
 * Return to file list from file view
-* User profile at top
 
 # Current major features
 

@@ -2,7 +2,7 @@
 @import views.html.helper._
 @import base._
 
-@main {
+@auth("Create repository") {
 <h1>Add a computer</h1>
 @request.flash.get("error").map { message =>
 <div class="alert-message warning">

@@ -2,7 +2,7 @@
 @import views.html.helper._
 @import base._
 
-@main {
+@main("Sign in") {
 <h1>Login</h1>
 @request.flash.get("error").map { message =>
 <div class="alert-message warning">

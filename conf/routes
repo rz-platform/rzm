@@ -16,6 +16,9 @@ POST     /signin              controllers.AuthController.authenticate
 GET     /signup              controllers.AuthController.register
 POST     /signup              controllers.AuthController.saveUser
 
+# Log out
+GET /logout controllers.AuthController.logout
+
 # Repositories list
 
 GET /repositories      controllers.RepositoryController.list

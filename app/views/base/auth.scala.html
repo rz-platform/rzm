@@ -1,0 +1,18 @@
+@(title: String)(body: Html)(implicit request: RequestWithUser)
+
+@main(title) {
+<header id="auth-header">
+    <div class="logo" id="logo">
+        RAZAM
+    </div>
+    <div class="auth-user">
+        @request.account.userName
+    </div>
+    <div class="sign-out">
+        <a href="@routes.AuthController.logout">Sign out</a>
+    </div>
+</header>
+<div class="container">
+    @body
+</div>
+}
