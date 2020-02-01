@@ -1,10 +1,12 @@
 package models
 
-import java.util.Date
+import java.util.{Calendar, Date}
+
 import javax.inject.{Inject, Singleton}
 import anorm.SqlParser.{get, scalar}
 import anorm._
 import play.api.db.DBApi
+import services.encryption.EncryptionService
 
 import scala.concurrent.Future
 
@@ -24,6 +26,21 @@ case class Account(
 object Account {
   implicit def toParameters: ToParameterList[Account] =
     Macro.toParameters[Account]
+
+  def buildNewAccount(userForm: AccountRegistrationData): Account = {
+    Account(
+      0,
+      userForm.userName,
+      userForm.fullName,
+      userForm.mailAddress,
+      EncryptionService.getHash(userForm.password),
+      isAdmin = false,
+      Calendar.getInstance().getTime,
+      None,
+      isRemoved = false,
+      None
+    )
+  }
 }
 
 object AccessLevel {

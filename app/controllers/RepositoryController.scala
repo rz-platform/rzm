@@ -62,10 +62,12 @@ class RepositoryController @Inject() (
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
-  class NoRepo extends Exception("Repository does not exist")
-  class NoCollaborator extends Exception("Access denied")
+  trait RepositoryAccessException
+  class NoRepo extends Exception("Repository does not exist") with RepositoryAccessException
+  class NoCollaborator extends Exception("Access denied") with RepositoryAccessException
 
-  def getOrElse[T](ifNot: Exception)(what: => Future[Option[T]]) = what.map(_.getOrElse(throw ifNot))
+  def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]) =
+    what.map(_.getOrElse(throw ifNot))
 
   def repositoryActionOn(username: String, repositoryName: String, minimumAccessLevel: Int = AccessLevel.canView) =
     new ActionRefiner[UserRequest, RepositoryRequest] {
@@ -93,7 +95,7 @@ class RepositoryController @Inject() (
               Left(NotFound((new NoCollaborator).getMessage))
             }
           })
-          .recover { case e: Exception => Left(NotFound(e.getMessage)) }
+          .recover { case e: Exception with RepositoryAccessException => Left(NotFound(e.getMessage)) }
       }
     }
 
@@ -127,10 +129,11 @@ class RepositoryController @Inject() (
             }
           }
           case other =>
-            Future(
-              Redirect(routes.RepositoryController.createRepository).flashing("error" -> s"Repository already exist")
+            val formBuiltFromRequest = createRepositoryForm.bindFromRequest
+            val newForm = createRepositoryForm.bindFromRequest.copy(
+              errors = formBuiltFromRequest.errors ++ Seq(FormError("name", "Repository already exists."))
             )
-
+            Future(BadRequest(html.createRepository(newForm)))
         }
       }
     )
@@ -321,47 +324,39 @@ class RepositoryController @Inject() (
 
   def addCollaborator(accountName: String, repositoryName: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit request =>
+      val redirect = Redirect(
+        routes.RepositoryController.addCollaborator(request.repositoryWithOwner.owner.userName,
+                                                    request.repositoryWithOwner.repository.name)
+      )
+
+      val formValidatedFunction = { collaboratorData: NewCollaboratorData =>
+        accountRepository
+          .findByLoginOrEmail(collaboratorData.emailOrLogin)
+          .flatMap {
+            case Some(futureCollaborator) =>
+              gitEntitiesRepository
+                .isUserCollaborator(request.repositoryWithOwner.repository, futureCollaborator.id)
+                .map {
+                  case None =>
+                    gitEntitiesRepository.createCollaborator(
+                      request.repositoryWithOwner.repository.id,
+                      futureCollaborator.id,
+                      collaboratorData.accessLevel.toInt
+                    )
+                  case Some(_) => ()
+                }
+              Future.successful { redirect }
+            case None =>
+              Future.successful { redirect.flashing("error" -> s"No such user") }
+          }
+      }
+
       addCollaboratorForm.bindFromRequest.fold(
         formWithErrors =>
           gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map { collaborators =>
             BadRequest(html.addCollaborator(formWithErrors, collaborators))
           },
-        collaboratorData => {
-          accountRepository
-            .findByLoginOrEmail(collaboratorData.emailOrLogin)
-            .flatMap {
-              case Some(accountToCollab) =>
-                gitEntitiesRepository
-                  .isUserCollaborator(request.repositoryWithOwner.repository, accountToCollab.id)
-                  .map {
-                    case None =>
-                      gitEntitiesRepository.createCollaborator(
-                        request.repositoryWithOwner.repository.id,
-                        accountToCollab.id,
-                        collaboratorData.accessLevel.toInt
-                      )
-                    case Some(collaborator) => ()
-                  }
-                Future.successful {
-                  Redirect(
-                    routes.RepositoryController.addCollaborator(
-                      request.repositoryWithOwner.owner.userName,
-                      request.repositoryWithOwner.repository.name
-                    )
-                  )
-                }
-              case None =>
-                Future.successful {
-                  Redirect(
-                    routes.RepositoryController.addCollaborator(
-                      request.repositoryWithOwner.owner.userName,
-                      request.repositoryWithOwner.repository.name
-                    )
-                  ).flashing("error" -> s"No such user")
-                }
-
-            }
-        }
+        formValidatedFunction
       )
     }
 }

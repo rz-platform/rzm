@@ -1,6 +1,6 @@
 package controllers
 
-import java.util.Calendar
+import scala.util.{Try, Success, Failure}
 import javax.inject.Inject
 import models.{Account, AccountLoginData, AccountRegistrationData, AccountRepository}
 import services.encryption._
@@ -36,58 +36,60 @@ class AuthController @Inject() (accountService: AccountRepository, cc: MessagesC
   }
 
   def saveUser = Action.async { implicit request =>
+    val formValidatedFunction = { user: AccountRegistrationData =>
+      accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
+        case None =>
+          val acc = Account.buildNewAccount(user)
+          accountService.insert(acc).map { accountId =>
+            Redirect(routes.RepositoryController.list)
+              .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
+          }
+        case _ =>
+          val formBuiltFromRequest = registerForm.bindFromRequest
+          val newForm = registerForm.bindFromRequest.copy(
+            errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "User name or email already exists."))
+          )
+          Future(BadRequest(html.userRegister(newForm)))
+      }
+    }
+
     registerForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
-      user => {
-        accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
-          case None =>
-            val acc = Account(
-              0,
-              user.userName,
-              user.fullName,
-              user.mailAddress,
-              EncryptionService.getHash(user.password),
-              isAdmin = false,
-              Calendar.getInstance().getTime,
-              None,
-              isRemoved = false,
-              None
-            )
-            accountService.insert(acc).map { accountId =>
-              Redirect(routes.RepositoryController.list)
-                .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
-            }
-          case (account) => Future(Redirect(routes.AuthController.register).flashing("error" -> "User already exist"))
-        }
-      }
+      formValidatedFunction
     )
   }
+
+  trait AuthException
+  class UserDoesNotExist extends Exception with AuthException
+  class WrongPassword extends Exception with AuthException
 
   def authenticate = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
       user => {
-        accountService.findByLoginOrEmail(user.userName).flatMap {
-          case Some(account) =>
-            if (EncryptionService.checkHash(user.password, account.password)) {
-              Future(
-                Redirect(routes.RepositoryController.list)
-                  .withSession(AuthController.SESSION_NAME -> account.id.toString)
-              )
-            } else {
-              Future.successful(
-                Redirect(routes.AuthController.login).withNewSession.flashing(
-                  "error" -> "Incorrect password."
+        accountService
+          .findByLoginOrEmail(user.userName)
+          .flatMap {
+            case Some(account) =>
+              if (EncryptionService.checkHash(user.password, account.password)) {
+                Future(
+                  Redirect(routes.RepositoryController.list)
+                    .withSession(AuthController.SESSION_NAME -> account.id.toString)
                 )
+              } else {
+                throw new WrongPassword
+              }
+            case _ =>
+              throw new UserDoesNotExist
+          }
+          .recover {
+            case e: Exception with AuthException =>
+              val formBuiltFromRequest = loginForm.bindFromRequest
+              val newForm = loginForm.bindFromRequest.copy(
+                errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "Check username of password"))
               )
-            }
-          case other =>
-            Future.successful(
-              Redirect(routes.AuthController.login).withNewSession.flashing(
-                "error" -> "Account does not exist."
-              )
-            )
-        }
+              BadRequest(html.userLogin(newForm))
+          }
       }
     )
   }
