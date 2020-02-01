@@ -267,14 +267,15 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL"""
-        select * from (
-          select * from repository
-          join collaborator
-          on collaborator.repositoryId = repository.id
-          and collaborator.userId = $accountId) as availableRepositories, collaborator
-        join account
-        on account.id = collaborator.userid
-        where collaborator.role = ${AccessLevel.owner}
+             select r.*, a.* from repository r
+             join collaborator c1
+             on r.id = c1.repositoryid
+             join collaborator c2
+             on r.id = c2.repositoryid and c2.role = 0
+             join account a
+             on a.id = c2.userid
+             where c1.userid = $accountId;
+             ;
       """.as(withOwner.*)
       }
     }(ec)
