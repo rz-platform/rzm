@@ -17,7 +17,7 @@ header#auth-header {
         line-height: 48px;
     }
 
-    .auth-user, .sign-out {
+    .auth-user, .sign-out, .repositories {
         height: 48px;
         line-height: 48px;
     }
@@ -26,7 +26,7 @@ header#auth-header {
         margin-left: auto;
     }
 
-    .sign-out {
+    .repositories, .sign-out {
         margin-left: 25px;
     }
 }

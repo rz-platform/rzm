@@ -8,6 +8,9 @@
     <div class="auth-user">
         @request.account.userName
     </div>
+    <div class="repositories">
+        <a href="@routes.RepositoryController.list">My repositories</a>
+    </div>
     <div class="sign-out">
         <a href="@routes.AuthController.logout">Sign out</a>
     </div>
