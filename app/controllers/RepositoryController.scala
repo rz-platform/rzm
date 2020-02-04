@@ -37,7 +37,7 @@ class RepositoryController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val gitHome = config.get[String]("git.path")
+  private val gitHome = config.get[String]("play.server.git.path")
 
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
