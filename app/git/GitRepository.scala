@@ -4,6 +4,7 @@ import models._
 import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveOutputStream}
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}
 
+import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
 import org.apache.commons.compress.utils.{IOUtils => CompressIOUtils}
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.input.BOMInputStream
@@ -578,12 +579,8 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   ): T = {
     val attrs = treeWalk.getAttributes
     val loader = git.getRepository.open(treeWalk.getObjectId(0))
-    if (!attrs.containsKey("filter") && attrs.get("filter").getValue != "lfs") {
-      Using.resource(loader.openStream()) { in =>
-        f(in)
-      }
-    } else {
-      throw new NoSuchElementException("LFS is not supported yet.")
+    Using.resource(loader.openStream()) { in =>
+      f(in)
     }
   }
 
@@ -595,56 +592,54 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
   }
 
-  private def archiveRepository(filename: String, path: String) = {
-    def archive(revision: String, archiveFormat: String, archive: ArchiveOutputStream)(
-      entryCreator: (String, Long, java.util.Date, Int) => ArchiveEntry
-    ): Unit = {
-      Using.resource(Git.open(repositoryDir)) { git =>
-        val oid = git.getRepository.resolve(revision)
-        val commit = getRevCommitFromId(git, oid)
-        val date = commit.getCommitterIdent.getWhen
-        val sha1 = oid.getName()
-        val repositorySuffix = (if (sha1.startsWith(revision)) sha1 else revision).replace('/', '-')
-        val pathSuffix = if (path.isEmpty) "" else s"-${path.replace('/', '-')}"
-        val baseName = repositoryName + "-" + repositorySuffix + pathSuffix
+  private def archiveRepo(path: String, revision: String, archive: ArchiveOutputStream)(
+    entryCreator: (String, Long, java.util.Date, Int) => ArchiveEntry
+  ): Unit = {
+    Using.resource(Git.open(repositoryDir)) { git =>
+      val oid = git.getRepository.resolve(revision)
+      val commit = getRevCommitFromId(git, oid)
+      val date = commit.getCommitterIdent.getWhen
+      val sha1 = oid.getName()
+      val repositorySuffix = (if (sha1.startsWith(revision)) sha1 else revision).replace('/', '-')
+      val pathSuffix = if (path.isEmpty) "" else s"-${path.replace('/', '-')}"
+      val baseName = repositoryName + "-" + repositorySuffix + pathSuffix
 
-        Using.resource(new TreeWalk(git.getRepository)) { treeWalk =>
-          treeWalk.addTree(commit.getTree)
-          treeWalk.setRecursive(true)
-          if (!path.isEmpty) {
-            treeWalk.setFilter(PathFilter.create(path))
-          }
-          if (treeWalk != null) {
-            while (treeWalk.next()) {
-              val entryPath =
-                if (path.isEmpty) baseName + "/" + treeWalk.getPathString
-                else path.split("/").last + treeWalk.getPathString.substring(path.length)
-              val mode = treeWalk.getFileMode.getBits
-              openFile(git, commit.getTree, treeWalk.getPathString) { in =>
-                val tempFile = File.createTempFile("gitbucket", ".archive")
-                val size = Using.resource(new FileOutputStream(tempFile)) { out =>
-                  CompressIOUtils.copy(
-                    EolStreamTypeUtil.wrapInputStream(
-                      in,
-                      EolStreamTypeUtil
-                        .detectStreamType(
-                          OperationType.CHECKOUT_OP,
-                          git.getRepository.getConfig.get(WorkingTreeOptions.KEY),
-                          treeWalk.getAttributes
-                        )
-                    ),
-                    out
-                  )
-                }
-
-                val entry: ArchiveEntry = entryCreator(entryPath, size, date, mode)
-                archive.putArchiveEntry(entry)
-                Using.resource(new FileInputStream(tempFile)) { in =>
-                  CompressIOUtils.copy(in, archive)
-                }
-                archive.closeArchiveEntry()
-                tempFile.delete()
+      Using.resource(new TreeWalk(git.getRepository)) { treeWalk =>
+        treeWalk.addTree(commit.getTree)
+        treeWalk.setRecursive(true)
+        if (!path.isEmpty) {
+          treeWalk.setFilter(PathFilter.create(path))
+        }
+        if (treeWalk != null) {
+          while (treeWalk.next()) {
+            val entryPath =
+              if (path.isEmpty) baseName + "/" + treeWalk.getPathString
+              else path.split("/").last + treeWalk.getPathString.substring(path.length)
+            val mode = treeWalk.getFileMode.getBits
+            openFile(git, commit.getTree, treeWalk.getPathString) { in =>
+              val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive")
+              val size = Using.resource(new FileOutputStream(tempFile)) { out =>
+                CompressIOUtils.copy(
+                  EolStreamTypeUtil.wrapInputStream(
+                    in,
+                    EolStreamTypeUtil
+                      .detectStreamType(
+                        OperationType.CHECKOUT_OP,
+                        git.getRepository.getConfig.get(WorkingTreeOptions.KEY),
+                        treeWalk.getAttributes
+                      )
+                  ),
+                  out
+                )
               }
+
+              val entry: ArchiveEntry = entryCreator(entryPath, size, date, mode)
+              archive.putArchiveEntry(entry)
+              Using.resource(new FileInputStream(tempFile)) { in =>
+                CompressIOUtils.copy(in, archive)
+              }
+              archive.closeArchiveEntry()
+              tempFile.delete()
             }
           }
         }
@@ -652,4 +647,17 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
   }
 
+  def createArchive(path: String, revision: String) = {
+    val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive.zip")
+    Using.resource(new ZipArchiveOutputStream(tempFile)) { zip =>
+      archiveRepo(path, revision, zip) { (path, size, date, mode) =>
+        val entry = new ZipArchiveEntry(path)
+        entry.setSize(size)
+        entry.setUnixMode(mode)
+        entry.setTime(date.getTime)
+        entry
+      }
+    }
+    tempFile
+  }
 }

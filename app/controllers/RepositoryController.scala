@@ -7,20 +7,20 @@ import java.util.Calendar
 import akka.stream.IOResult
 import akka.stream.scaladsl.{FileIO, Sink}
 import akka.util.ByteString
+import git.GitRepository
 import javax.inject.Inject
 import models._
-import play.api.data.Forms._
-import play.api.data._
-import play.api.mvc._
-import views._
-import play.api.Configuration
-import git.GitRepository
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.lib.{Constants, FileMode}
+import play.api.Configuration
+import play.api.data.Forms._
+import play.api.data._
 import play.api.i18n.MessagesApi
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
+import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
+import views._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -359,4 +359,17 @@ class RepositoryController @Inject() (
         formValidatedFunction
       )
     }
+
+  def downloadRepositoryArchive(accountName: String, repositoryName: String, revision: String = "master") = {
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
+      val gitRepository =
+        new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+
+      Ok.sendFile(
+        gitRepository.createArchive("", revision),
+        inline = false,
+        fileName = _ => repositoryName + "-" + revision + ".zip"
+      )
+    }
+  }
 }
