@@ -56,3 +56,8 @@ POST /repositories/:account/:repository/createItem controllers.RepositoryControl
 # Repository archive
 
 GET /repositories/:account/:repository/archive controllers.RepositoryController.downloadRepositoryArchive(account:String, repository:String, revision: String = "master")
+
+# Profile editing page
+
+GET /profile controllers.AuthController.profilePage
+POST /profile controllers.AuthController.editProfile
