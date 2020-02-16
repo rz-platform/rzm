@@ -51,6 +51,8 @@ object AccessLevel {
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, mailAddress: String)
 
+case class AccountData(userName: String, fullName: Option[String], mailAddress: String, description: Option[String])
+
 case class AccountLoginData(userName: String, password: String)
 
 @Singleton

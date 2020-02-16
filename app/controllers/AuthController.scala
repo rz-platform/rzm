@@ -1,16 +1,21 @@
 package controllers
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 import javax.inject.Inject
-import models.{Account, AccountLoginData, AccountRegistrationData, AccountRepository}
+import models.{Account, AccountData, AccountLoginData, AccountRegistrationData, AccountRepository}
 import services.encryption._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
 import views._
+
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthController @Inject() (accountService: AccountRepository, cc: MessagesControllerComponents)(
+class AuthController @Inject() (
+  accountService: AccountRepository,
+  userAction: UserInfoAction,
+  cc: MessagesControllerComponents
+)(
   implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
@@ -25,6 +30,15 @@ class AuthController @Inject() (accountService: AccountRepository, cc: MessagesC
       "password" -> nonEmptyText,
       "mailAddress" -> email
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
+  )
+
+  val userEditForm = Form(
+    mapping(
+      "userName" -> nonEmptyText,
+      "fullName" -> optional(text),
+      "mailAddress" -> email,
+      "description" -> optional(text)
+    )(AccountData.apply)(AccountData.unapply)
   )
 
   def login = Action { implicit request =>
@@ -98,6 +112,32 @@ class AuthController @Inject() (accountService: AccountRepository, cc: MessagesC
     Redirect(routes.AuthController.login).withNewSession.flashing(
       "success" -> "You are now logged out."
     )
+  }
+
+  def profilePage = userAction { implicit request =>
+    val filledForm = userEditForm.fill(
+      AccountData(request.account.userName,
+                  request.account.fullName,
+                  request.account.mailAddress,
+                  request.account.description)
+    )
+    Ok(html.userProfile(filledForm))
+  }
+
+  def editProfile = userAction.async { implicit request =>
+    userEditForm.bindFromRequest.fold(
+      formWithErrors => Future(BadRequest(html.userProfile(formWithErrors))),
+      accountData =>
+        accountService.findByLoginOrEmail("", accountData.mailAddress).flatMap {
+          case None =>
+            Future(Ok(html.userProfile(userEditForm)))
+          case _ =>
+            val formBuiltFromRequest = userEditForm.bindFromRequest
+            val newForm = userEditForm.bindFromRequest.copy(
+              errors = formBuiltFromRequest.errors ++ Seq(FormError("mailAddress", "Email already exists."))
+            )
+            Future(BadRequest(html.userProfile(newForm)))
+        })
   }
 }
 

@@ -6,7 +6,7 @@
         RAZAM
     </div>
     <div class="auth-user">
-        @request.account.userName
+        <a href="@routes.AuthController.profilePage">@request.account.userName</a>
     </div>
     <div class="repositories">
         <a href="@routes.RepositoryController.list">My repositories</a>
