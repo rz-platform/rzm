@@ -2,7 +2,7 @@ package controllers
 
 import scala.util.{Failure, Success, Try}
 import javax.inject.Inject
-import models.{Account, AccountData, AccountLoginData, AccountRegistrationData, AccountRepository}
+import models.{Account, AccountData, AccountLoginData, AccountRegistrationData, AccountRepository, PasswordData}
 import services.encryption._
 import play.api.data.Forms._
 import play.api.data._
@@ -39,6 +39,13 @@ class AuthController @Inject() (
       "mailAddress" -> email,
       "description" -> optional(text)
     )(AccountData.apply)(AccountData.unapply)
+  )
+
+  val updatePasswordForm = Form(
+    mapping(
+      "oldPassword" -> nonEmptyText,
+      "newPassword" -> nonEmptyText
+    )(PasswordData.apply)(PasswordData.unapply)
   )
 
   def login = Action { implicit request =>
@@ -121,23 +128,31 @@ class AuthController @Inject() (
                   request.account.mailAddress,
                   request.account.description)
     )
-    Ok(html.userProfile(filledForm))
+    Ok(html.userProfile(filledForm, updatePasswordForm))
   }
 
   def editProfile = userAction.async { implicit request =>
     userEditForm.bindFromRequest.fold(
-      formWithErrors => Future(BadRequest(html.userProfile(formWithErrors))),
+      formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
       accountData =>
         accountService.findByLoginOrEmail("", accountData.mailAddress).flatMap {
           case None =>
-            Future(Ok(html.userProfile(userEditForm)))
+            Future(Ok(html.userProfile(userEditForm, updatePasswordForm)))
           case _ =>
             val formBuiltFromRequest = userEditForm.bindFromRequest
             val newForm = userEditForm.bindFromRequest.copy(
               errors = formBuiltFromRequest.errors ++ Seq(FormError("mailAddress", "Email already exists."))
             )
-            Future(BadRequest(html.userProfile(newForm)))
+            Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
         })
+  }
+
+  def updatePassword = userAction.async { implicit request =>
+    updatePasswordForm.bindFromRequest.fold(
+      formWithErrors => Future(BadRequest(html.userProfile(userEditForm, formWithErrors))),
+      passwordData =>
+        Redirect(routes.AuthController.profilePage()).flashing("success" -> s"Password successfully updated")
+    )
   }
 }
 

@@ -1,4 +1,4 @@
-@(userEditForm: Form[AccountData])(implicit request: UserRequestHeader)
+@(userEditForm: Form[AccountData], passwordUpdateForm: Form[PasswordData])(implicit request: UserRequestHeader)
 @import views.html.helper._
 @import base._
 
@@ -19,5 +19,14 @@
     @inputText(userEditForm("description"), Symbol("_label") -> "Your background", Symbol("_help") -> "")
 </fieldset>
 <div class="actions"><input type="submit" value="Save data" class="btn primary"/></div>
+}
+
+@form(routes.AuthController.updatePassword()) {
+<fieldset>
+    @CSRF.formField
+    @inputPassword(passwordUpdateForm("currentPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
+    @inputPassword(passwordUpdateForm("newPassword"), Symbol("_label") -> "New Password", Symbol("_help") -> "")
+</fieldset>
+<div class="actions"><input type="submit" value="Update password" class="btn primary"/></div>
 }
 }
