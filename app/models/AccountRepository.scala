@@ -53,6 +53,8 @@ case class AccountRegistrationData(userName: String, fullName: Option[String], p
 
 case class AccountData(userName: String, fullName: Option[String], mailAddress: String, description: Option[String])
 
+case class PasswordData(oldPassword: String, newPassword: String)
+
 case class AccountLoginData(userName: String, password: String)
 
 @Singleton
