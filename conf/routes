@@ -62,3 +62,4 @@ GET /repositories/:account/:repository/archive controllers.RepositoryController.
 GET /profile controllers.AuthController.profilePage
 POST /profile controllers.AuthController.editProfile
 POST /profilePassword controllers.AuthController.updatePassword
+POST  /uploadProfilePage controllers.AuthController.uploadProfilePicture()

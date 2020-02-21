@@ -34,4 +34,14 @@
 </fieldset>
 <div class="actions"><input type="submit" value="Update password" class="btn primary"/></div>
 }
+
+@helper.form(action = routes.AuthController.uploadProfilePicture, Symbol("enctype") -> "multipart/form-data") {
+@CSRF.formField
+<input type="file" name="picture">
+
+<p>
+    <input type="submit">
+</p>
+
+}
 }
