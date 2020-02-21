@@ -59,7 +59,6 @@ case class AccountLoginData(userName: String, password: String)
 
 @Singleton
 class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionContext) {
-
   private val db = dbapi.database("default")
 
   /**
@@ -119,4 +118,15 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
+
+  def updatePassword(id: Long, newPasswordHash: String): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+          UPDATE account
+          SET password = {newPasswordHash}
+          WHERE account.id = {id}
+      """).on("newPasswordHash" -> newPasswordHash, "id" -> id).executeUpdate()
+      }
+    }(ec)
 }

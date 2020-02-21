@@ -10,6 +10,11 @@
 </div>
 }
 
+@request.flash.get("success").map { message =>
+<div class="alert-message warning">
+    <strong>Success!</strong> @message
+</div>
+}
 @form(routes.AuthController.editProfile()) {
 <fieldset>
     @CSRF.formField
@@ -24,7 +29,7 @@
 @form(routes.AuthController.updatePassword()) {
 <fieldset>
     @CSRF.formField
-    @inputPassword(passwordUpdateForm("currentPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
+    @inputPassword(passwordUpdateForm("oldPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
     @inputPassword(passwordUpdateForm("newPassword"), Symbol("_label") -> "New Password", Symbol("_help") -> "")
 </fieldset>
 <div class="actions"><input type="submit" value="Update password" class="btn primary"/></div>
