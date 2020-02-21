@@ -19,6 +19,8 @@ class AuthController @Inject() (
   implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
+  private val logger = play.api.Logger(this.getClass)
+
   val loginForm = Form(
     mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
   )
@@ -121,14 +123,14 @@ class AuthController @Inject() (
     )
   }
 
-  def profilePage = userAction { implicit request =>
-    val filledForm = userEditForm.fill(
-      AccountData(request.account.userName,
-                  request.account.fullName,
-                  request.account.mailAddress,
-                  request.account.description)
+  private def filledProfileForm(account: Account): Form[AccountData] = {
+    userEditForm.fill(
+      AccountData(account.userName, account.fullName, account.mailAddress, account.description)
     )
-    Ok(html.userProfile(filledForm, updatePasswordForm))
+  }
+
+  def profilePage = userAction { implicit request =>
+    Ok(html.userProfile(filledProfileForm(request.account), updatePasswordForm))
   }
 
   def editProfile = userAction.async { implicit request =>
@@ -144,14 +146,28 @@ class AuthController @Inject() (
               errors = formBuiltFromRequest.errors ++ Seq(FormError("mailAddress", "Email already exists."))
             )
             Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
-        })
+        }
+    )
   }
 
   def updatePassword = userAction.async { implicit request =>
     updatePasswordForm.bindFromRequest.fold(
-      formWithErrors => Future(BadRequest(html.userProfile(userEditForm, formWithErrors))),
-      passwordData =>
-        Redirect(routes.AuthController.profilePage()).flashing("success" -> s"Password successfully updated")
+      formWithErrors => Future(BadRequest(html.userProfile(filledProfileForm(request.account), formWithErrors))),
+      passwordData => {
+        if (EncryptionService.checkHash(passwordData.oldPassword, request.account.password)) {
+          val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
+          accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
+            Future(
+              Redirect(routes.AuthController.profilePage()).flashing("success" -> s"Password successfully updated")
+            )
+          }
+        } else {
+          val formBuiltFromRequest = updatePasswordForm.bindFromRequest
+          val newForm = updatePasswordForm.bindFromRequest.copy(
+            errors = formBuiltFromRequest.errors ++ Seq(FormError("oldPassword", "Current password is incorrect."))
+          )
+          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))        }
+      }
     )
   }
 }
