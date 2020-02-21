@@ -1,8 +1,11 @@
 package controllers
 
+import java.nio.file.Paths
+
 import scala.util.{Failure, Success, Try}
 import javax.inject.Inject
 import models.{Account, AccountData, AccountLoginData, AccountRegistrationData, AccountRepository, PasswordData}
+import play.api.Configuration
 import services.encryption._
 import play.api.data.Forms._
 import play.api.data._
@@ -14,12 +17,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthController @Inject() (
   accountService: AccountRepository,
   userAction: UserInfoAction,
+  config: Configuration,
   cc: MessagesControllerComponents
 )(
   implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
   private val logger = play.api.Logger(this.getClass)
+
+  private val appHome = config.get[String]("play.server.dir")
+  private val maxStaticSize = config.get[String]("play.server.media.max_size_bytes").toInt
 
   val loginForm = Form(
     mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
@@ -166,9 +173,47 @@ class AuthController @Inject() (
           val newForm = updatePasswordForm.bindFromRequest.copy(
             errors = formBuiltFromRequest.errors ++ Seq(FormError("oldPassword", "Current password is incorrect."))
           )
-          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))        }
+          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))
+        }
       }
     )
+  }
+
+  val allowedContentTypes = List("image/png", "image/jpeg")
+
+  trait FileUploadException
+  class WrongContentType extends Exception("Only images is allowed") with FileUploadException
+  class ExceededMaxSize extends Exception("Image bigger than a max size") with FileUploadException
+
+  def uploadProfilePicture = Action(parse.multipartFormData) { request =>
+    val redirect = Redirect(routes.AuthController.profilePage)
+    request.body
+      .file("picture")
+      .map { picture =>
+        // only get the last part of the filename
+        // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
+        val filename = Paths.get(picture.filename).getFileName
+        val fileSize = picture.fileSize
+        try {
+          val contentType = picture.contentType.getOrElse { throw new WrongContentType }
+
+          if (!(allowedContentTypes contains contentType)) {
+            throw new WrongContentType
+          }
+
+          if (fileSize > maxStaticSize) {
+            throw new ExceededMaxSize
+          }
+
+          picture.ref.copyTo(Paths.get(s"${appHome}/public/pictures/$filename"), replace = true)
+          redirect.flashing("success" -> "Profile picture updated")
+        } catch {
+          case exc: FileUploadException => redirect.flashing("error" -> exc.getMessage)
+        }
+      }
+      .getOrElse {
+        redirect.flashing("error" -> "Missing file")
+      }
   }
 }
 
