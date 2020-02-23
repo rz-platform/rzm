@@ -118,7 +118,6 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-
   def updatePassword(id: Long, newPasswordHash: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
@@ -129,4 +128,22 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       """).on("newPasswordHash" -> newPasswordHash, "id" -> id).executeUpdate()
       }
     }(ec)
+
+  def updateProfileInfo(id: Long, accountData: AccountData): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+          UPDATE account
+          SET fullName = {fullName},
+          mailAddress = {mailAddress},
+          description = {description}
+          WHERE account.id = {id}
+      """).on("fullName" -> accountData.fullName,
+              "mailAddress" -> accountData.mailAddress,
+              "description" -> accountData.description,
+              "id" -> id)
+          .executeUpdate()
+      }
+    }(ec)
+
 }

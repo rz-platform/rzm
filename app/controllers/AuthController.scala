@@ -140,20 +140,33 @@ class AuthController @Inject() (
     Ok(html.userProfile(filledProfileForm(request.account), updatePasswordForm))
   }
 
+  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] = {
+    if (currentEmail != newEmail) {
+      accountService.findByLoginOrEmail("", newEmail).flatMap {
+        case Some(_) => Future(false)
+        case None => Future(true)
+      }
+    } else Future(true)
+  }
+
   def editProfile = userAction.async { implicit request =>
     userEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
-      accountData =>
-        accountService.findByLoginOrEmail("", accountData.mailAddress).flatMap {
-          case None =>
-            Future(Ok(html.userProfile(userEditForm, updatePasswordForm)))
-          case _ =>
+      accountData => {
+        isEmailAvailable(request.account.mailAddress, accountData.mailAddress).flatMap { available =>
+          if (available) {
+            accountService.updateProfileInfo(request.account.id, accountData).flatMap { _ =>
+              Future(Ok(html.userProfile(userEditForm.bindFromRequest, updatePasswordForm)))
+            }
+          } else {
             val formBuiltFromRequest = userEditForm.bindFromRequest
             val newForm = userEditForm.bindFromRequest.copy(
               errors = formBuiltFromRequest.errors ++ Seq(FormError("mailAddress", "Email already exists."))
             )
             Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
+          }
         }
+      }
     )
   }
 

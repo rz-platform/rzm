@@ -18,7 +18,7 @@
 @form(routes.AuthController.editProfile()) {
 <fieldset>
     @CSRF.formField
-    @inputText(userEditForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("disabled") -> true)
+    @inputText(userEditForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("readonly") -> "readonly")
     @inputText(userEditForm("fullName"), Symbol("_label") -> "Ful name", Symbol("_help") -> "")
     @inputText(userEditForm("mailAddress"), Symbol("_label") -> "Mail address", Symbol("_help") -> "")
     @inputText(userEditForm("description"), Symbol("_label") -> "Your background", Symbol("_help") -> "")
