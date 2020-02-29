@@ -142,7 +142,7 @@ class RepositoryController @Inject() (
                     .flashing("success" -> s"Repository created")
                 }
             }
-          case other =>
+          case Some(_) =>
             val formBuiltFromRequest = createRepositoryForm.bindFromRequest
             val newForm = createRepositoryForm.bindFromRequest.copy(
               errors = formBuiltFromRequest.errors ++ Seq(FormError("name", "Repository already exists."))
