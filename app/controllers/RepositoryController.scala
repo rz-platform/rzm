@@ -41,19 +41,19 @@ class RepositoryController @Inject() (
 
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
-  val createRepositoryForm = Form(
+  val createRepositoryForm: Form[RepositoryData] = Form(
     mapping("name" -> nonEmptyText, "description" -> optional(text))(RepositoryData.apply)(RepositoryData.unapply)
   )
 
-  val addCollaboratorForm = Form(
+  val addCollaboratorForm: Form[NewCollaboratorData] = Form(
     mapping("emailOrLogin" -> nonEmptyText, "accessLevel" -> nonEmptyText)(NewCollaboratorData.apply)(
       NewCollaboratorData.unapply
     )
   )
 
-  val addNewItemToRepForm = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply))
+  val addNewItemToRepForm: Form[NewItem] = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply))
 
-  val editorForm = Form(
+  val editorForm: Form[EditedItem] = Form(
     mapping(
       "content" -> nonEmptyText,
       "message" -> nonEmptyText,
@@ -66,10 +66,14 @@ class RepositoryController @Inject() (
   class NoRepo extends Exception("Repository does not exist") with RepositoryAccessException
   class NoCollaborator extends Exception("Access denied") with RepositoryAccessException
 
-  def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]) =
+  def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]): Future[T] =
     what.map(_.getOrElse(throw ifNot))
 
-  def repositoryActionOn(username: String, repositoryName: String, minimumAccessLevel: Int = AccessLevel.canView) =
+  def repositoryActionOn(
+    username: String,
+    repositoryName: String,
+    minimumAccessLevel: Int = AccessLevel.canView
+  ): ActionRefiner[UserRequest, RepositoryRequest] =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
@@ -113,7 +117,7 @@ class RepositoryController @Inject() (
       formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
       repository => {
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
-          case None => {
+          case None =>
             val now = Calendar.getInstance().getTime
             val repo = Repository(0, repository.name, true, repository.description, "master", now, now)
             gitEntitiesRepository.insertRepository(repo).flatMap { repositoryId: Option[Long] =>
@@ -127,7 +131,6 @@ class RepositoryController @Inject() (
                     .flashing("success" -> s"Repository created")
                 }
             }
-          }
           case other =>
             val formBuiltFromRequest = createRepositoryForm.bindFromRequest
             val newForm = createRepositoryForm.bindFromRequest.copy(
@@ -193,7 +196,6 @@ class RepositoryController @Inject() (
                     )
                   }
                 }
-                val emptyArray = Array.empty[Byte]
                 builder.add(
                   gitRepository
                     .createDirCacheEntry(fName, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
@@ -229,7 +231,7 @@ class RepositoryController @Inject() (
     userAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
         addNewItemToRepForm.bindFromRequest.fold(
-          formWithErrors =>
+          _ =>
             Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
               .flashing("error" -> s"Name is required"),
           newItem => {
@@ -329,19 +331,23 @@ class RepositoryController @Inject() (
                                                     request.repositoryWithOwner.repository.name)
       )
 
-      val formValidatedFunction = { collaboratorData: NewCollaboratorData =>
+      val formValidatedFunction = { data: NewCollaboratorData =>
         accountRepository
-          .findByLoginOrEmail(collaboratorData.emailOrLogin)
+          .findByLoginOrEmail(data.emailOrLogin)
           .flatMap {
             case Some(futureCollaborator) =>
               gitEntitiesRepository
                 .isUserCollaborator(request.repositoryWithOwner.repository, futureCollaborator.id)
                 .map {
                   case None =>
+                    val accessLevel =
+                      if (AccessLevel.map.contains(data.accessLevel)) AccessLevel.map(data.accessLevel)
+                      else AccessLevel.canView
+
                     gitEntitiesRepository.createCollaborator(
                       request.repositoryWithOwner.repository.id,
                       futureCollaborator.id,
-                      collaboratorData.accessLevel.toInt
+                      accessLevel
                     )
                   case Some(_) => ()
                 }

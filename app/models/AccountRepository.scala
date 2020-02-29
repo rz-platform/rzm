@@ -2,12 +2,13 @@ package models
 
 import java.util.{Calendar, Date}
 
-import javax.inject.{Inject, Singleton}
-import anorm.SqlParser.{get, scalar}
+import anorm.SqlParser.get
 import anorm._
+import javax.inject.{Inject, Singleton}
 import play.api.db.DBApi
 import services.encryption.EncryptionService
 
+import scala.collection.immutable.HashMap
 import scala.concurrent.Future
 
 case class Account(
@@ -47,6 +48,11 @@ object AccessLevel {
   val owner = 0
   val canEdit = 20
   val canView = 30
+
+  val canEditName = "edit"
+  val canViewName = "view"
+
+  val map: HashMap[String, Int] = HashMap((canEditName,canEdit),(canViewName,canView))
 }
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, mailAddress: String)
