@@ -1,6 +1,7 @@
 package controllers
 
 import java.io.File
+import java.net.URLDecoder
 import java.nio.file.{Files, Path}
 import java.util.Calendar
 
@@ -51,7 +52,15 @@ class RepositoryController @Inject() (
     )
   )
 
-  val addNewItemToRepForm: Form[NewItem] = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply))
+  val excludedSymbolsForFileName = List('/', ':', '#')
+
+  val addNewItemToRepForm: Form[NewItem] = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply).verifying(
+    "",
+    fields =>
+      fields match {
+        case data => !excludedSymbolsForFileName.exists(data.name contains _)
+      })
+  )
 
   val editorForm: Form[EditedItem] = Form(
     mapping(
@@ -61,6 +70,8 @@ class RepositoryController @Inject() (
       "oldFileName" -> nonEmptyText
     )(EditedItem.apply)(EditedItem.unapply)
   )
+
+  private def decodeNameFromUrl(key: String): String = URLDecoder.decode(key.replace("+", " "), "utf-8")
 
   trait RepositoryAccessException
   class NoRepo extends Exception("Repository does not exist") with RepositoryAccessException
@@ -150,7 +161,7 @@ class RepositoryController @Inject() (
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val gitData = git
-        .fileList(request.repositoryWithOwner.repository, path = path)
+        .fileList(request.repositoryWithOwner.repository, path = decodeNameFromUrl(path))
         .getOrElse(RepositoryGitData(List(), None))
       Ok(html.viewRepository(addNewItemToRepForm, gitData, path))
     }
@@ -158,7 +169,7 @@ class RepositoryController @Inject() (
   def blob(accountName: String, repositoryName: String, rev: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(path, rev).get
+      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
       Ok(html.viewBlob(blobInfo, path))
     }
 
@@ -166,8 +177,8 @@ class RepositoryController @Inject() (
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
       val rev = "master" // TODO: Replace with rev
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(path, rev).get
-      Ok(html.editFile(editorForm, blobInfo, path))
+      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
+      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path)))
     }
 
   def edit(accountName: String, repositoryName: String, path: String) =
@@ -222,7 +233,6 @@ class RepositoryController @Inject() (
       val accumulator: Accumulator[ByteString, IOResult] = Accumulator(fileSink)
       accumulator.map {
         case IOResult(count, status) =>
-          logger.info(s"count = $count, status = $status")
           FilePart(partName, filename, contentType, path.toFile)
       }
   }
@@ -242,7 +252,7 @@ class RepositoryController @Inject() (
 
             // TODO: replace with rev
             gitRepository
-              .commitFiles("master", ".", "Added file", request.account) {
+              .commitFiles("master", path, "Added file", request.account) {
                 case (git, headTip, builder, inserter) =>
                   gitRepository.processTree(git, headTip) { (path, tree) =>
                     if (!fName.contains(path)) {
