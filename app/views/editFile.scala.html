@@ -2,6 +2,7 @@
 
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @auth("Edit file") {
 @request.flash.get("success").map { message =>
@@ -15,6 +16,8 @@
     <strong>Error!</strong> @message
 </div>
 }
+
+@repositoryHeader()
 
 @form(routes.RepositoryController.edit(request.repositoryWithOwner.owner.userName,
     request.repositoryWithOwner.repository.name, path), Symbol("enctype") -> "multipart/form-data") {

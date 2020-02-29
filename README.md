@@ -38,28 +38,4 @@ Run app in live-reload mode:
 sbt run
 ```
 
-Open localhost:9000
-
-# Roadmap
-
-## Ready
-
-* SignIn / SignUp
-* Git-repository creation
-* File tree viewing
-* File view
-* File upload
-* Add collaborators
-* Folder/file creation
-* Add editing
-
-# Current minor features
-* File renaming
-* Return to file list from file view
-
-# Current major features
-
-* User profile editing
-* Repository downloading
-* TeX creation Wizard
-* Tex builder agent
+Open http://localhost:9000

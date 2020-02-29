@@ -1,0 +1,21 @@
+.repository-actions {
+    .tooltip {
+        position:absolute;
+        margin:5px;
+        padding: 20px;
+        width:350px;
+        border:1px solid black;
+        display: none;
+        background-color: #FFF;
+    }
+
+    .repository-actions-with-tooltip {
+        display: inline-block;
+    }
+}
+
+.file-list {
+    span.time {
+        color: #CCC;
+    }
+}

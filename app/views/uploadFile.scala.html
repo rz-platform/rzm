@@ -1,9 +1,10 @@
 @()(implicit request: RepositoryRequestHeader)
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @auth("Upload file") {
-<h1>File upload</h1>
+@repositoryHeader()
 
 @form(routes.RepositoryController.upload(request.repositoryWithOwner.owner.userName,
         request.repositoryWithOwner.repository.name), Symbol("enctype") -> "multipart/form-data") {

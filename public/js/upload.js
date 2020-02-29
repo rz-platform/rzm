@@ -1,3 +1,5 @@
+"use strict";
+
 document.getElementById("filepicker").addEventListener("change", function(event) {
   let output = document.getElementById("listing");
   let files = event.target.files;

@@ -1,0 +1,3 @@
+@()(implicit request: RepositoryRequestHeader)
+
+<h1><a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, ".")">@request.repositoryWithOwner.repository.name</a></h1>

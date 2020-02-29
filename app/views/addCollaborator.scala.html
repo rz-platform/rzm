@@ -2,6 +2,7 @@
 
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @auth("Repository collaborators") {
 @request.flash.get("success").map { message =>
@@ -14,8 +15,9 @@
     <strong>Error!</strong> @message
 </div>
 }
+@repositoryHeader()
 
-    @collaborators.map {
+@collaborators.map {
     case (collaborator) => {
     <p>@collaborator.userName</p>
     }

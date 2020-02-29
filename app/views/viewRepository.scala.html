@@ -1,6 +1,7 @@
 @(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String)(implicit request: RepositoryRequestHeader )
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @auth(request.repositoryWithOwner.repository.name) {
 @request.flash.get("success").map { message =>
@@ -15,49 +16,64 @@
 </div>
 }
 
+@repositoryHeader()
 
-<a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
-<a class="button" href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Collaborators</a>
-<a class="button" href="@routes.RepositoryController.downloadRepositoryArchive(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Download .zip archive</a>
+<div class="repository-actions">
+    <a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
+    <a class="button" href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Collaborators</a>
+    <a class="button" href="@routes.RepositoryController.downloadRepositoryArchive(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Download .zip archive</a>
 
+    <div class="repository-actions-with-tooltip">
+        <button id="create-folder-tooltip">Create folder</button>
 
-<div class="add-folder-form">
-    @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
-    <fieldset>
-        @CSRF.formField
-        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
-    </fieldset>
-    <div class="actions">
-        <input type="submit" value="Create folder" class="btn primary"/></div>
-    }
+        <div id="add-folder-form"  class="tooltip">
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
+        <fieldset>
+            @CSRF.formField
+            @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
+        </fieldset>
+        <div class="actions">
+            <input type="submit" value="Create folder" class="btn primary"/></div>
+        }
+        </div>
+    </div>
+
+    <div class="repository-actions-with-tooltip">
+        <button id="create-file-tooltip">Create file</button>
+
+        <div id="add-file-form" class="tooltip">
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
+        <fieldset>
+            @CSRF.formField
+            @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
+        </fieldset>
+        <div class="actions">
+            <input type="submit" value="Create file" class="btn primary"/></div>
+        }
+        </div>
+    </div>
 </div>
 
-<div class="add-file-form">
-    @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
-    <fieldset>
-        @CSRF.formField
-        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
-    </fieldset>
-    <div class="actions">
-        <input type="submit" value="Create file" class="btn primary"/></div>
-    }
-</div>
-
-<a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
+<div class="file-list">
     @gitData.files.map {
         case (file) => {
-            @if(file.isDirectory) {
                 <p>
-                    FLDR: <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">@file.name</a>
+                    @if(file.isDirectory) {
+                        <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">
+                        <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
+                        } else {
+                        <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
+                        <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
+                        }
+                        @file.name
+                        </a>
+
+                <span class="time">@file.time</span>
                 </p>
-            } else {
-                <p>
-                    FILE: <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
-                    @file.name
-                </a></p>
-            }
-            <p>@file.time</p>
-            <p>---</p>
         }
     }
+</div>
+
+<link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/repo.css")"/>
+<script src="@routes.Assets.at("dist/js/repo.js")" type="text/javascript"></script>
 }
