@@ -13,7 +13,7 @@ Package *git* contains parts of code inherited from GitBucket project.
 
 *In heavy development*
 
-# Local development
+## Local development
 
 Init psql db:
 
@@ -45,3 +45,7 @@ Run tests:
 ```
 sbt test
 ```
+
+## Copyright
+
+Copyright 2020 Eugene Bosiakov (@bosiakov). All rights reserved.
