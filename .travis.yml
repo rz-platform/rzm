@@ -1,0 +1,11 @@
+language: scala
+scala:
+  - 2.13
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database razam;' -U postgres
+  - psql -c "create user razam with encrypted password 'razam';" -U postgres
+  - psql -c "grant all privileges on database razam to razam;" -U postgres
+script:
+  sbt ++$TRAVIS_SCALA_VERSION test
