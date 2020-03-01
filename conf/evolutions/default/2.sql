@@ -7,4 +7,4 @@ insert into account(userName, fullName, mailAddress, password, isAdmin, register
 
 # --- !Downs
 
-delete from collaborator, account, repository;
+TRUNCATE TABLE collaborator, account, repository RESTART IDENTITY;
