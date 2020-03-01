@@ -1,4 +1,4 @@
-Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE)
+Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE) [![Build Status](https://travis-ci.org/razamgit/razam.svg?branch=master)](https://travis-ci.org/razamgit/razam)
 =====
 
 *RZ* (Razam) is web-based Git repository hosting (much like GitHub) for writing science papers in a browser and full integration with TeX.
@@ -39,3 +39,9 @@ sbt run
 ```
 
 Open http://localhost:9000
+
+Run tests:
+
+```
+sbt test
+```
