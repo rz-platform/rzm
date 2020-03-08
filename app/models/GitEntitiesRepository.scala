@@ -14,9 +14,9 @@ import scala.concurrent.Future
 case class Repository(
   id: Long,
   name: String,
-  isPrivate: Boolean,
-  description: Option[String],
-  defaultBranch: String,
+  isPrivate: Boolean = true,
+  description: String = "",
+  defaultBranch: String = "master",
   registeredDate: java.util.Date,
   lastActivityDate: java.util.Date
 )
@@ -164,7 +164,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     get[Long]("repository.id") ~
       get[String]("repository.name") ~
       get[Boolean]("repository.isPrivate") ~
-      get[Option[String]]("repository.description") ~
+      get[String]("repository.description") ~
       get[String]("repository.defaultBranch") ~
       get[Date]("repository.registeredDate") ~
       get[Date]("repository.lastActivityDate") map {

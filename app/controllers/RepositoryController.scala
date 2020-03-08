@@ -130,7 +130,7 @@ class RepositoryController @Inject() (
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
             val now = Calendar.getInstance().getTime
-            val repo = Repository(0, repository.name, true, repository.description, "master", now, now)
+            val repo = Repository(0, repository.name, true, repository.description.getOrElse(""), "master", now, now)
             gitEntitiesRepository.insertRepository(repo).flatMap { repositoryId: Option[Long] =>
               gitEntitiesRepository
                 .createCollaborator(repositoryId.get, request.account.id, 0)
