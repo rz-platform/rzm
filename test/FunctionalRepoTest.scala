@@ -1,5 +1,7 @@
 import java.sql.{Connection, Statement}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import controllers.{RepositoryController, routes}
 import git.GitRepository
@@ -56,9 +58,9 @@ class FunctionalRepoTest
         Statement.RETURN_GENERATED_KEYS
       )
     userPreparedStatement.executeUpdate()
-    val rs = userPreparedStatement.getGeneratedKeys()
+    val rs = userPreparedStatement.getGeneratedKeys
     rs.next()
-    Account(rs.getInt(1), userName, null, null, null, false, null, None, false, None)
+    Account(rs.getInt(1), userName, null, null, null, false, null)
   }
 
   "RepositoryController" must {
@@ -87,6 +89,8 @@ class FunctionalRepoTest
     }
 
     "Create file in repository" in {
+      implicit val sys = ActorSystem("MyTest")
+      implicit val mat = ActorMaterializer()
       val account = createUser()
       val repoId = getRandomString
 
@@ -100,21 +104,30 @@ class FunctionalRepoTest
       )
 
       await(controller.saveRepository().apply(request))
+      val logger = play.api.Logger(this.getClass)
 
       val newFileId = getRandomString
-      controller.addNewItem(account.userName, repoId, ".", isFolder = false).apply(addCSRFToken(
-        FakeRequest(routes.RepositoryController.addNewItem(account.userName, repoId, ".", isFolder = false))
-          .withFormUrlEncodedBody("name" -> newFileId)
-          .withSession(("user_id", account.id.toString))
-      ))
+      val answer: Accumulator[ByteString, Result] = controller
+        .addNewItem(account.userName, repoId, ".", isFolder = false)
+        .apply(
+          addCSRFToken(
+            FakeRequest(routes.RepositoryController.addNewItem(account.userName, repoId, ".", isFolder = false))
+              .withFormUrlEncodedBody("name" -> newFileId)
+              .withSession(("user_id", account.id.toString))
+          )
+        )
+
+      val runResult: Future[Result] = answer.run()
+      val opa: Result = await(runResult)
+      logger.info(opa.toString)
       val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
-      val logger = play.api.Logger(this.getClass)
       val gitData = git
-        .fileList(Repository(0, repoId, true, null, "master", null, null), path =".")
+        .fileList(Repository(0, repoId, true, null, "master", null, null), path = ".")
         .getOrElse(RepositoryGitData(List(), None))
 
       logger.info(gitData.files.toString())
-
+      logger.info(newFileId)
+      gitData.files.exists(_.name contains newFileId) must equal(true)
     }
   }
 }

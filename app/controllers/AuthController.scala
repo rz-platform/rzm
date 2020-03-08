@@ -132,7 +132,7 @@ class AuthController @Inject() (
 
   private def filledProfileForm(account: Account): Form[AccountData] = {
     userEditForm.fill(
-      AccountData(account.userName, account.fullName, account.mailAddress, account.description)
+      AccountData(account.userName, Some(account.fullName), account.mailAddress, Some(account.description))
     )
   }
 

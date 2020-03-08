@@ -14,14 +14,14 @@ import scala.concurrent.Future
 case class Account(
   id: Long,
   userName: String,
-  fullName: Option[String],
+  fullName: String = "",
   mailAddress: String,
   password: String,
-  isAdmin: Boolean,
+  isAdmin: Boolean = false,
   registeredDate: java.util.Date,
-  image: Option[String],
-  isRemoved: Boolean,
-  description: Option[String]
+  image: String = "",
+  isRemoved: Boolean = false,
+  description: String = ""
 )
 
 object Account {
@@ -32,14 +32,10 @@ object Account {
     Account(
       0,
       userForm.userName,
-      userForm.fullName,
+      userForm.fullName.getOrElse(""),
       userForm.mailAddress,
       EncryptionService.getHash(userForm.password),
-      isAdmin = false,
-      Calendar.getInstance().getTime,
-      None,
-      isRemoved = false,
-      None
+      registeredDate = Calendar.getInstance().getTime
     )
   }
 }
@@ -52,7 +48,7 @@ object AccessLevel {
   val canEditName = "edit"
   val canViewName = "view"
 
-  val map: HashMap[String, Int] = HashMap((canEditName,canEdit),(canViewName,canView))
+  val map: HashMap[String, Int] = HashMap((canEditName, canEdit), (canViewName, canView))
 }
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, mailAddress: String)
@@ -73,14 +69,14 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   private[models] val simple = {
     get[Long]("account.id") ~
       get[String]("account.userName") ~
-      get[Option[String]]("account.fullName") ~
+      get[String]("account.fullName") ~
       get[String]("account.mailAddress") ~
       get[String]("account.password") ~
       get[Boolean]("account.isAdmin") ~
       get[Date]("account.registeredDate") ~
-      get[Option[String]]("account.image") ~
+      get[String]("account.image") ~
       get[Boolean]("account.isRemoved") ~
-      get[Option[String]]("account.description") map {
+      get[String]("account.description") map {
       case id ~ userName ~ fullName ~ mailAddress ~ password ~ isAdmin ~ registeredDate ~ image ~ isRemoved ~ description =>
         Account(id, userName, fullName, mailAddress, password, isAdmin, registeredDate, image, isRemoved, description)
     }
@@ -144,9 +140,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
           mailAddress = {mailAddress},
           description = {description}
           WHERE account.id = {id}
-      """).on("fullName" -> accountData.fullName,
+      """).on("fullName" -> accountData.fullName.getOrElse(""),
               "mailAddress" -> accountData.mailAddress,
-              "description" -> accountData.description,
+              "description" -> accountData.description.getOrElse(""),
               "id" -> id)
           .executeUpdate()
       }
