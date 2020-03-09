@@ -2,7 +2,6 @@ import java.sql.{Connection, Statement}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.util.ByteString
 import controllers.{RepositoryController, routes}
 import git.GitRepository
 import models.{Account, Repository, RepositoryGitData}
@@ -14,7 +13,6 @@ import org.scalatestplus.play.guice._
 import play.api.Configuration
 import play.api.db.DBApi
 import play.api.db.evolutions.Evolutions
-import play.api.libs.streams.Accumulator
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
@@ -71,7 +69,7 @@ class FunctionalRepoTest
       val controller = inject[RepositoryController]
 
       val request = addCSRFToken(
-        FakeRequest(routes.RepositoryController.saveRepository())
+        FakeRequest()
           .withFormUrlEncodedBody("name" -> repoId, "description" -> getRandomString)
           .withSession(("user_id", account.id.toString))
       )
@@ -89,44 +87,37 @@ class FunctionalRepoTest
     }
 
     "Create file in repository" in {
-      implicit val sys = ActorSystem("MyTest")
-      implicit val mat = ActorMaterializer()
+      implicit val sys: ActorSystem = ActorSystem("MyTest")
+      implicit val mat: ActorMaterializer = ActorMaterializer()
       val account = createUser()
       val repoId = getRandomString
+      val newFileId = getRandomString
 
       val config = inject[Configuration]
       val controller = inject[RepositoryController]
 
       val request = addCSRFToken(
-        FakeRequest(routes.RepositoryController.saveRepository())
+        FakeRequest()
           .withFormUrlEncodedBody("name" -> repoId, "description" -> getRandomString)
           .withSession(("user_id", account.id.toString))
       )
-
       await(controller.saveRepository().apply(request))
-      val logger = play.api.Logger(this.getClass)
 
-      val newFileId = getRandomString
-      val answer: Accumulator[ByteString, Result] = controller
-        .addNewItem(account.userName, repoId, ".", isFolder = false)
-        .apply(
-          addCSRFToken(
-            FakeRequest(routes.RepositoryController.addNewItem(account.userName, repoId, ".", isFolder = false))
-              .withFormUrlEncodedBody("name" -> newFileId)
-              .withSession(("user_id", account.id.toString))
-          )
-        )
+      val newFileRequest = addCSRFToken(
+        FakeRequest()
+          .withFormUrlEncodedBody("name" -> newFileId)
+          .withSession(("user_id", account.id.toString))
+      )
 
-      val runResult: Future[Result] = answer.run()
-      val opa: Result = await(runResult)
-      logger.info(opa.toString)
+      val result: Future[Result] =
+        call(controller.addNewItem(account.userName, repoId, ".", isFolder = false), newFileRequest)
+
+      await(result)
       val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
       val gitData = git
         .fileList(Repository(0, repoId, true, null, "master", null, null), path = ".")
         .getOrElse(RepositoryGitData(List(), None))
 
-      logger.info(gitData.files.toString())
-      logger.info(newFileId)
       gitData.files.exists(_.name contains newFileId) must equal(true)
     }
   }

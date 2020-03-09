@@ -238,8 +238,7 @@ class RepositoryController @Inject() (
   }
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean) =
-    userAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
         addNewItemToRepForm.bindFromRequest.fold(
           _ =>
             Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
