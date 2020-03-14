@@ -29,6 +29,9 @@ class FunctionalRepoTest
   implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
+  implicit val sys: ActorSystem = ActorSystem("RepositoryTest")
+  implicit val mat: ActorMaterializer = ActorMaterializer()
+
   def getRandomString: String = {
     java.util.UUID.randomUUID.toString
   }
@@ -39,9 +42,9 @@ class FunctionalRepoTest
     Evolutions.applyEvolutions(databaseApi.database("default"))
   }
 
-  override def afterAll(): Unit = {
-    Evolutions.cleanupEvolutions(databaseApi.database("default"))
-  }
+//  override def afterAll(): Unit = {
+//    Evolutions.cleanupEvolutions(databaseApi.database("default"))
+//  }
 
   def getDbConnection: Connection = {
     databaseApi.database("default").getConnection()
@@ -61,6 +64,35 @@ class FunctionalRepoTest
     Account(rs.getInt(1), userName, null, null, null, false, null)
   }
 
+  def createRepository(controller: RepositoryController, name: String, owner: Account): Result = {
+    val request = addCSRFToken(
+      FakeRequest(routes.RepositoryController.saveRepository())
+        .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
+        .withSession(("user_id", owner.id.toString))
+    )
+
+    await(controller.saveRepository().apply(request))
+  }
+
+  def createNewItem(
+    controller: RepositoryController,
+    name: String,
+    repositoryName: String,
+    creator: Account,
+    isFolder: Boolean
+  ): Result = {
+    val newFileRequest = addCSRFToken(
+      FakeRequest()
+        .withFormUrlEncodedBody("name" -> name)
+        .withSession(("user_id", creator.id.toString))
+    )
+
+    val result: Future[Result] =
+      call(controller.addNewItem(creator.userName, repositoryName, ".", isFolder = isFolder), newFileRequest)
+
+    await(result)
+  }
+
   "RepositoryController" must {
     "Create Repository" in {
       val account = createUser()
@@ -68,27 +100,16 @@ class FunctionalRepoTest
 
       val controller = inject[RepositoryController]
 
-      val request = addCSRFToken(
-        FakeRequest()
-          .withFormUrlEncodedBody("name" -> repoId, "description" -> getRandomString)
-          .withSession(("user_id", account.id.toString))
-      )
+      val result = createRepository(controller, repoId, account)
+      result.header.headers(LOCATION) must equal(routes.RepositoryController.list().toString)
 
-      val futureResult: Future[Result] = controller.saveRepository().apply(request)
-
-      whenReady(futureResult) { result =>
-        result.header.headers(LOCATION) must equal(routes.RepositoryController.list().toString)
-
-        val isRepoExist = getDbConnection
-          .prepareStatement(s"select 1 FROM repository WHERE name='$repoId'")
-          .executeQuery()
-        isRepoExist.next() must equal(true)
-      }
+      val isRepoExist = getDbConnection
+        .prepareStatement(s"select 1 FROM repository WHERE name='$repoId'")
+        .executeQuery()
+      isRepoExist.next() must equal(true)
     }
 
     "Create file in repository" in {
-      implicit val sys: ActorSystem = ActorSystem("MyTest")
-      implicit val mat: ActorMaterializer = ActorMaterializer()
       val account = createUser()
       val repoId = getRandomString
       val newFileId = getRandomString
@@ -96,29 +117,43 @@ class FunctionalRepoTest
       val config = inject[Configuration]
       val controller = inject[RepositoryController]
 
-      val request = addCSRFToken(
-        FakeRequest()
-          .withFormUrlEncodedBody("name" -> repoId, "description" -> getRandomString)
-          .withSession(("user_id", account.id.toString))
-      )
-      await(controller.saveRepository().apply(request))
+      createRepository(controller, repoId, account)
 
-      val newFileRequest = addCSRFToken(
-        FakeRequest()
-          .withFormUrlEncodedBody("name" -> newFileId)
-          .withSession(("user_id", account.id.toString))
-      )
+      createNewItem(controller, newFileId, repoId, account, isFolder = false)
 
-      val result: Future[Result] =
-        call(controller.addNewItem(account.userName, repoId, ".", isFolder = false), newFileRequest)
-
-      await(result)
       val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
       val gitData = git
         .fileList(Repository(0, repoId, true, null, "master", null, null), path = ".")
         .getOrElse(RepositoryGitData(List(), None))
 
       gitData.files.exists(_.name contains newFileId) must equal(true)
+    }
+
+    "Create folder in repository" in {
+      val account = createUser()
+      val repoId = getRandomString
+      val newFileId = getRandomString
+
+      val config = inject[Configuration]
+      val controller = inject[RepositoryController]
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, newFileId, repoId, account, isFolder = true)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val rootFileList = git
+        .fileList(repo, path = ".")
+        .getOrElse(RepositoryGitData(List(), None))
+
+      rootFileList.files.exists(_.name contains newFileId) must equal(true)
+
+      val folderFileList = git
+        .fileList(repo, path = newFileId)
+        .getOrElse(RepositoryGitData(List(), None))
+
+      folderFileList.files.exists(_.name contains ".gitkeep") must equal(true)
     }
   }
 }
