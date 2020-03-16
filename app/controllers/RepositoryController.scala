@@ -2,7 +2,7 @@ package controllers
 
 import java.io.File
 import java.net.URLDecoder
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util.Calendar
 
 import akka.stream.IOResult
@@ -54,12 +54,15 @@ class RepositoryController @Inject() (
 
   val excludedSymbolsForFileName = List('/', ':', '#')
 
-  val addNewItemToRepForm: Form[NewItem] = Form(mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply).verifying(
-    "",
-    fields =>
-      fields match {
-        case data => !excludedSymbolsForFileName.exists(data.name contains _)
-      })
+  val addNewItemToRepForm: Form[NewItem] = Form(
+    mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply).verifying("",
+                                                                              fields =>
+                                                                                fields match {
+                                                                                  case data =>
+                                                                                    !excludedSymbolsForFileName.exists(
+                                                                                      data.name contains _
+                                                                                    )
+                                                                                })
   )
 
   val editorForm: Form[EditedItem] = Form(
@@ -186,7 +189,7 @@ class RepositoryController @Inject() (
       val rev = "master" // TODO: Replace with rev
       val gitRepository =
         new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = gitRepository.blobFile(path, rev).get
+      val blobInfo = gitRepository.blobFile(decodeNameFromUrl(path), rev).get
 
       editorForm.bindFromRequest.fold(
         formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blobInfo, path))),
@@ -237,45 +240,59 @@ class RepositoryController @Inject() (
       }
   }
 
+  def buildFilePath(path: String, name: String, isFolder: Boolean): String = {
+    val decodedName = decodeNameFromUrl(name)
+    val decodedPath = decodeNameFromUrl(path)
+    if (isFolder && path == ".") {
+      Paths.get(decodedName, ".gitkeep").toString
+    } else if (isFolder && path != ".") {
+      Paths.get(decodedPath, name, ".gitkeep").toString
+    } else if (!isFolder && path == ".") {
+      decodedName
+    } else {
+      Paths.get(decodedPath, name).toString
+    }
+  }
+
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-        addNewItemToRepForm.bindFromRequest.fold(
-          _ =>
-            Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
-              .flashing("error" -> s"Name is required"),
-          newItem => {
-            val gitRepository =
-              new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+      addNewItemToRepForm.bindFromRequest.fold(
+        _ =>
+          Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
+            .flashing("error" -> s"Name is required"),
+        newItem => {
+          val gitRepository =
+            new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
 
-            val fName = if (isFolder) newItem.name + "/.gitkeep" else newItem.name
+          val fName = buildFilePath(path, newItem.name, isFolder)
 
-            // TODO: replace with rev
-            gitRepository
-              .commitFiles("master", path, "Added file", request.account) {
-                case (git, headTip, builder, inserter) =>
-                  gitRepository.processTree(git, headTip) { (path, tree) =>
-                    if (!fName.contains(path)) {
-                      builder.add(
-                        gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                      )
-                    }
-                  }
-                  val emptyArray = Array.empty[Byte]
-                  builder.add(
-                    gitRepository.createDirCacheEntry(
-                      fName,
-                      FileMode.REGULAR_FILE,
-                      inserter.insert(Constants.OBJ_BLOB, emptyArray)
+          // TODO: replace with rev
+          gitRepository
+            .commitFiles("master", path, "Added file", request.account) {
+              case (git, headTip, builder, inserter) =>
+                gitRepository.processTree(git, headTip) { (path, tree) =>
+                  if (!fName.contains(path)) {
+                    builder.add(
+                      gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
                     )
+                  }
+                }
+                val emptyArray = Array.empty[Byte]
+                builder.add(
+                  gitRepository.createDirCacheEntry(
+                    fName,
+                    FileMode.REGULAR_FILE,
+                    inserter.insert(Constants.OBJ_BLOB, emptyArray)
                   )
-                  builder.finish()
-              }
+                )
+                builder.finish()
+            }
 
-            Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
-              .flashing("success" -> s"Item is successfully created")
-          }
-        )
-      }
+          Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
+            .flashing("success" -> s"Item is successfully created")
+        }
+      )
+    }
 
   /**
    * Uploads a multipart file as a POST request.

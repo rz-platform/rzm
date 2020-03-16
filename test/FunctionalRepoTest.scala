@@ -13,7 +13,7 @@ import org.scalatestplus.play.guice._
 import play.api.Configuration
 import play.api.db.DBApi
 import play.api.db.evolutions.Evolutions
-import play.api.mvc.Result
+import play.api.mvc.{Flash, Result}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
@@ -79,7 +79,8 @@ class FunctionalRepoTest
     name: String,
     repositoryName: String,
     creator: Account,
-    isFolder: Boolean
+    isFolder: Boolean,
+    path: String
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
@@ -88,7 +89,7 @@ class FunctionalRepoTest
     )
 
     val result: Future[Result] =
-      call(controller.addNewItem(creator.userName, repositoryName, ".", isFolder = isFolder), newFileRequest)
+      call(controller.addNewItem(creator.userName, repositoryName, path, isFolder = isFolder), newFileRequest)
 
     await(result)
   }
@@ -109,51 +110,123 @@ class FunctionalRepoTest
       isRepoExist.next() must equal(true)
     }
 
+    def listFileInRepo(gitRepository: GitRepository, repository: Repository, path: String): RepositoryGitData = {
+      gitRepository
+        .fileList(repository, path = path)
+        .getOrElse(RepositoryGitData(List(), None))
+
+    }
+
     "Create file in repository" in {
       val account = createUser()
       val repoId = getRandomString
-      val newFileId = getRandomString
+      val fileId = getRandomString
 
       val config = inject[Configuration]
       val controller = inject[RepositoryController]
 
       createRepository(controller, repoId, account)
 
-      createNewItem(controller, newFileId, repoId, account, isFolder = false)
+      createNewItem(controller, fileId, repoId, account, isFolder = false, ".")
 
       val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
-      val gitData = git
-        .fileList(Repository(0, repoId, true, null, "master", null, null), path = ".")
-        .getOrElse(RepositoryGitData(List(), None))
+      val listRootFiles = listFileInRepo(git, Repository(0, repoId, true, null, "master", null, null), ".")
 
-      gitData.files.exists(_.name contains newFileId) must equal(true)
+      listRootFiles.files.exists(_.name contains fileId) must equal(true)
     }
 
     "Create folder in repository" in {
       val account = createUser()
       val repoId = getRandomString
-      val newFileId = getRandomString
+      val folderId = getRandomString
 
       val config = inject[Configuration]
       val controller = inject[RepositoryController]
 
       createRepository(controller, repoId, account)
 
-      createNewItem(controller, newFileId, repoId, account, isFolder = true)
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
 
       val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
       val repo = Repository(0, repoId, true, null, "master", null, null)
-      val rootFileList = git
-        .fileList(repo, path = ".")
-        .getOrElse(RepositoryGitData(List(), None))
+      val rootFileList = listFileInRepo(git, repo, ".")
 
-      rootFileList.files.exists(_.name contains newFileId) must equal(true)
+      rootFileList.files.exists(_.name contains folderId) must equal(true)
 
-      val folderFileList = git
-        .fileList(repo, path = newFileId)
-        .getOrElse(RepositoryGitData(List(), None))
-
+      val folderFileList = listFileInRepo(git, repo, folderId)
       folderFileList.files.exists(_.name contains ".gitkeep") must equal(true)
+    }
+
+    "Attempt to create file with forbidden symbols" in {
+      val account = createUser()
+
+      val controller = inject[RepositoryController]
+
+      val repoId = getRandomString
+      val fileId = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
+
+      createRepository(controller, repoId, account)
+
+      val result = createNewItem(controller, fileId, repoId, account, isFolder = false, ".")
+      result.header.status must equal(303)
+      result.newFlash.getOrElse(Flash(Map())).data.contains("error") must equal(true)
+    }
+
+    "Attempt to create folder with forbidden symbols" in {
+      val account = createUser()
+
+      val controller = inject[RepositoryController]
+
+      val repoId = getRandomString
+      val folderId = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
+
+      createRepository(controller, repoId, account)
+
+      val result = createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      result.header.status must equal(303)
+      result.newFlash.getOrElse(Flash(Map())).data.contains("error") must equal(true)
+    }
+
+    "Create file in subfolder" in {
+      val account = createUser()
+
+      val config = inject[Configuration]
+      val controller = inject[RepositoryController]
+
+      val repoId = getRandomString
+      val folderId = getRandomString
+      val fileInSubfolderId = getRandomString
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      createNewItem(controller, fileInSubfolderId, repoId, account, isFolder = true, folderId)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val folderFileList = listFileInRepo(git, repo, folderId)
+      folderFileList.files.exists(_.name contains fileInSubfolderId) must equal(true)
+    }
+
+    "Create folder in subfolder" in {
+      val account = createUser()
+
+      val config = inject[Configuration]
+      val controller = inject[RepositoryController]
+
+      val repoId = getRandomString
+      val folderId = getRandomString
+      val folderInSubfolderId = getRandomString
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      createNewItem(controller, folderInSubfolderId, repoId, account, isFolder = true, folderId)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val folderFileList = listFileInRepo(git, repo, folderId)
+      folderFileList.files.exists(_.name contains folderInSubfolderId) must equal(true)
     }
   }
 }

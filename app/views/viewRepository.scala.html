@@ -27,7 +27,7 @@
         <button id="create-folder-tooltip">Create folder</button>
 
         <div id="add-folder-form"  class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true), Symbol("enctype") -> "multipart/form-data") {
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
@@ -42,7 +42,7 @@
         <button id="create-file-tooltip">Create file</button>
 
         <div id="add-file-form" class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false), Symbol("enctype") -> "multipart/form-data") {
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
