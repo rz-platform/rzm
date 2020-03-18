@@ -36,15 +36,17 @@ class FunctionalRepoTest
     java.util.UUID.randomUUID.toString
   }
 
-  lazy val databaseApi: DBApi = inject[DBApi]
+  lazy val databaseApi: DBApi = app.injector.instanceOf[DBApi]
+  val config = app.injector.instanceOf[Configuration]
+  val controller = app.injector.instanceOf[RepositoryController]
 
   override def beforeAll(): Unit = {
     Evolutions.applyEvolutions(databaseApi.database("default"))
   }
 
-//  override def afterAll(): Unit = {
-//    Evolutions.cleanupEvolutions(databaseApi.database("default"))
-//  }
+  override def afterAll(): Unit = {
+    Evolutions.cleanupEvolutions(databaseApi.database("default"))
+  }
 
   def getDbConnection: Connection = {
     databaseApi.database("default").getConnection()
@@ -99,8 +101,6 @@ class FunctionalRepoTest
       val account = createUser()
       val repoId = getRandomString
 
-      val controller = inject[RepositoryController]
-
       val result = createRepository(controller, repoId, account)
       result.header.headers(LOCATION) must equal(routes.RepositoryController.list().toString)
 
@@ -122,9 +122,6 @@ class FunctionalRepoTest
       val repoId = getRandomString
       val fileId = getRandomString
 
-      val config = inject[Configuration]
-      val controller = inject[RepositoryController]
-
       createRepository(controller, repoId, account)
 
       createNewItem(controller, fileId, repoId, account, isFolder = false, ".")
@@ -139,9 +136,6 @@ class FunctionalRepoTest
       val account = createUser()
       val repoId = getRandomString
       val folderId = getRandomString
-
-      val config = inject[Configuration]
-      val controller = inject[RepositoryController]
 
       createRepository(controller, repoId, account)
 
@@ -160,8 +154,6 @@ class FunctionalRepoTest
     "Attempt to create file with forbidden symbols" in {
       val account = createUser()
 
-      val controller = inject[RepositoryController]
-
       val repoId = getRandomString
       val fileId = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
 
@@ -175,8 +167,6 @@ class FunctionalRepoTest
     "Attempt to create folder with forbidden symbols" in {
       val account = createUser()
 
-      val controller = inject[RepositoryController]
-
       val repoId = getRandomString
       val folderId = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
 
@@ -189,9 +179,6 @@ class FunctionalRepoTest
 
     "Create file in subfolder" in {
       val account = createUser()
-
-      val config = inject[Configuration]
-      val controller = inject[RepositoryController]
 
       val repoId = getRandomString
       val folderId = getRandomString
@@ -211,9 +198,6 @@ class FunctionalRepoTest
     "Create folder in subfolder" in {
       val account = createUser()
 
-      val config = inject[Configuration]
-      val controller = inject[RepositoryController]
-
       val repoId = getRandomString
       val folderId = getRandomString
       val folderInSubfolderId = getRandomString
@@ -227,6 +211,60 @@ class FunctionalRepoTest
       val repo = Repository(0, repoId, true, null, "master", null, null)
       val folderFileList = listFileInRepo(git, repo, folderId)
       folderFileList.files.exists(_.name contains folderInSubfolderId) must equal(true)
+    }
+
+    "Create folder with spaces in subfolder" in {
+      val account = createUser()
+
+      val repoId = getRandomString
+      val folderId = getRandomString + " " + getRandomString
+      val folderInSubfolderId = getRandomString + " " + getRandomString
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      createNewItem(controller, folderInSubfolderId, repoId, account, isFolder = true, folderId)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val folderFileList = listFileInRepo(git, repo, folderId)
+      folderFileList.files.exists(_.name contains folderInSubfolderId) must equal(true)
+    }
+
+    "Create file with spaces in subfolder1" in {
+      val account = createUser()
+
+      val repoId = getRandomString
+      val folderId = getRandomString + " " + getRandomString
+      val fileInSubfolderId = getRandomString + " " + getRandomString
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      createNewItem(controller, fileInSubfolderId, repoId, account, isFolder = true, folderId)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val folderFileList = listFileInRepo(git, repo, folderId)
+      folderFileList.files.exists(_.name contains fileInSubfolderId) must equal(true)
+    }
+
+    "Create file with spaces in subfolder" in {
+      val account = createUser()
+
+      val repoId = getRandomString
+      val folderId = getRandomString + " " + getRandomString
+      val fileInSubfolderId = getRandomString + " " + getRandomString
+
+      createRepository(controller, repoId, account)
+
+      createNewItem(controller, folderId, repoId, account, isFolder = true, ".")
+      createNewItem(controller, fileInSubfolderId, repoId, account, isFolder = true, folderId)
+
+      val git = new GitRepository(account, repoId, config.get[String]("play.server.git.path"))
+      val repo = Repository(0, repoId, true, null, "master", null, null)
+      val folderFileList = listFileInRepo(git, repo, folderId)
+      folderFileList.files.exists(_.name contains fileInSubfolderId) must equal(true)
     }
   }
 }
