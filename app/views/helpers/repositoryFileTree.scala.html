@@ -1,0 +1,10 @@
+@(tree: Map[String, String])(implicit request: RepositoryRequestHeader)
+
+
+@if(!tree.isEmpty) {
+    <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, ".")">@request.repositoryWithOwner.repository.name</a> /
+}
+
+@for((key, value) <- tree){
+    <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, value)">@key</a> /
+}
