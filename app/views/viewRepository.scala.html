@@ -1,4 +1,4 @@
-@(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String)(implicit request: RepositoryRequestHeader )
+@(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String, tree: Map[String, String])(implicit request: RepositoryRequestHeader )
 @import views.html.helper._
 @import base._
 @import helpers._
@@ -17,6 +17,8 @@
 }
 
 @repositoryHeader()
+
+@repositoryFileTree(tree)
 
 <div class="repository-actions">
     <a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>

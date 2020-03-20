@@ -55,14 +55,15 @@ class RepositoryController @Inject() (
   val excludedSymbolsForFileName = List('/', ':', '#')
 
   val addNewItemToRepForm: Form[NewItem] = Form(
-    mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply).verifying("",
-                                                                              fields =>
-                                                                                fields match {
-                                                                                  case data =>
-                                                                                    !excludedSymbolsForFileName.exists(
-                                                                                      data.name contains _
-                                                                                    )
-                                                                                })
+    mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply)
+      .verifying("",
+                 fields =>
+                   fields match {
+                     case data =>
+                       !excludedSymbolsForFileName.exists(
+                         data.name contains _
+                       )
+                   })
   )
 
   val editorForm: Form[EditedItem] = Form(
@@ -160,20 +161,34 @@ class RepositoryController @Inject() (
     Ok(html.createRepository(createRepositoryForm))
   }
 
+  private def buildTreeFromPath(path: String): Map[String, String] = {
+    if (path == ".") {
+      Map()
+    } else {
+      val fullPath = path.split("/")
+      var pathMap: Map[String, String] = Map()
+      fullPath.zipWithIndex.foreach {
+        case (element, index) =>
+          pathMap = pathMap ++ List((element, fullPath.slice(0, index + 1).mkString("/")))
+      }
+      pathMap
+    }
+  }
+
   def view(accountName: String, repositoryName: String, path: String = ".") =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val gitData = git
         .fileList(request.repositoryWithOwner.repository, path = decodeNameFromUrl(path))
         .getOrElse(RepositoryGitData(List(), None))
-      Ok(html.viewRepository(addNewItemToRepForm, gitData, path))
+      Ok(html.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.viewBlob(blobInfo, path))
+      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path)))
     }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
@@ -181,7 +196,7 @@ class RepositoryController @Inject() (
       val rev = "master" // TODO: Replace with rev
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path)))
+      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path), buildTreeFromPath(path)))
     }
 
   def edit(accountName: String, repositoryName: String, path: String) =
@@ -192,7 +207,7 @@ class RepositoryController @Inject() (
       val blobInfo = gitRepository.blobFile(decodeNameFromUrl(path), rev).get
 
       editorForm.bindFromRequest.fold(
-        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blobInfo, path))),
+        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blobInfo, path, buildTreeFromPath(path)))),
         editedFile => {
           val fName = editedFile.oldFileName
           val content = if (editedFile.content.nonEmpty) {
@@ -265,7 +280,6 @@ class RepositoryController @Inject() (
             new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
 
           val fName = buildFilePath(path, newItem.name, isFolder)
-
           // TODO: replace with rev
           gitRepository
             .commitFiles("master", path, "Added file", request.account) {

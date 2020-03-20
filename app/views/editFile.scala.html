@@ -1,4 +1,4 @@
-@(editorForm: Form[EditedItem], blob:Blob, path: String)(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path: String, tree: Map[String, String])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
@@ -18,6 +18,7 @@
 }
 
 @repositoryHeader()
+@repositoryFileTree(tree)
 
 @form(routes.RepositoryController.edit(request.repositoryWithOwner.owner.userName,
     request.repositoryWithOwner.repository.name, path), Symbol("enctype") -> "multipart/form-data") {
