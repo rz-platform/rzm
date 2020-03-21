@@ -161,17 +161,20 @@ class RepositoryController @Inject() (
     Ok(html.createRepository(createRepositoryForm))
   }
 
-  private def buildTreeFromPath(path: String): Map[String, String] = {
-    if (path == ".") {
-      Map()
-    } else {
-      val fullPath = path.split("/")
-      var pathMap: Map[String, String] = Map()
-      fullPath.zipWithIndex.foreach {
-        case (element, index) =>
-          pathMap = pathMap ++ List((element, fullPath.slice(0, index + 1).mkString("/")))
-      }
-      pathMap
+  private def buildTreeFromPath(path: String, isFile: Boolean = false): Array[PathBreadcrumb] = {
+    path match {
+      case "." => Array()
+      case _ =>
+        val fullPath = path.split("/")
+        val breadcrumbs = fullPath.zipWithIndex.map {
+          case (element, index) =>
+            PathBreadcrumb(element, fullPath.slice(0, index + 1).mkString("/"))
+        }
+        if (isFile) {
+          breadcrumbs.dropRight(1) // we don't need a file name in path
+        } else {
+          breadcrumbs
+        }
     }
   }
 
@@ -188,7 +191,7 @@ class RepositoryController @Inject() (
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path)))
+      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path, isFile = true)))
     }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
@@ -196,7 +199,7 @@ class RepositoryController @Inject() (
       val rev = "master" // TODO: Replace with rev
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path), buildTreeFromPath(path)))
+      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path), buildTreeFromPath(path, isFile = true)))
     }
 
   def edit(accountName: String, repositoryName: String, path: String) =

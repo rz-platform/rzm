@@ -1,4 +1,4 @@
-@(editorForm: Form[EditedItem], blob:Blob, path: String, tree: Map[String, String])(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path: String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
