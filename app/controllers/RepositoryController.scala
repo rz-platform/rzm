@@ -1,8 +1,7 @@
 package controllers
 
 import java.io.File
-import java.net.URLDecoder
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 import java.util.Calendar
 
 import akka.stream.IOResult
@@ -21,6 +20,7 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
+import services.path.PathService._
 import views._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -74,8 +74,6 @@ class RepositoryController @Inject() (
       "oldFileName" -> nonEmptyText
     )(EditedItem.apply)(EditedItem.unapply)
   )
-
-  private def decodeNameFromUrl(key: String): String = URLDecoder.decode(key.replace("+", " "), "utf-8")
 
   trait RepositoryAccessException
   class NoRepo extends Exception("Repository does not exist") with RepositoryAccessException
@@ -161,23 +159,6 @@ class RepositoryController @Inject() (
     Ok(html.createRepository(createRepositoryForm))
   }
 
-  private def buildTreeFromPath(path: String, isFile: Boolean = false): Array[PathBreadcrumb] = {
-    path match {
-      case "." => Array()
-      case _ =>
-        val fullPath = path.split("/")
-        val breadcrumbs = fullPath.zipWithIndex.map {
-          case (element, index) =>
-            PathBreadcrumb(element, fullPath.slice(0, index + 1).mkString("/"))
-        }
-        if (isFile) {
-          breadcrumbs.dropRight(1) // we don't need a file name in path
-        } else {
-          breadcrumbs
-        }
-    }
-  }
-
   def view(accountName: String, repositoryName: String, path: String = ".") =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
@@ -258,19 +239,7 @@ class RepositoryController @Inject() (
       }
   }
 
-  def buildFilePath(path: String, name: String, isFolder: Boolean): String = {
-    val decodedName = decodeNameFromUrl(name)
-    val decodedPath = decodeNameFromUrl(path)
-    if (isFolder && path == ".") {
-      Paths.get(decodedName, ".gitkeep").toString
-    } else if (isFolder && path != ".") {
-      Paths.get(decodedPath, name, ".gitkeep").toString
-    } else if (!isFolder && path == ".") {
-      decodedName
-    } else {
-      Paths.get(decodedPath, name).toString
-    }
-  }
+
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
