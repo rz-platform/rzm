@@ -1,13 +1,13 @@
-import java.sql.{Connection, Statement}
+import java.sql.Statement
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import controllers.{RepositoryController, routes}
 import git.GitRepository
 import models.{Account, Repository, RepositoryGitData}
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
@@ -25,6 +25,7 @@ class FunctionalRepoTest
     with BeforeAndAfterAll
     with GuiceOneAppPerSuite
     with Injecting
+    with PrivateMethodTester
     with ScalaFutures {
   implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
