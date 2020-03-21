@@ -97,6 +97,8 @@ case class Blob(
 
 case class RepositoryWithOwner(repository: Repository, owner: Account)
 
+case class PathBreadcrumb(name: String, path: String)
+
 /**
  * The commit data.
  *
