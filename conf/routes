@@ -37,6 +37,11 @@ GET /repositories/:account/:repository/tree/*path controllers.RepositoryControll
 
 GET /repositories/:account/:repository/blob/:rev/*path controllers.RepositoryController.blob(account:String, repository:String, rev: String, path: String)
 
+# Raw view
+
+GET /repositories/:account/:repository/raw/:rev/*path controllers.RepositoryController.raw(account:String, repository:String, rev: String, path: String)
+
+
 # File upload
 
 GET /repositories/:account/:repository/upload controllers.RepositoryController.uploadPage(account:String, repository:String)
