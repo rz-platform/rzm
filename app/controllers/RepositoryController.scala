@@ -132,7 +132,8 @@ class RepositoryController @Inject() (
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
             val now = Calendar.getInstance().getTime
-            val repo = Repository(0, repository.name, true, repository.description.getOrElse(""), "master", now, now)
+            val repo =
+              Repository(0, repository.name, isPrivate = true, repository.description.getOrElse(""), "master", now, now)
             gitEntitiesRepository.insertRepository(repo).flatMap { repositoryId: Option[Long] =>
               gitEntitiesRepository
                 .createCollaborator(repositoryId.get, request.account.id, 0)
@@ -140,7 +141,7 @@ class RepositoryController @Inject() (
                   val git =
                     new GitRepository(request.account, repository.name, gitHome)
                   git.create()
-                  Redirect(routes.RepositoryController.list)
+                  Redirect(routes.RepositoryController.list())
                     .flashing("success" -> s"Repository created")
                 }
             }
@@ -174,6 +175,14 @@ class RepositoryController @Inject() (
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
       Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path, isFile = true)))
     }
+
+  def raw(accountName: String, repositoryName: String, rev: String, path: String) =
+    userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
+      val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
+      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path, isFile = true)))
+    }
+
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
@@ -238,8 +247,6 @@ class RepositoryController @Inject() (
           FilePart(partName, filename, contentType, path.toFile)
       }
   }
-
-
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>

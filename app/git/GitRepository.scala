@@ -660,4 +660,22 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
     tempFile
   }
+
+  def responseRawFile(git: Git, objectId: ObjectId, path: String
+  ): Unit = {
+    getObjectLoaderFromId(git, objectId) { loader =>
+      contentType = getSafeMimeType(path)
+
+      if (loader.isLarge) {
+//        response.setContentLength(loader.getSize.toInt)
+//        loader.copyTo(response.outputStream)
+      } else {
+        val bytes = loader.getCachedBytes
+        val text = new String(bytes, "UTF-8")
+
+        response.setContentLength(loader.getSize.toInt)
+        response.getOutputStream.write(bytes)
+      }
+    }
+  }
 }
