@@ -7,18 +7,20 @@
 
 @repositoryFileTree(tree)
 
-<p><a  class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">Edit</a></p>
+<p><a class="button" href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">Raw</a>
+</p>
 
 @if(blob.content.viewType == "text"){
+<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">Edit</a></p>
     <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
 
 @if(blob.content.viewType == "image"){
-
+<img src="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)" />
 }
 
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
-
+<a href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">We can't dispay @blob.content.viewType files. Download by direct link.</a>
 }
 
 <link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/edit.css")"/>
