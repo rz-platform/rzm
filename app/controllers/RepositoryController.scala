@@ -5,16 +5,17 @@ import java.nio.file.{Files, Path}
 import java.util.Calendar
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Sink}
+import akka.stream.scaladsl.{FileIO, Sink, Source, StreamConverters}
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
 import org.apache.commons.io.FileUtils
-import org.eclipse.jgit.lib.{Constants, FileMode}
+import org.eclipse.jgit.lib.{Constants, FileMode, ObjectStream}
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
+import play.api.http.HttpEntity
 import play.api.i18n.MessagesApi
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
@@ -23,6 +24,7 @@ import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
 
+import scala.io.Source
 import scala.concurrent.{ExecutionContext, Future}
 
 class RepositoryController @Inject() (
@@ -172,61 +174,82 @@ class RepositoryController @Inject() (
   def blob(accountName: String, repositoryName: String, rev: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path, isFile = true)))
+      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+      blobInfo match {
+        case Some(blob) => Ok(html.viewBlob(blob, path, buildTreeFromPath(path, isFile = true)))
+        case None       => NotFound
+      }
     }
 
-  def raw(accountName: String, repositoryName: String, rev: String, path: String) =
+  def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.viewBlob(blobInfo, path, buildTreeFromPath(path, isFile = true)))
-    }
+      val raw = git.getRawFile("master", decodeNameFromUrl(path))
 
+      raw match {
+        case Some(rawFile) =>
+          val stream = StreamConverters.fromInputStream(() => rawFile.inputStream)
+          Result(
+            header = ResponseHeader(200, Map.empty),
+            body = HttpEntity.Streamed(stream, Some(rawFile.contentLength.toLong), Some(rawFile.contentType))
+          )
+        case None => NotFound
+      }
+
+    }
 
   def editFilePage(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
       val rev = "master" // TODO: Replace with rev
       val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev).get
-      Ok(html.editFile(editorForm, blobInfo, decodeNameFromUrl(path), buildTreeFromPath(path, isFile = true)))
+      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+      blobInfo match {
+        case Some(blob) =>
+          Ok(html.editFile(editorForm, blob, decodeNameFromUrl(path), buildTreeFromPath(path, isFile = true)))
+        case None => NotFound
+      }
     }
 
   def edit(accountName: String, repositoryName: String, path: String) =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
       val rev = "master" // TODO: Replace with rev
-      val gitRepository =
-        new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = gitRepository.blobFile(decodeNameFromUrl(path), rev).get
+      val gitRepository = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+      val blobInfo = gitRepository.blobFile(decodeNameFromUrl(path), rev)
 
-      editorForm.bindFromRequest.fold(
-        formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blobInfo, path, buildTreeFromPath(path)))),
-        editedFile => {
-          val fName = editedFile.oldFileName
-          val content = if (editedFile.content.nonEmpty) {
-            editedFile.content.getBytes()
-          } else {
-            Array.emptyByteArray
-          }
-          gitRepository
-            .commitFiles(rev, ".", editedFile.message, request.account) {
-              case (git, headTip, builder, inserter) =>
-                gitRepository.processTree(git, headTip) { (path, tree) =>
-                  if (!fName.contains(path)) {
-                    builder.add(
-                      gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                    )
-                  }
-                }
-                builder.add(
-                  gitRepository
-                    .createDirCacheEntry(fName, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
-                )
-                builder.finish()
-            }
+      val editFile = { editedFile: EditedItem =>
+        val fName = editedFile.oldFileName
+        val content = if (editedFile.content.nonEmpty) {
+          editedFile.content.getBytes()
+        } else {
+          Array.emptyByteArray
         }
-      )
-      Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path))
+        gitRepository
+          .commitFiles(rev, ".", editedFile.message, request.account) {
+            case (git, headTip, builder, inserter) =>
+              gitRepository.processTree(git, headTip) { (path, tree) =>
+                if (!fName.contains(path)) {
+                  builder.add(
+                    gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
+                  )
+                }
+              }
+              builder.add(
+                gitRepository
+                  .createDirCacheEntry(fName, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
+              )
+              builder.finish()
+          }
+      }
+
+      blobInfo match {
+        case Some(blob) =>
+          editorForm.bindFromRequest.fold(
+            formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path)))),
+            editFile
+          )
+          Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path))
+        case None => NotFound
+      }
     }
 
   /**

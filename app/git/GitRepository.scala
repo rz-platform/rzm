@@ -4,6 +4,7 @@ import models._
 import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveOutputStream}
 import java.io.{File, FileInputStream, FileOutputStream, InputStream}
 
+import akka.util.ByteString
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
 import org.apache.commons.compress.utils.{IOUtils => CompressIOUtils}
 import org.apache.commons.io.IOUtils
@@ -179,8 +180,8 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
    * Get objectLoader of the given object id from the Git repository.
    *
    * @param git the Git object
-   * @param id the object id
-   * @param f the function process ObjectLoader
+   * @param id  the object id
+   * @param f   the function process ObjectLoader
    * @return None if object does not exist
    */
   def getObjectLoaderFromId[A](git: Git, id: ObjectId)(f: ObjectLoader => A): Option[A] =
@@ -210,8 +211,8 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   /**
    * Get object content of the given object id as byte array from the Git repository.
    *
-   * @param git the Git object
-   * @param id the object id
+   * @param git            the Git object
+   * @param id             the object id
    * @param fetchLargeFile if false then returns None for the large file
    * @return the byte array of content or None if object does not exist
    */
@@ -647,6 +648,12 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
   }
 
+  def getSafeMimeType(name: String): String = {
+    getMimeType(name)
+      .replace("text/html", "text/plain")
+      .replace("image/svg+xml", "text/plain; charset=UTF-8")
+  }
+
   def createArchive(path: String, revision: String) = {
     val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive.zip")
     Using.resource(new ZipArchiveOutputStream(tempFile)) { zip =>
@@ -661,20 +668,13 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     tempFile
   }
 
-  def responseRawFile(git: Git, objectId: ObjectId, path: String
-  ): Unit = {
-    getObjectLoaderFromId(git, objectId) { loader =>
-      contentType = getSafeMimeType(path)
-
-      if (loader.isLarge) {
-//        response.setContentLength(loader.getSize.toInt)
-//        loader.copyTo(response.outputStream)
-      } else {
-        val bytes = loader.getCachedBytes
-        val text = new String(bytes, "UTF-8")
-
-        response.setContentLength(loader.getSize.toInt)
-        response.getOutputStream.write(bytes)
+  def getRawFile(rev: String, path: String): Option[RawFile] = {
+    Using.resource(Git.open(repositoryDir)) { git =>
+      val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
+      getPathObjectId(git, path, revCommit).flatMap { objectId =>
+        getObjectLoaderFromId(git, objectId) { loader =>
+          RawFile(loader.openStream(), loader.getSize.toInt,getSafeMimeType(path))
+        }
       }
     }
   }

@@ -1,7 +1,8 @@
 package models
 
 import java.util.Date
-import java.io.File
+import java.io.{File, InputStream}
+
 import javax.inject.{Inject, Singleton}
 import play.api.db.DBApi
 import anorm._
@@ -98,6 +99,8 @@ case class Blob(
 case class RepositoryWithOwner(repository: Repository, owner: Account)
 
 case class PathBreadcrumb(name: String, path: String)
+
+case class RawFile(inputStream: InputStream, contentLength: Integer, contentType: String)
 
 /**
  * The commit data.
