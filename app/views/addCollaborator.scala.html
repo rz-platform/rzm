@@ -4,17 +4,8 @@
 @import base._
 @import helpers._
 
-@auth("Repository collaborators") {
-@request.flash.get("success").map { message =>
-<div class="alert-message warning">
-    <strong>Done!</strong> @message
-</div>
-}
-@request.flash.get("error").map { message =>
-<div class="alert-message warning">
-    <strong>Error!</strong> @message
-</div>
-}
+@auth(request.messages("repository.collaborator.title")) {
+@notificationHeader()
 @repositoryHeader()
 
 @collaborators.map {
@@ -26,11 +17,18 @@
                                                         request.repositoryWithOwner.repository.name)) {
     <fieldset>
         @CSRF.formField
-        @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> "User login or email", Symbol("_help") -> "")
-        @select(field = addCollaboratorForm("accessLevel"), options = Seq(AccessLevel.canViewName -> "Read", AccessLevel.canEditName -> "Edit"), Symbol("_label") -> "Access Level")
+        @inputText(addCollaboratorForm("emailOrLogin"),
+        Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"),
+        Symbol("_help") -> "")
+
+        @select(field = addCollaboratorForm("accessLevel"),
+        options = Seq(AccessLevel.canViewName -> request.messages("repository.collaborator.accessLevel.read"),
+        AccessLevel.canEditName -> request.messages("repository.collaborator.accessLevel.write")),
+        Symbol("_label") -> request.messages("repository.collaborator.accessLevel")
+        )
     </fieldset>
     <div class="actions">
-        <input type="submit" value="Add collaborator" class="btn primary"/>
+        <input type="submit" value='@request.messages("repository.collaborator.button")' class="btn primary"/>
     </div>
     }
 }

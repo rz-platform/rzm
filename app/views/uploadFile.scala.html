@@ -3,7 +3,7 @@
 @import base._
 @import helpers._
 
-@auth("Upload file") {
+@auth(request.messages("repository.upload.title")) {
 @repositoryHeader()
 
 @form(routes.RepositoryController.upload(request.repositoryWithOwner.owner.userName,
@@ -13,12 +13,12 @@
 <ul id="listing"></ul>
 
 <input type="radio" id="single" name="input-type" value="single" checked>
-<label for="single">Files one by one</label>
+<label for="single">@request.messages("repository.upload.singleFile")</label>
 
 <input type="radio" id="directory" name="input-type" value="directory">
-<label for="directory">Complete Directory</label><br>
+<label for="directory">@request.messages("repository.upload.completeDirectory")</label><br>
 
-<input type="submit" />
+<input type="submit" value='@request.messages("repository.upload.submit")'/>
 }
 
 

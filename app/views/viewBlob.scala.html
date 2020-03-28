@@ -2,16 +2,21 @@
 @import base._
 @import helpers._
 
-@auth("View file") {
+@auth(request.messages("repository.viewFile.title")) {
 @repositoryHeader()
 
 @repositoryFileTree(tree)
 
-<p><a class="button" href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">Raw</a>
+<p><a class="button"
+      href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">
+    @request.messages("repository.viewFile.raw")
+</a>
 </p>
 
 @if(blob.content.viewType == "text"){
-<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">Edit</a></p>
+<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">
+    @request.messages("repository.viewFile.edit")
+</a></p>
     <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
 
@@ -20,7 +25,9 @@
 }
 
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
-<a href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">We can't dispay @blob.content.viewType files. Download by direct link.</a>
+<a href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">
+    @request.messages("repository.viewFile.cant")
+</a>
 }
 
 <link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/edit.css")"/>

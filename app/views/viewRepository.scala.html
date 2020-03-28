@@ -21,15 +21,25 @@
 @repositoryFileTree(tree)
 
 <div class="repository-actions">
-    <a class="button" href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Upload files</a>
-    <a class="button" href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Collaborators</a>
-    <a class="button" href="@routes.RepositoryController.downloadRepositoryArchive(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">Download .zip archive</a>
+    <a class="button"
+       href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">
+        @request.messages("repository.tree.uploadFiles")
+    </a>
+    <a class="button"
+       href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">
+        @request.messages("repository.tree.collaborators")
+    </a>
+    <a class="button"
+       href="@routes.RepositoryController.downloadRepositoryArchive(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">
+        @request.messages("repository.tree.downloads")
+    </a>
 
     <div class="repository-actions-with-tooltip">
-        <button id="create-folder-tooltip">Create folder</button>
+        <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>
 
         <div id="add-folder-form"  class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, true)) {
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName,
+            request.repositoryWithOwner.repository.name, path, true)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
@@ -44,7 +54,8 @@
         <button id="create-file-tooltip">Create file</button>
 
         <div id="add-file-form" class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path, false)) {
+        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName,
+            request.repositoryWithOwner.repository.name, path, false)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
@@ -59,19 +70,19 @@
 <div class="file-list">
     @gitData.files.map {
         case (file) => {
-                <p>
-                    @if(file.isDirectory) {
-                        <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">
-                        <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
-                        } else {
-                        <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
-                        <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
-                        }
-                        @file.name
-                        </a>
+            <p>
+                @if(file.isDirectory) {
+                <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">
+                <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
+                } else {
+                <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
+                <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
+                }
+                @file.name
+                </a>
 
                 <span class="time">@file.time</span>
-                </p>
+            </p>
         }
     }
 </div>
