@@ -2,7 +2,7 @@
 @import views.html.helper._
 @import base._
 
-@auth("My profile") {
+@auth(request.messages("profile.title")) {
 <h1>Profile edit</h1>
 @request.flash.get("error").map { message =>
 <div class="alert-message warning">
@@ -23,7 +23,7 @@
     @inputText(userEditForm("mailAddress"), Symbol("_label") -> "Mail address", Symbol("_help") -> "")
     @inputText(userEditForm("description"), Symbol("_label") -> "Your background", Symbol("_help") -> "")
 </fieldset>
-<div class="actions"><input type="submit" value="Save data" class="btn primary"/></div>
+<div class="actions"><input type="submit" value='@request.messages("profile.submitData")' class="btn primary"/></div>
 }
 
 @form(routes.AuthController.updatePassword()) {
@@ -32,15 +32,15 @@
     @inputPassword(passwordUpdateForm("oldPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
     @inputPassword(passwordUpdateForm("newPassword"), Symbol("_label") -> "New Password", Symbol("_help") -> "")
 </fieldset>
-<div class="actions"><input type="submit" value="Update password" class="btn primary"/></div>
+<div class="actions"><input type="submit" value='@request.messages("profile.submitPassword")' class="btn primary"/></div>
 }
 
 @helper.form(action = routes.AuthController.uploadProfilePicture, Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
-<input type="file" name="picture">
+<input type="file" name="picture" />
 
 <p>
-    <input type="submit">
+    <input type="submit" value='@request.messages("profile.submitPicture")'>
 </p>
 
 }

@@ -2,8 +2,8 @@
 
 @import base._
 
-@auth("My repositories") {
-<a class="button" href="@routes.RepositoryController.createRepository">Create new repository</a>
+@auth(request.messages("repository.list.title")) {
+<a class="button" href="@routes.RepositoryController.createRepository">@request.messages("repository.list.createNew")</a>
 
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
                 @repositories.map {

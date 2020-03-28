@@ -1,25 +1,27 @@
 @(repositoryForm: Form[RepositoryData])(implicit request: UserRequestHeader)
 @import views.html.helper._
 @import base._
+@import helpers._
 
-@auth("Create repository") {
-<h1>Add a computer</h1>
-@request.flash.get("error").map { message =>
-<div class="alert-message warning">
-    <strong>Error!</strong> @message
-</div>
-}
+@auth(request.messages("repository.create.title")) {
+<h1>@request.messages("repository.create.head")</h1>
+@notificationHeader()
 
 @form(routes.RepositoryController.saveRepository()) {
 
 <fieldset>
     @CSRF.formField
-    @inputText(repositoryForm("name"), Symbol("_label") -> "Repository name", Symbol("_help") -> "")
-    @inputText(repositoryForm("description"), Symbol("_label") -> "Repository description", Symbol("_help") -> "")
+    @inputText(repositoryForm("name"),
+    Symbol("_label") -> request.messages("repository.create.name"),
+    Symbol("_help") -> "")
+
+    @inputText(repositoryForm("description"),
+    Symbol("_label") -> request.messages("repository.create.desc"),
+    Symbol("_help") -> "")
 </fieldset>
 
 <div class="actions">
-    <input type="submit" value="Create repository" class="btn primary">
+    <input type="submit" value='@request.messages("repository.create.submit")' class="btn primary">
 </div>
 
 }
