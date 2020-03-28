@@ -1,1 +1,64 @@
 # Messages
+
+errorHandler.title=Error
+errorHandler.head=Oops
+
+signin.title=Sign in
+signin.head=Sign in
+signin.submit=Sign in
+signin.signupLink=Create an account
+
+signup.title=Sign up
+signup.userName=Username
+signup.password= Password
+signup.email=Email address
+signup.fullname=Full Name
+signup.submit=Sign up
+signup.signInLink=Sign in
+
+profile.title=My profile
+profile.head=Profile edit
+
+profile.submitData=Update profile
+profile.submitPassword=Update password
+profile.submitPicture=Upload a photo
+
+
+repository.collaborator.title=Repository collaborators
+repository.collaborator.emailOrLogin=User login or email
+repository.collaborator.accessLevel=Access Level
+repository.collaborator.accessLevel.read=Read
+repository.collaborator.accessLevel.write=Write
+repository.collaborator.button=Invite a collaborator
+
+repository.create.title=Create a New Repository
+repository.create.head =Create a New Repository
+repository.create.name=Repository name
+repository.create.desc=Description
+repository.create.submit=Create repository
+
+repository.edit.title=Edit file
+repository.edit.submit=Save
+
+repository.list.title=Repositories
+repository.list.createNew=Create a New Repository
+repository.list.empty=Nothing to display
+
+repository.upload.title=Upload files
+repository.upload.singleFile=Files one by one
+repository.upload.completeDirectory=Complete Directory
+repository.upload.submit=Commit changes
+
+repository.viewFile.title=View file
+repository.viewFile.raw=Raw
+repository.viewFile.edit=Edit
+repository.viewFile.cant=We can't dispay file. Download by direct link
+
+repository.tree.uploadFiles=Upload files
+repository.tree.collaborators=Collaborators
+repository.tree.downloads=Download ZIP
+repository.tree.createFolder=Create new folder
+repository.tree.createFolder.formName=Folder name
+
+repository.tree.createFile=Create new file
+repository.tree.createFile.formName=File name
