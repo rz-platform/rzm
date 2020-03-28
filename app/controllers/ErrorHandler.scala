@@ -16,12 +16,11 @@ class ErrorHandler @Inject() (
   sourceMapper: OptionalSourceMapper,
   router: Provider[Router]
 ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
-  override def onProdServerError(request: RequestHeader, exception: UsefulException) =
+  override def onProdServerError(request: RequestHeader, exception: UsefulException): Future[Result] =
     Future.successful {
       implicit val ir: RequestHeader = request
       BadRequest(views.html.error(exception.getMessage))
     }
-
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     if (env.mode == Mode.Prod) {
