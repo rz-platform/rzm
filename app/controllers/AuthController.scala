@@ -9,6 +9,7 @@ import play.api.Configuration
 import services.encryption._
 import play.api.data.Forms._
 import play.api.data._
+import play.api.libs.Files
 import play.api.mvc._
 import views._
 
@@ -28,11 +29,11 @@ class AuthController @Inject() (
   private val appHome = config.get[String]("play.server.dir")
   private val maxStaticSize = config.get[String]("play.server.media.max_size_bytes").toInt
 
-  val loginForm = Form(
+  val loginForm: Form[AccountLoginData] = Form(
     mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
   )
 
-  val registerForm = Form(
+  val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
       "userName" -> nonEmptyText,
       "fullName" -> optional(text),
@@ -41,7 +42,7 @@ class AuthController @Inject() (
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
   )
 
-  val userEditForm = Form(
+  val userEditForm: Form[AccountData] = Form(
     mapping(
       "userName" -> nonEmptyText,
       "fullName" -> optional(text),
@@ -50,42 +51,39 @@ class AuthController @Inject() (
     )(AccountData.apply)(AccountData.unapply)
   )
 
-  val updatePasswordForm = Form(
+  val updatePasswordForm: Form[PasswordData] = Form(
     mapping(
       "oldPassword" -> nonEmptyText,
       "newPassword" -> nonEmptyText
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def login = Action { implicit request =>
+  def login: Action[AnyContent] = Action { implicit request =>
     Ok(html.userLogin(loginForm))
   }
 
-  def register = Action { implicit request =>
+  def register: Action[AnyContent] = Action { implicit request =>
     Ok(html.userRegister(registerForm))
   }
 
-  def saveUser = Action.async { implicit request =>
-    val formValidatedFunction = { user: AccountRegistrationData =>
-      accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
-        case None =>
-          val acc = Account.buildNewAccount(user)
-          accountService.insert(acc).map { accountId =>
-            Redirect(routes.RepositoryController.list)
-              .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
-          }
-        case _ =>
-          val formBuiltFromRequest = registerForm.bindFromRequest
-          val newForm = registerForm.bindFromRequest.copy(
-            errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "User name or email already exists."))
-          )
-          Future(BadRequest(html.userRegister(newForm)))
-      }
-    }
-
+  def saveUser: Action[AnyContent] = Action.async { implicit request =>
     registerForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
-      formValidatedFunction
+      (user: AccountRegistrationData) =>
+        accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
+          case None =>
+            val acc = Account.buildNewAccount(user)
+            accountService.insert(acc).map { accountId =>
+              Redirect(routes.RepositoryController.list())
+                .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
+            }
+          case _ =>
+            val formBuiltFromRequest = registerForm.bindFromRequest
+            val newForm = registerForm.bindFromRequest.copy(
+              errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "User name or email already exists."))
+            )
+            Future(BadRequest(html.userRegister(newForm)))
+        }
     )
   }
 
@@ -93,7 +91,7 @@ class AuthController @Inject() (
   class UserDoesNotExist extends Exception with AuthException
   class WrongPassword extends Exception with AuthException
 
-  def authenticate = Action.async { implicit request =>
+  def authenticate: Action[AnyContent] = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
       user => {
@@ -103,7 +101,7 @@ class AuthController @Inject() (
             case Some(account) =>
               if (EncryptionService.checkHash(user.password, account.password)) {
                 Future(
-                  Redirect(routes.RepositoryController.list)
+                  Redirect(routes.RepositoryController.list())
                     .withSession(AuthController.SESSION_NAME -> account.id.toString)
                 )
               } else {
@@ -124,8 +122,8 @@ class AuthController @Inject() (
     )
   }
 
-  def logout = Action {
-    Redirect(routes.AuthController.login).withNewSession.flashing(
+  def logout: Action[AnyContent] = Action {
+    Redirect(routes.AuthController.login()).withNewSession.flashing(
       "success" -> "You are now logged out."
     )
   }
@@ -136,7 +134,7 @@ class AuthController @Inject() (
     )
   }
 
-  def profilePage = userAction { implicit request =>
+  def profilePage: Action[AnyContent] = userAction { implicit request =>
     Ok(html.userProfile(filledProfileForm(request.account), updatePasswordForm))
   }
 
@@ -144,12 +142,12 @@ class AuthController @Inject() (
     if (currentEmail != newEmail) {
       accountService.findByLoginOrEmail("", newEmail).flatMap {
         case Some(_) => Future(false)
-        case None => Future(true)
+        case None    => Future(true)
       }
     } else Future(true)
   }
 
-  def editProfile = userAction.async { implicit request =>
+  def editProfile: Action[AnyContent] = userAction.async { implicit request =>
     userEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
       accountData => {
@@ -170,7 +168,7 @@ class AuthController @Inject() (
     )
   }
 
-  def updatePassword = userAction.async { implicit request =>
+  def updatePassword(): Action[AnyContent] = userAction.async { implicit request =>
     updatePasswordForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(filledProfileForm(request.account), formWithErrors))),
       passwordData => {
@@ -198,36 +196,37 @@ class AuthController @Inject() (
   class WrongContentType extends Exception("Only images is allowed") with FileUploadException
   class ExceededMaxSize extends Exception("Image bigger than a max size") with FileUploadException
 
-  def uploadProfilePicture = Action(parse.multipartFormData) { request =>
-    val redirect = Redirect(routes.AuthController.profilePage)
-    request.body
-      .file("picture")
-      .map { picture =>
-        // only get the last part of the filename
-        // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
-        val filename = Paths.get(picture.filename).getFileName
-        val fileSize = picture.fileSize
-        try {
-          val contentType = picture.contentType.getOrElse { throw new WrongContentType }
+  def uploadProfilePicture: Action[MultipartFormData[Files.TemporaryFile]] =
+    Action(parse.multipartFormData) { request =>
+      val redirect = Redirect(routes.AuthController.profilePage())
+      request.body
+        .file("picture")
+        .map { picture =>
+          // only get the last part of the filename
+          // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
+          val filename = Paths.get(picture.filename).getFileName
+          val fileSize = picture.fileSize
+          try {
+            val contentType = picture.contentType.getOrElse { throw new WrongContentType }
 
-          if (!(allowedContentTypes contains contentType)) {
-            throw new WrongContentType
+            if (!(allowedContentTypes contains contentType)) {
+              throw new WrongContentType
+            }
+
+            if (fileSize > maxStaticSize) {
+              throw new ExceededMaxSize
+            }
+
+            picture.ref.copyTo(Paths.get(s"${appHome}/public/pictures/$filename"), replace = true)
+            redirect.flashing("success" -> "Profile picture updated")
+          } catch {
+            case exc: FileUploadException => redirect.flashing("error" -> exc.getMessage)
           }
-
-          if (fileSize > maxStaticSize) {
-            throw new ExceededMaxSize
-          }
-
-          picture.ref.copyTo(Paths.get(s"${appHome}/public/pictures/$filename"), replace = true)
-          redirect.flashing("success" -> "Profile picture updated")
-        } catch {
-          case exc: FileUploadException => redirect.flashing("error" -> exc.getMessage)
         }
-      }
-      .getOrElse {
-        redirect.flashing("error" -> "Missing file")
-      }
-  }
+        .getOrElse {
+          redirect.flashing("error" -> "Missing file")
+        }
+    }
 }
 
 object AuthController {
