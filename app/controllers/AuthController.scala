@@ -2,15 +2,14 @@ package controllers
 
 import java.nio.file.Paths
 
-import scala.util.{Failure, Success, Try}
 import javax.inject.Inject
-import models.{Account, AccountData, AccountLoginData, AccountRegistrationData, AccountRepository, PasswordData}
+import models._
 import play.api.Configuration
-import services.encryption._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.Files
 import play.api.mvc._
+import services.encryption._
 import views._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -217,7 +216,7 @@ class AuthController @Inject() (
               throw new ExceededMaxSize
             }
 
-            picture.ref.copyTo(Paths.get(s"${appHome}/public/pictures/$filename"), replace = true)
+            picture.ref.copyTo(Paths.get(s"$appHome/public/pictures/$filename"), replace = true)
             redirect.flashing("success" -> "Profile picture updated")
           } catch {
             case exc: FileUploadException => redirect.flashing("error" -> exc.getMessage)

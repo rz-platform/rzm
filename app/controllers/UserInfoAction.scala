@@ -61,14 +61,14 @@ class UserInfoAction @Inject() (
           block(new UserRequest[A](request, account, messagesApi))
         case None =>
           Future.successful {
-            Redirect(routes.AuthController.login).withNewSession.flashing("error" -> "unauthorized")
+            Redirect(routes.AuthController.login()).withNewSession.flashing("error" -> "unauthorized")
           }
       }
     }
 
     maybeFutureResult.getOrElse {
       Future.successful {
-        Redirect(routes.AuthController.login).withNewSession.flashing("error" -> "unauthorized")
+        Redirect(routes.AuthController.login()).withNewSession.flashing("error" -> "unauthorized")
       }
     }
   }
