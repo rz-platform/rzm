@@ -50,7 +50,7 @@ POST /repositories/:account/:repository/upload controllers.RepositoryController.
 # Add collaborators
 
 GET /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaboratorPage(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaborator(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaboratorAction(account:String, repository:String)
 
 # Creation / Editing
 

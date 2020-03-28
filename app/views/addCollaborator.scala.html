@@ -22,7 +22,7 @@
     <p>@collaborator.userName</p>
     }
     }
-    @form(routes.RepositoryController.addCollaborator(request.repositoryWithOwner.owner.userName,
+    @form(routes.RepositoryController.addCollaboratorAction(request.repositoryWithOwner.owner.userName,
                                                         request.repositoryWithOwner.repository.name)) {
     <fieldset>
         @CSRF.formField

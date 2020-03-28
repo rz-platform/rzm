@@ -1,22 +1,35 @@
 package controllers
 
-import javax.inject.Singleton
-import play.api.http.DefaultHttpErrorHandler
-import play.api.mvc.Results._
-import play.api.mvc._
+import javax.inject._
 
+import play.api.http.DefaultHttpErrorHandler
+import play.api._
+import play.api.mvc._
+import play.api.mvc.Results._
+import play.api.routing.Router
 import scala.concurrent._
 
 @Singleton
-class ErrorHandler extends DefaultHttpErrorHandler {
-  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
+class ErrorHandler @Inject() (
+  env: Environment,
+  config: Configuration,
+  sourceMapper: OptionalSourceMapper,
+  router: Provider[Router]
+) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
+  override def onProdServerError(request: RequestHeader, exception: UsefulException) =
     Future.successful {
       implicit val ir: RequestHeader = request
-      Status(statusCode)(views.html.error(message))
+      BadRequest(views.html.error(exception.getMessage))
     }
 
-  override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] =
-    Future.successful {
-      InternalServerError("A server error occurred: " + exception.getMessage)
+
+  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
+    if (env.mode == Mode.Prod) {
+      Future.successful {
+        implicit val ir: RequestHeader = request
+        BadRequest(views.html.error(message))
+      }
+    } else {
+      super.onClientError(request, statusCode, message)
     }
 }
