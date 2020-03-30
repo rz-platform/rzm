@@ -30,7 +30,7 @@ POST /repositories/create controllers.RepositoryController.saveRepository
 
 # Repository view
 
-GET /repositories/:account/:repository/tree/ controllers.RepositoryController.view(account:String, repository:String, path: String = ".")
+GET /repositories/:account/:repository/tree controllers.RepositoryController.view(account:String, repository:String, path: String = ".")
 GET /repositories/:account/:repository/tree/*path controllers.RepositoryController.view(account:String, repository:String, path: String)
 
 # Blob view
