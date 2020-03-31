@@ -47,10 +47,11 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.RepositoryCont
 GET /repositories/:account/:repository/upload controllers.RepositoryController.uploadPage(account:String, repository:String)
 POST /repositories/:account/:repository/upload controllers.RepositoryController.upload(account:String, repository:String)
 
-# Add collaborators
+# Collaborators
 
 GET /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaboratorPage(account:String, repository:String)
 POST /repositories/:account/:repository/collaborators controllers.RepositoryController.addCollaboratorAction(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators/remove controllers.RepositoryController.removeCollaboratorAction(account:String, repository:String)
 
 # Creation / Editing
 

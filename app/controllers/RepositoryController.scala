@@ -54,6 +54,12 @@ class RepositoryController @Inject() (
     )
   )
 
+  val removeCollaboratorForm: Form[RemoveCollaboratorData] = Form(
+    mapping("email" -> nonEmptyText)(RemoveCollaboratorData.apply)(
+      RemoveCollaboratorData.unapply
+    )
+  )
+
   val excludedSymbolsForFileName = List('/', ':', '#')
 
   val addNewItemToRepForm: Form[NewItem] = Form(
@@ -386,33 +392,51 @@ class RepositoryController @Inject() (
                                                           request.repositoryWithOwner.repository.name)
         )
 
-        accountRepository
-          .findByLoginOrEmail(data.emailOrLogin)
-          .flatMap {
-            case Some(futureCollaborator) =>
-              gitEntitiesRepository
-                .isUserCollaborator(request.repositoryWithOwner.repository, futureCollaborator.id)
-                .map {
-                  case None =>
-                    val accessLevel =
-                      if (AccessLevel.map.contains(data.accessLevel)) AccessLevel.map(data.accessLevel)
-                      else AccessLevel.canView
+        accountRepository.findByLoginOrEmail(data.emailOrLogin).flatMap {
+          case Some(futureCollaborator) =>
+            gitEntitiesRepository
+              .isUserCollaborator(request.repositoryWithOwner.repository, futureCollaborator.id)
+              .map {
+                case None =>
+                  val accessLevel =
+                    if (AccessLevel.map.contains(data.accessLevel)) AccessLevel.map(data.accessLevel)
+                    else AccessLevel.canView
 
-                    gitEntitiesRepository.createCollaborator(
-                      request.repositoryWithOwner.repository.id,
-                      futureCollaborator.id,
-                      accessLevel
-                    )
-                  case Some(_) => ()
-                }
-              Future.successful {
-                redirect
+                  gitEntitiesRepository.createCollaborator(
+                    request.repositoryWithOwner.repository.id,
+                    futureCollaborator.id,
+                    accessLevel
+                  )
+                case Some(_) => ()
               }
-            case None =>
-              Future.successful {
-                redirect.flashing("error" -> s"No such user")
+            Future.successful { redirect }
+          case None =>
+            Future.successful { redirect.flashing("error" -> s"No such user") }
+        }
+      }
+  }
+
+  private def removeCollaborator(request: RepositoryRequest[AnyContent]): RemoveCollaboratorData => Future[Result] = {
+    data: RemoveCollaboratorData =>
+      {
+        val redirect = Redirect(
+          routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName,
+                                                          request.repositoryWithOwner.repository.name)
+        )
+
+        accountRepository.findByLoginOrEmail(data.emailOrLogin).flatMap {
+          case Some(collaborator) =>
+            gitEntitiesRepository
+              .isUserCollaborator(request.repositoryWithOwner.repository, collaborator.id)
+              .map {
+                case Some(_) =>
+                  gitEntitiesRepository.removeCollaborator(request.repositoryWithOwner.repository.id, collaborator.id)
+                case None => ()
               }
-          }
+            Future.successful { redirect }
+          case None =>
+            Future.successful { redirect.flashing("error" -> s"No such user") }
+        }
       }
   }
 
@@ -425,6 +449,18 @@ class RepositoryController @Inject() (
               BadRequest(html.addCollaborator(formWithErrors, collaborators))
             },
           addCollaborator(request)
+        )
+    }
+
+  def removeCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
+      implicit request: RepositoryRequest[AnyContent] =>
+        removeCollaboratorForm.bindFromRequest.fold(
+          _ =>
+            gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map { collaborators =>
+              BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
+            },
+          removeCollaborator(request)
         )
     }
 

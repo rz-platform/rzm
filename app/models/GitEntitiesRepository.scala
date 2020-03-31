@@ -39,6 +39,11 @@ case class NewCollaboratorData(
   accessLevel: String
 )
 
+
+case class RemoveCollaboratorData(
+                                emailOrLogin: String
+                              )
+
 case class CommitFile(id: String, name: String, file: File)
 
 case class EditedItem(content: String, message: String, newFileName: Option[String], oldFileName: String)
@@ -224,6 +229,14 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       SQL("""
         insert into collaborator (userId, repositoryId, role) values ({userId}, {repositoryId}, {role})
       """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId, "role" -> role).executeInsert()
+    }
+  }
+
+  def removeCollaborator(repositoryId: Long, collaboratorId: Long): Future[Int] = Future {
+    db.withConnection { implicit connection =>
+      SQL("""
+        DELETE FROM collaborator WHERE userId={userId} and repositoryId={repositoryId}
+      """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId).executeUpdate()
     }
   }
 
