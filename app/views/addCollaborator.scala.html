@@ -10,7 +10,14 @@
 
 @collaborators.map {
     case (collaborator) => {
-    <p>@collaborator.userName</p>
+<p>@collaborator.userName
+    @form(routes.RepositoryController.addCollaboratorAction(request.repositoryWithOwner.owner.userName,
+    request.repositoryWithOwner.repository.name)) {
+    @CSRF.formField
+    <input type="hidden" name="id" value='@collaborator.mailAddress' />
+    <button type="submit">X</button>
+    }
+</p>
     }
     }
     @form(routes.RepositoryController.addCollaboratorAction(request.repositoryWithOwner.owner.userName,
