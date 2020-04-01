@@ -41,7 +41,7 @@ case class NewCollaboratorData(
 
 
 case class RemoveCollaboratorData(
-                                emailOrLogin: String
+                                email: String
                               )
 
 case class CommitFile(id: String, name: String, file: File)

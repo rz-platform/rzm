@@ -125,7 +125,7 @@ class RepositoryController @Inject() (
               Left(NotFound("Access denied"))
             }
           })
-          .recover { case _: Exception with RepositoryAccessException => Left(BadRequest("Access denied")) }
+          .recover { case ex: Exception with RepositoryAccessException => Left(BadRequest(ex.getMessage)) }
       }
     }
 
@@ -424,7 +424,7 @@ class RepositoryController @Inject() (
                                                           request.repositoryWithOwner.repository.name)
         )
 
-        accountRepository.findByLoginOrEmail(data.emailOrLogin).flatMap {
+        accountRepository.findByLoginOrEmail(data.email).flatMap {
           case Some(collaborator) =>
             gitEntitiesRepository
               .isUserCollaborator(request.repositoryWithOwner.repository, collaborator.id)
