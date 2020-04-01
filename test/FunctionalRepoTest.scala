@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import controllers.{RepositoryController, routes}
 import git.GitRepository
-import models.{Account, Repository, RepositoryGitData}
+import models.{AccessLevel, Account, Repository, RepositoryGitData}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
@@ -75,6 +75,22 @@ class FunctionalRepoTest
     )
 
     await(controller.saveRepository().apply(request))
+  }
+
+  def addCollaborator(
+                       controller: RepositoryController,
+                       repositoryName: String,
+                       owner: Account,
+                       collaborator: Account,
+                       accessLevel: Integer
+  ): Result = {
+    val request = addCSRFToken(
+      FakeRequest(routes.RepositoryController.addCollaboratorAction(owner.userName, repositoryName))
+        .withFormUrlEncodedBody("emailOrLogin" -> collaborator.userName, "accessLevel" -> accessLevel.toString)
+        .withSession(("user_id", owner.id.toString))
+    )
+
+    await(controller.addCollaboratorAction(owner.userName, repositoryName).apply(request))
   }
 
   def createNewItem(
@@ -250,6 +266,29 @@ class FunctionalRepoTest
       val repo = Repository(0, repoName, true, null, "master", null, null)
       val folderFileList = listFileInRepo(git, repo, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
+    }
+
+    "Add collaborator" in {
+      val owner = createUser()
+
+      val repoName = getRandomString
+      createRepository(controller, repoName, owner)
+
+      val collaborator = createUser()
+      val result = addCollaborator(controller, repoName, owner, collaborator, AccessLevel.canEdit)
+
+      result.header.status must equal(303)
+      defaultDatabase.withConnection { connection =>
+        val repoIdQuery = connection
+          .prepareStatement(s"select id FROM repository WHERE name='$repoName'").executeQuery()
+        repoIdQuery.next()
+        val repoId = repoIdQuery.getInt("id")
+
+        val isCollaboratorExist = connection
+          .prepareStatement(s"select 1 FROM collaborator WHERE userid=${collaborator.id} and repositoryid=$repoId")
+          .executeQuery()
+        isCollaboratorExist.next() must equal(true)
+      }
     }
   }
 }
