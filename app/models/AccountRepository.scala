@@ -49,6 +49,11 @@ object AccessLevel {
   val canViewName = "view"
 
   val map: HashMap[String, Int] = HashMap((canEditName, canEdit), (canViewName, canView))
+
+  def fromString(accessLevel: String): Int = {
+    if (AccessLevel.map.contains(accessLevel)) AccessLevel.map(accessLevel)
+    else AccessLevel.canView
+  }
 }
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, mailAddress: String)

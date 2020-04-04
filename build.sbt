@@ -1,4 +1,5 @@
 name := "razam"
+maintainer := "eugenebosyakov@gmail.com"
 
 version := "2.7.x"
 

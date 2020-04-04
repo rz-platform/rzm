@@ -1,17 +1,21 @@
 package controllers
 
 import java.io.File
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Calendar
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Sink, StreamConverters}
+import akka.stream.scaladsl.FileIO
+import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.StreamConverters
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
 import org.apache.commons.io.FileUtils
-import org.eclipse.jgit.lib.{Constants, FileMode}
+import org.eclipse.jgit.lib.Constants
+import org.eclipse.jgit.lib.FileMode
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
@@ -24,16 +28,17 @@ import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class RepositoryController @Inject() (
-  gitEntitiesRepository: GitEntitiesRepository,
-  accountRepository: AccountRepository,
-  userAction: UserInfoAction,
-  errorHandler: ErrorHandler,
-  config: Configuration,
-  messagesApi: MessagesApi,
-  cc: MessagesControllerComponents
+    gitEntitiesRepository: GitEntitiesRepository,
+    accountRepository: AccountRepository,
+    userAction: UserInfoAction,
+    errorHandler: ErrorHandler,
+    config: Configuration,
+    messagesApi: MessagesApi,
+    cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc)
     with play.api.i18n.I18nSupport {
@@ -64,14 +69,16 @@ class RepositoryController @Inject() (
 
   val addNewItemToRepForm: Form[NewItem] = Form(
     mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply)
-      .verifying("",
-                 fields =>
-                   fields match {
-                     case data =>
-                       !excludedSymbolsForFileName.exists(
-                         data.name contains _
-                       )
-                   })
+      .verifying(
+        "",
+        fields =>
+          fields match {
+            case data =>
+              !excludedSymbolsForFileName.exists(
+                data.name contains _
+              )
+          }
+      )
   )
 
   protected def createBadResult(msg: String, statusCode: Int = BAD_REQUEST): RequestHeader => Future[Result] = {
@@ -81,30 +88,30 @@ class RepositoryController @Inject() (
 
   val editorForm: Form[EditedItem] = Form(
     mapping(
-      "content" -> nonEmptyText,
-      "message" -> nonEmptyText,
+      "content"     -> nonEmptyText,
+      "message"     -> nonEmptyText,
       "newFileName" -> optional(text),
       "oldFileName" -> nonEmptyText
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
   trait RepositoryAccessException
-  class NoRepo extends Exception("Repository does not exist") with RepositoryAccessException
+  class NoRepo         extends Exception("Repository does not exist") with RepositoryAccessException
   class NoCollaborator extends Exception("Access denied") with RepositoryAccessException
 
   def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]): Future[T] =
     what.map(_.getOrElse(throw ifNot))
 
   def repositoryActionOn(
-    username: String,
-    repositoryName: String,
-    minimumAccessLevel: Int = AccessLevel.canView
+      username: String,
+      repositoryName: String,
+      minimumAccessLevel: Int = AccessLevel.canView
   ): ActionRefiner[UserRequest, RepositoryRequest] =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
       def refine[A](
-        request: UserRequest[A]
+          request: UserRequest[A]
       ): Future[Either[Result, controllers.RepositoryRequest[A]]] = {
         val items = for {
           repositoryWithOwner <- getOrElse(new NoRepo)(
@@ -184,7 +191,7 @@ class RepositoryController @Inject() (
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
-      val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+      val git      = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
       blobInfo match {
         case Some(blob) =>
@@ -216,8 +223,8 @@ class RepositoryController @Inject() (
 
   def editFilePage(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
-      val rev = "master" // TODO: Replace with rev
-      val git = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
+      val rev      = "master" // TODO: Replace with rev
+      val git      = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
       blobInfo match {
         case Some(blob) =>
@@ -230,9 +237,9 @@ class RepositoryController @Inject() (
 
   def edit(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      val rev = "master" // TODO: Replace with rev
+      val rev           = "master" // TODO: Replace with rev
       val gitRepository = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-      val blobInfo = gitRepository.blobFile(decodeNameFromUrl(path), rev)
+      val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
 
       val editFile = { editedFile: EditedItem =>
         val fName = editedFile.oldFileName
@@ -280,8 +287,8 @@ class RepositoryController @Inject() (
    */
   private def handleFilePartAsFile: FilePartHandler[File] = {
     case FileInfo(partName, filename, contentType, _) =>
-      val path: Path = Files.createTempFile("multipartBody", "tempFile")
-      val fileSink: Sink[ByteString, Future[IOResult]] = FileIO.toPath(path)
+      val path: Path                                     = Files.createTempFile("multipartBody", "tempFile")
+      val fileSink: Sink[ByteString, Future[IOResult]]   = FileIO.toPath(path)
       val accumulator: Accumulator[ByteString, IOResult] = Accumulator(fileSink)
       accumulator.map {
         case IOResult(count, status) =>
@@ -384,90 +391,75 @@ class RepositoryController @Inject() (
       }
     }
 
-  private def addCollaborator(request: RepositoryRequest[AnyContent]): NewCollaboratorData => Future[Result] = {
-    data: NewCollaboratorData =>
-      {
-        val redirect = Redirect(
-          routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName,
-                                                          request.repositoryWithOwner.repository.name)
-        )
-
-        accountRepository.findByLoginOrEmail(data.emailOrLogin).flatMap {
-          case Some(futureCollaborator) =>
-            gitEntitiesRepository
-              .isUserCollaborator(request.repositoryWithOwner.repository, futureCollaborator.id)
-              .map {
-                case None =>
-                  val accessLevel =
-                    if (AccessLevel.map.contains(data.accessLevel)) AccessLevel.map(data.accessLevel)
-                    else AccessLevel.canView
-
-                  gitEntitiesRepository.createCollaborator(
-                    request.repositoryWithOwner.repository.id,
-                    futureCollaborator.id,
-                    accessLevel
-                  )
-                case Some(_) => ()
-              }
-            Future.successful { redirect }
-          case None =>
-            Future.successful { redirect.flashing("error" -> s"No such user") }
-        }
-      }
-  }
-
-  private def removeCollaborator(request: RepositoryRequest[AnyContent]): RemoveCollaboratorData => Future[Result] = {
-    data: RemoveCollaboratorData =>
-      {
-        val redirect = Redirect(
-          routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName,
-                                                          request.repositoryWithOwner.repository.name)
-        )
-
-        accountRepository.findByLoginOrEmail(data.email).flatMap {
-          case Some(collaborator) =>
-            gitEntitiesRepository
-              .isUserCollaborator(request.repositoryWithOwner.repository, collaborator.id)
-              .map {
-                case Some(_) =>
-                  gitEntitiesRepository.removeCollaborator(request.repositoryWithOwner.repository.id, collaborator.id)
-                case None => ()
-              }
-            Future.successful { redirect }
-          case None =>
-            Future.successful { redirect.flashing("error" -> s"No such user") }
-        }
-      }
+  private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result = {
+    Redirect(
+      routes.RepositoryController
+        .addCollaboratorPage(req.repositoryWithOwner.owner.userName, req.repositoryWithOwner.repository.name)
+    )
   }
 
   def addCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
-      implicit request: RepositoryRequest[AnyContent] =>
-        addCollaboratorForm.bindFromRequest.fold(
-          formWithErrors =>
-            gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map { collaborators =>
-              BadRequest(html.addCollaborator(formWithErrors, collaborators))
-            },
-          addCollaborator(request)
-        )
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit req =>
+      addCollaboratorForm.bindFromRequest.fold(
+        formWithErrors =>
+          gitEntitiesRepository.getCollaborators(req.repositoryWithOwner.repository).map { collaborators =>
+            BadRequest(html.addCollaborator(formWithErrors, collaborators))
+          },
+        (data: NewCollaboratorData) =>
+          accountRepository.findByLoginOrEmail(data.emailOrLogin).flatMap {
+            case Some(futureCollaborator) =>
+              gitEntitiesRepository
+                .isUserCollaborator(req.repositoryWithOwner.repository, futureCollaborator.id)
+                .flatMap {
+                  case None =>
+                    gitEntitiesRepository
+                      .createCollaborator(
+                        req.repositoryWithOwner.repository.id,
+                        futureCollaborator.id,
+                        AccessLevel.fromString(data.accessLevel)
+                      )
+                      .flatMap { _ =>
+                        Future(getCollaboratorPageRedirect(req))
+                      }
+                  case Some(_) =>
+                    Future(
+                      getCollaboratorPageRedirect(req)
+                        .flashing("error" -> s"User is already a collaborator")
+                    )
+                }
+            case None => Future(getCollaboratorPageRedirect(req).flashing("error" -> s"No such user"))
+          }
+      )
     }
 
   def removeCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
-      implicit request: RepositoryRequest[AnyContent] =>
-        removeCollaboratorForm.bindFromRequest.fold(
-          _ =>
-            gitEntitiesRepository.getCollaborators(request.repositoryWithOwner.repository).map { collaborators =>
-              BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
-            },
-          removeCollaborator(request)
-        )
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit req =>
+      removeCollaboratorForm.bindFromRequest.fold(
+        _ =>
+          gitEntitiesRepository.getCollaborators(req.repositoryWithOwner.repository).map { collaborators =>
+            BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
+          },
+        data =>
+          accountRepository.findByLoginOrEmail(data.email).flatMap {
+            case Some(collaborator) =>
+              gitEntitiesRepository
+                .isUserCollaborator(req.repositoryWithOwner.repository, collaborator.id)
+                .flatMap {
+                  case Some(_) =>
+                    gitEntitiesRepository
+                      .removeCollaborator(req.repositoryWithOwner.repository.id, collaborator.id)
+                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
+                  case None => Future(getCollaboratorPageRedirect(req))
+                }
+            case None => Future(getCollaboratorPageRedirect(req).flashing("error" -> s"No such user"))
+          }
+      )
     }
 
   def downloadRepositoryArchive(
-    accountName: String,
-    repositoryName: String,
-    revision: String = "master"
+      accountName: String,
+      repositoryName: String,
+      revision: String = "master"
   ): Action[AnyContent] = {
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
       val gitRepository =
