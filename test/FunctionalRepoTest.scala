@@ -107,6 +107,21 @@ class FunctionalRepoTest
     await(controller.addCollaboratorAction(owner.userName, repositoryName).apply(request))
   }
 
+  def removeCollaborator(
+      controller: RepositoryController,
+      repositoryName: String,
+      owner: Account,
+      collaboratorName: String
+  ): Result = {
+    val request = addCSRFToken(
+      FakeRequest(routes.RepositoryController.removeCollaboratorAction(owner.userName, repositoryName))
+        .withFormUrlEncodedBody("email" -> collaboratorName)
+        .withSession(("user_id", owner.id.toString))
+    )
+
+    await(controller.removeCollaboratorAction(owner.userName, repositoryName).apply(request))
+  }
+
   def createNewItem(
       controller: RepositoryController,
       name: String,
@@ -322,11 +337,11 @@ class FunctionalRepoTest
   }
 
   "Add collaborator that already exists" in {
-    val owner = createUser()
+    val owner    = createUser()
     val repoName = getRandomString
     createRepository(controller, repoName, owner)
     val collaborator = createUser()
-    val result = addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+    val result       = addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
 
     result.header.status must equal(303)
     defaultDatabase.withConnection { connection =>
@@ -343,4 +358,56 @@ class FunctionalRepoTest
     addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
     result.header.status must equal(303)
   }
+
+  "Remove collaborator" in {
+    val owner    = createUser()
+    val repoName = getRandomString
+    createRepository(controller, repoName, owner)
+    val collaborator = createUser()
+
+    addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+    defaultDatabase.withConnection { connection =>
+      val collaboratorStatement = connection
+        .prepareStatement(
+          s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
+            s"and repositoryid=(select id FROM repository WHERE name='$repoName')" +
+            s"and role=${AccessLevel.canEdit}"
+        )
+        .executeQuery()
+      collaboratorStatement.next() must equal(true)
+    }
+
+    val result = removeCollaborator(controller, repoName, owner, collaborator.userName)
+
+    result.header.status must equal(303)
+    defaultDatabase.withConnection { connection =>
+      val collaboratorStatement = connection
+        .prepareStatement(
+          s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
+            s"and repositoryid=(select id FROM repository WHERE name='$repoName')"
+        )
+        .executeQuery()
+      collaboratorStatement.next() must equal(false)
+    }
+  }
+
+  "Remove collaborator with non-existent userid" in {
+    val owner    = createUser()
+    val repoName = getRandomString
+    createRepository(controller, repoName, owner)
+
+    val result = removeCollaborator(controller, repoName, owner, "nonexistentuserid")
+    result.header.status must equal(303)
+  }
+
+  "Remove collaborator who are not a member" in {
+    val owner    = createUser()
+    val repoName = getRandomString
+    createRepository(controller, repoName, owner)
+    val collaborator = createUser()
+
+    val result = removeCollaborator(controller, repoName, owner,collaborator.userName)
+    result.header.status must equal(303)
+  }
+
 }
