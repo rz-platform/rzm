@@ -44,8 +44,10 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.RepositoryCont
 
 # File upload
 
-GET /repositories/:account/:repository/upload controllers.RepositoryController.uploadPage(account:String, repository:String)
+GET /repositories/:account/:repository/upload controllers.RepositoryController.uploadPage(account:String, repository:String, path = "")
+GET /repositories/:account/:repository/upload/*path controllers.RepositoryController.uploadPage(account:String, repository:String, path: String)
 POST /repositories/:account/:repository/upload controllers.RepositoryController.upload(account:String, repository:String)
+
 
 # Collaborators
 

@@ -60,9 +60,11 @@ class RepositoryController @Inject() (
   )
 
   val removeCollaboratorForm: Form[RemoveCollaboratorData] = Form(
-    mapping("email" -> nonEmptyText)(RemoveCollaboratorData.apply)(
-      RemoveCollaboratorData.unapply
-    )
+    mapping("email" -> nonEmptyText)(RemoveCollaboratorData.apply)(RemoveCollaboratorData.unapply)
+  )
+
+  val uploadFileForm: Form[UploadFileForm] = Form(
+    mapping("path" -> text, "message" -> nonEmptyText)(UploadFileForm.apply)(UploadFileForm.unapply)
   )
 
   val excludedSymbolsForFileName = List('/', ':', '#')
@@ -73,10 +75,7 @@ class RepositoryController @Inject() (
         "",
         fields =>
           fields match {
-            case data =>
-              !excludedSymbolsForFileName.exists(
-                data.name contains _
-              )
+            case data => !excludedSymbolsForFileName.exists(data.name contains _)
           }
       )
   )
@@ -342,46 +341,31 @@ class RepositoryController @Inject() (
    */
   def upload(accountName: String, repositoryName: String): Action[MultipartFormData[File]] =
     userAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-        val path = "" // TODO
-        val files = request.body.files.map(filePart => {
-          CommitFile(
-            filePart.filename,
-            name = if (path.length == 0) filePart.filename else s"$path/${filePart.filename}",
-            filePart.ref
-          )
-        })
-
-        val gitRepository =
-          new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
-
-        // TODO: replace with rev
-        gitRepository.commitFiles("master", ".", "Add files via upload", request.account) {
-          case (git, headTip, builder, inserter) =>
-            gitRepository.processTree(git, headTip) { (path, tree) =>
-              if (!files.exists(_.name.contains(path))) {
-                builder.add(
-                  gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                )
-              }
-            }
-
-            files.foreach { file =>
-              val bytes = FileUtils.readFileToByteArray(file.file)
-              builder.add(
-                gitRepository
-                  .createDirCacheEntry(file.name, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, bytes))
+    .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
+        uploadFileForm.bindFromRequest.fold(
+          formWithErrors =>    BadRequest(html.uploadFile(formWithErrors, "")),
+          (data: UploadFileForm) => {
+            val files: Seq[CommitFile] = req.body.files.map(filePart => {
+              CommitFile(
+                filePart.filename,
+                name = if (data.path.trim.nonEmpty) filePart.filename else s"${data.path}/${filePart.filename}",
+                filePart.ref
               )
-              builder.finish()
-            }
-        }
-        Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
-          .flashing("success" -> s"Uploaded $files.length files")
+            })
+
+            val gitRepository = new GitRepository(req.repositoryWithOwner.owner, repositoryName, gitHome)
+            gitRepository.commitUploadedFiles(files, req.account, "master", data.path, "uploaded")
+
+            Redirect(routes.RepositoryController.view(accountName, repositoryName, data.path))
+              .flashing("success" -> s"Uploaded $files.length files")
+
+          }
+        )
       }
 
-  def uploadPage(accountName: String, repositoryName: String): Action[AnyContent] =
+  def uploadPage(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      Ok(html.uploadFile())
+      Ok(html.uploadFile(uploadFileForm, path))
     }
 
   def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =
