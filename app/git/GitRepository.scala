@@ -1,24 +1,38 @@
 package git
 
 import models._
-import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveOutputStream}
-import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+import org.apache.commons.compress.archivers.ArchiveEntry
+import org.apache.commons.compress.archivers.ArchiveOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
 
 import akka.util.ByteString
-import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
-import org.apache.commons.compress.utils.{IOUtils => CompressIOUtils}
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.compress.utils.{ IOUtils => CompressIOUtils }
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.input.BOMInputStream
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.dircache.{DirCache, DirCacheBuilder, DirCacheEntry}
+import org.eclipse.jgit.dircache.DirCache
+import org.eclipse.jgit.dircache.DirCacheBuilder
+import org.eclipse.jgit.dircache.DirCacheEntry
 import org.eclipse.jgit.errors.MissingObjectException
-import org.eclipse.jgit.lib.{Repository => _, _}
-import org.eclipse.jgit.revwalk.{RevCommit, RevTag, RevTree, RevWalk}
-import org.eclipse.jgit.transport.{ReceiveCommand, ReceivePack}
+import org.eclipse.jgit.lib.{ Repository => _, _ }
+import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.revwalk.RevTag
+import org.eclipse.jgit.revwalk.RevTree
+import org.eclipse.jgit.revwalk.RevWalk
+import org.eclipse.jgit.transport.ReceiveCommand
+import org.eclipse.jgit.transport.ReceivePack
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
 import org.eclipse.jgit.treewalk.filter.PathFilter
-import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk, WorkingTreeOptions}
+import org.eclipse.jgit.treewalk.CanonicalTreeParser
+import org.eclipse.jgit.treewalk.TreeWalk
+import org.eclipse.jgit.treewalk.WorkingTreeOptions
 import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
 
@@ -46,7 +60,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
             defining(getRevCommitFromId(git, objectId)) { revCommit =>
               val lastModifiedCommit = if (path == ".") revCommit else getLastModifiedCommit(git, revCommit, path)
               // get files
-              val files = getFileList(git, revision, path, None)
+              val files      = getFileList(git, revision, path, None)
               val parentPath = if (path == ".") Nil else path.split("/").toList
 
               // process README.md or README.markdown
@@ -86,11 +100,11 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     // Viewer
     Using.resource(git.getRepository.getObjectDatabase) { db =>
       val loader = db.open(objectId)
-      val isLfs = isLfsPointer(loader)
-      val large = isLarge(loader.getSize)
+      val isLfs  = isLfsPointer(loader)
+      val large  = isLarge(loader.getSize)
       val viewer = if (isImage(path)) "image" else if (large) "large" else "other"
-      val bytes = if (viewer == "other") getContentFromId(git, objectId, false) else None
-      val size = Some(getContentSize(loader))
+      val bytes  = if (viewer == "other") getContentFromId(git, objectId, false) else None
+      val size   = Some(getContentSize(loader))
 
       if (viewer == "other") {
         if (!isLfs && bytes.isDefined && isText(bytes.get)) {
@@ -148,7 +162,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
       loader.getSize
     } else {
       val bytes = loader.getCachedBytes
-      val text = new String(bytes, "UTF-8")
+      val text  = new String(bytes, "UTF-8")
 
       val attr = getLfsObjects(text)
       attr.get("size") match {
@@ -163,9 +177,9 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
       val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
       getPathObjectId(git, path, revCommit).map { objectId =>
         {
-          val content = getContentInfo(git, path, objectId)
+          val content    = getContentInfo(git, path, objectId)
           val commitInfo = new CommitInfo(getLastModifiedCommit(git, revCommit, path))
-          val isLfs = isLfsFile(git, objectId)
+          val isLfs      = isLfsFile(git, objectId)
           Blob(content, commitInfo, isLfs)
         }
       }
@@ -262,7 +276,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
 
       @tailrec
       def simplifyPath(
-        tuple: (ObjectId, FileMode, String, String, Option[String], RevCommit)
+          tuple: (ObjectId, FileMode, String, String, Option[String], RevCommit)
       ): (ObjectId, FileMode, String, String, Option[String], RevCommit) = tuple match {
         case (oid, FileMode.TREE, name, path, _, commit) =>
           Using.resource(new TreeWalk(git.getRepository)) { walk =>
@@ -295,9 +309,9 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
 
       @tailrec
       def findLastCommits(
-        result: List[(ObjectId, FileMode, String, String, Option[String], RevCommit)],
-        restList: List[((ObjectId, FileMode, String, String, Option[String]), Map[RevCommit, RevCommit])],
-        revIterator: java.util.Iterator[RevCommit]
+          result: List[(ObjectId, FileMode, String, String, Option[String], RevCommit)],
+          restList: List[((ObjectId, FileMode, String, String, Option[String]), Map[RevCommit, RevCommit])],
+          revIterator: java.util.Iterator[RevCommit]
       ): List[(ObjectId, FileMode, String, String, Option[String], RevCommit)] = {
         if (restList.isEmpty) {
           result
@@ -311,7 +325,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
           if (thisTimeChecks.isEmpty) {
             findLastCommits(result, restList, revIterator)
           } else {
-            var nextRest = skips
+            var nextRest   = skips
             var nextResult = result
             // Map[(name, oid), (tuple, parentsMap)]
             val rest = scala.collection.mutable.Map(thisTimeChecks.map { t =>
@@ -352,8 +366,8 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
         }
       }
       revWalk.markStart(revCommit)
-      val it = revWalk.iterator
-      val lastCommit = it.next
+      val it             = revWalk.iterator
+      val lastCommit     = it.next
       val nextParentsMap = Option(lastCommit).map(_.getParents.map(_ -> lastCommit).toMap).getOrElse(Map())
       findLastCommits(List.empty, fileList.map(a => a -> nextParentsMap), it)
         .map(simplifyPath)
@@ -411,14 +425,14 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   }
 
   def commitFiles(branch: String, path: String, message: String, loginAccount: Account)(
-    f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
+      f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
   ) = {
     LockUtil.lock(s"${owner.userName}/${repositoryName}") {
       Using.resource(Git.open(repositoryDir)) { git =>
-        val builder = DirCache.newInCore.builder()
+        val builder  = DirCache.newInCore.builder()
         val inserter = git.getRepository.newObjectInserter()
         val headName = s"refs/heads/${branch}"
-        val headTip = git.getRepository.resolve(headName)
+        val headTip  = git.getRepository.resolve(headName)
 
         f(git, headTip, builder, inserter)
 
@@ -436,7 +450,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
         inserter.flush()
         inserter.close()
 
-        val receivePack = new ReceivePack(git.getRepository)
+        val receivePack    = new ReceivePack(git.getRepository)
         val receiveCommand = new ReceiveCommand(headTip, commitId, headName)
         commitId
       }
@@ -464,9 +478,9 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
 
   def createFile(fileName: String, commitName: String, account: Account): Unit = {
     Using.resource(Git.open(repositoryDir)) { git =>
-      val builder = DirCache.newInCore.builder()
+      val builder  = DirCache.newInCore.builder()
       val inserter = git.getRepository.newObjectInserter()
-      val headId = git.getRepository.resolve(Constants.HEAD + "^{commit}")
+      val headId   = git.getRepository.resolve(Constants.HEAD + "^{commit}")
 
       val content = "content"
 
@@ -517,14 +531,14 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   def isEmpty(git: Git): Boolean = git.getRepository.resolve(Constants.HEAD) == null
 
   def createNewCommit(
-    git: Git,
-    inserter: ObjectInserter,
-    headId: AnyObjectId,
-    treeId: AnyObjectId,
-    ref: String,
-    fullName: String,
-    mailAddress: String,
-    message: String
+      git: Git,
+      inserter: ObjectInserter,
+      headId: AnyObjectId,
+      treeId: AnyObjectId,
+      ref: String,
+      fullName: String,
+      mailAddress: String,
+      message: String
   ): ObjectId = {
     val newCommit = new CommitBuilder()
     newCommit.setCommitter(new PersonIdent(fullName, mailAddress))
@@ -576,9 +590,9 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   }
 
   private def openFile[T](git: Git, treeWalk: TreeWalk)(
-    f: InputStream => T
+      f: InputStream => T
   ): T = {
-    val attrs = treeWalk.getAttributes
+    val attrs  = treeWalk.getAttributes
     val loader = git.getRepository.open(treeWalk.getObjectId(0))
     Using.resource(loader.openStream()) { in =>
       f(in)
@@ -586,7 +600,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   }
 
   def openFile[T](git: Git, tree: RevTree, path: String)(
-    f: InputStream => T
+      f: InputStream => T
   ): T = {
     Using.resource(TreeWalk.forPath(git.getRepository, path, tree)) { treeWalk =>
       openFile(git, treeWalk)(f)
@@ -594,16 +608,16 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
   }
 
   private def archiveRepo(path: String, revision: String, archive: ArchiveOutputStream)(
-    entryCreator: (String, Long, java.util.Date, Int) => ArchiveEntry
+      entryCreator: (String, Long, java.util.Date, Int) => ArchiveEntry
   ): Unit = {
     Using.resource(Git.open(repositoryDir)) { git =>
-      val oid = git.getRepository.resolve(revision)
-      val commit = getRevCommitFromId(git, oid)
-      val date = commit.getCommitterIdent.getWhen
-      val sha1 = oid.getName()
+      val oid              = git.getRepository.resolve(revision)
+      val commit           = getRevCommitFromId(git, oid)
+      val date             = commit.getCommitterIdent.getWhen
+      val sha1             = oid.getName()
       val repositorySuffix = (if (sha1.startsWith(revision)) sha1 else revision).replace('/', '-')
-      val pathSuffix = if (path.isEmpty) "" else s"-${path.replace('/', '-')}"
-      val baseName = repositoryName + "-" + repositorySuffix + pathSuffix
+      val pathSuffix       = if (path.isEmpty) "" else s"-${path.replace('/', '-')}"
+      val baseName         = repositoryName + "-" + repositorySuffix + pathSuffix
 
       Using.resource(new TreeWalk(git.getRepository)) { treeWalk =>
         treeWalk.addTree(commit.getTree)
@@ -654,7 +668,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
       .replace("image/svg+xml", "text/plain; charset=UTF-8")
   }
 
-  def createArchive(path: String, revision: String) = {
+  def createArchive(path: String, revision: String): File = {
     val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive.zip")
     Using.resource(new ZipArchiveOutputStream(tempFile)) { zip =>
       archiveRepo(path, revision, zip) { (path, size, date, mode) =>
@@ -668,12 +682,37 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     tempFile
   }
 
+  def commitUploadedFiles(
+      files: Seq[CommitFile],
+      account: Account,
+      rev: String,
+      path: String,
+      message: String
+  ): ObjectId = {
+    commitFiles(rev, path, message, account) {
+      case (git, headTip, builder, inserter) =>
+        processTree(git, headTip) { (path, tree) =>
+          if (!files.exists(_.name.contains(path))) {
+            builder.add(
+              createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
+            )
+          }
+        }
+
+        files.foreach { file =>
+          val bytes = FileUtils.readFileToByteArray(file.file)
+          builder.add(createDirCacheEntry(file.name, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, bytes)))
+          builder.finish()
+        }
+    }
+  }
+
   def getRawFile(rev: String, path: String): Option[RawFile] = {
     Using.resource(Git.open(repositoryDir)) { git =>
       val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
       getPathObjectId(git, path, revCommit).flatMap { objectId =>
         getObjectLoaderFromId(git, objectId) { loader =>
-          RawFile(loader.openStream(), loader.getSize.toInt,getSafeMimeType(path))
+          RawFile(loader.openStream(), loader.getSize.toInt, getSafeMimeType(path))
         }
       }
     }

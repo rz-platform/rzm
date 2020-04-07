@@ -1,52 +1,48 @@
 package models
 
 import java.util.Date
-import java.io.{File, InputStream}
+import java.io.File
+import java.io.InputStream
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.db.DBApi
 import anorm._
-import anorm.SqlParser.{get, str}
+import anorm.SqlParser.get
+import anorm.SqlParser.str
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
 
 import scala.concurrent.Future
 
 case class Repository(
-  id: Long,
-  name: String,
-  isPrivate: Boolean = true,
-  description: String = "",
-  defaultBranch: String = "master",
-  registeredDate: java.util.Date,
-  lastActivityDate: java.util.Date
+    id: Long,
+    name: String,
+    isPrivate: Boolean = true,
+    description: String = "",
+    defaultBranch: String = "master",
+    registeredDate: java.util.Date,
+    lastActivityDate: java.util.Date
 )
 
-case class RepositoryData(
-  name: String,
-  description: Option[String]
-)
+case class RepositoryData(name: String, description: Option[String])
 
 case class Collaborator(
-  id: Long,
-  userId: Long,
-  repositoryId: Long,
-  role: Long
+    id: Long,
+    userId: Long,
+    repositoryId: Long,
+    role: Long
 )
 
-case class NewCollaboratorData(
-  emailOrLogin: String,
-  accessLevel: String
-)
+case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
 
-
-case class RemoveCollaboratorData(
-                                email: String
-                              )
+case class RemoveCollaboratorData(email: String)
 
 case class CommitFile(id: String, name: String, file: File)
 
 case class EditedItem(content: String, message: String, newFileName: Option[String], oldFileName: String)
+
+case class UploadFileForm(path: String, message: String)
 
 /**
  * The file data for the file list of the repository viewer.
@@ -63,16 +59,16 @@ case class EditedItem(content: String, message: String, newFileName: Option[Stri
  * @param linkUrl     the url of submodule
  */
 case class FileInfo(
-  id: ObjectId,
-  isDirectory: Boolean,
-  name: String,
-  path: String,
-  message: String,
-  commitId: String,
-  time: Date,
-  author: String,
-  mailAddress: String,
-  linkUrl: Option[String]
+    id: ObjectId,
+    isDirectory: Boolean,
+    name: String,
+    path: String,
+    message: String,
+    commitId: String,
+    time: Date,
+    author: String,
+    mailAddress: String,
+    linkUrl: Option[String]
 )
 
 case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
@@ -96,9 +92,9 @@ case class ContentInfo(viewType: String, size: Option[Long], content: Option[Str
 }
 
 case class Blob(
-  content: ContentInfo,
-  latestCommit: CommitInfo,
-  isLfsFile: Boolean
+    content: ContentInfo,
+    latestCommit: CommitInfo,
+    isLfsFile: Boolean
 )
 
 case class RepositoryWithOwner(repository: Repository, owner: Account)
@@ -122,16 +118,16 @@ case class RawFile(inputStream: InputStream, contentLength: Integer, contentType
  * @param committerEmailAddress the mail address of the committer
  */
 case class CommitInfo(
-  id: String,
-  shortMessage: String,
-  fullMessage: String,
-  parents: List[String],
-  authorTime: Date,
-  authorName: String,
-  authorEmailAddress: String,
-  commitTime: Date,
-  committerName: String,
-  committerEmailAddress: String
+    id: String,
+    shortMessage: String,
+    fullMessage: String,
+    parents: List[String],
+    authorTime: Date,
+    authorName: String,
+    authorEmailAddress: String,
+    commitTime: Date,
+    committerName: String,
+    committerEmailAddress: String
 ) {
 
   def this(rev: org.eclipse.jgit.revwalk.RevCommit) =
@@ -163,7 +159,7 @@ object Collaborator {
 
 @Singleton
 class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dbapi: DBApi)(
-  implicit ec: DatabaseExecutionContext
+    implicit ec: DatabaseExecutionContext
 ) {
   private val db = dbapi.database("default")
 
@@ -171,13 +167,13 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Parse a Repository from a ResultSet
    */
   private val simple = {
-    get[Long]("repository.id") ~
+    (get[Long]("repository.id") ~
       get[String]("repository.name") ~
       get[Boolean]("repository.isPrivate") ~
       get[String]("repository.description") ~
       get[String]("repository.defaultBranch") ~
       get[Date]("repository.registeredDate") ~
-      get[Date]("repository.lastActivityDate") map {
+      get[Date]("repository.lastActivityDate")).map {
       case id ~ name ~ isPrivate ~ description ~ defaultBranch ~ registeredDate ~ lastActivityDate =>
         Repository(id, name, isPrivate, description, defaultBranch, registeredDate, lastActivityDate)
     }
@@ -186,7 +182,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
   /**
    * Parse a (Computer,Company) from a ResultSet
    */
-  private val withOwner = simple ~ accountRepository.simple map {
+  private val withOwner = (simple ~ accountRepository.simple).map {
     case repository ~ account => RepositoryWithOwner(repository, account) // repository -> account
   }
 

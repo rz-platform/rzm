@@ -1,4 +1,4 @@
-@()(implicit request: RepositoryRequestHeader)
+@(uploadForm: Form[UploadFileForm], path: String)(implicit request: RepositoryRequestHeader)
 @import views.html.helper._
 @import base._
 @import helpers._
@@ -11,6 +11,10 @@
 @CSRF.formField
 <input type="file" id="filepicker" name="fileList" multiple  accept="image/*,text/*" />
 <ul id="listing"></ul>
+
+@inputText(uploadForm("message"), Symbol("_label") -> "Commit name", Symbol("_help") -> "")
+
+<input type="hidden" name="path" value='@path' />
 
 <input type="radio" id="single" name="input-type" value="single" checked>
 <label for="single">@request.messages("repository.upload.singleFile")</label>
