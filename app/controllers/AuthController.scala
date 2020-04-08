@@ -11,6 +11,7 @@ import play.api.libs.Files
 import play.api.mvc._
 import services.encryption._
 import views._
+import play.api.data.validation.Constraints._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,19 +35,25 @@ class AuthController @Inject() (
 
   val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName" -> nonEmptyText,
-      "fullName" -> optional(text),
-      "password" -> nonEmptyText,
+      "userName" -> text.verifying(pattern("^[A-Za-z\\d_]+$".r,"Invalid  name")),
+      "fullName" -> optional(text(maxLength = 25)),
+      "password" -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
+//      .verifying("Incorrect name",
+//      fields =>
+//        fields match {
+//          case data => data.userName.trim.matches("^[A-Za-z\\d_]+$")
+//        }
+//    )
   )
 
   val userEditForm: Form[AccountData] = Form(
     mapping(
       "userName" -> nonEmptyText,
-      "fullName" -> optional(text),
+      "fullName" -> optional(text(maxLength = 25)),
       "mailAddress" -> email,
-      "description" -> optional(text)
+      "description" -> optional(text(maxLength = 255))
     )(AccountData.apply)(AccountData.unapply)
   )
 
