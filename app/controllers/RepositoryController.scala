@@ -345,20 +345,19 @@ class RepositoryController @Inject() (
         uploadFileForm.bindFromRequest.fold(
           formWithErrors =>    BadRequest(html.uploadFile(formWithErrors, "")),
           (data: UploadFileForm) => {
+            val gitRepository = new GitRepository(req.repositoryWithOwner.owner, repositoryName, gitHome)
+
             val files: Seq[CommitFile] = req.body.files.map(filePart => {
               CommitFile(
                 filePart.filename,
-                name = if (data.path.trim.nonEmpty) filePart.filename else s"${data.path}/${filePart.filename}",
+                name = if (data.path.trim.nonEmpty) s"${data.path}/${filePart.filename}" else filePart.filename,
                 filePart.ref
               )
             })
 
-            val gitRepository = new GitRepository(req.repositoryWithOwner.owner, repositoryName, gitHome)
-            gitRepository.commitUploadedFiles(files, req.account, "master", data.path, "uploaded")
-
+            gitRepository.commitUploadedFiles(files, req.account, "master", data.path, data.message)
             Redirect(routes.RepositoryController.view(accountName, repositoryName, data.path))
               .flashing("success" -> s"Uploaded $files.length files")
-
           }
         )
       }

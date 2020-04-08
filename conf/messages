@@ -39,6 +39,7 @@ repository.create.desc=Description
 repository.create.submit=Create repository
 
 repository.edit.title=Edit file
+repository.edit.commitmessage=Edited in web version
 repository.edit.submit=Save
 
 repository.list.title=Repositories
@@ -48,6 +49,8 @@ repository.list.empty=Nothing to display
 repository.upload.title=Upload files
 repository.upload.singleFile=Files one by one
 repository.upload.completeDirectory=Complete Directory
+repository.edit.commitmessage=Uploaded via web
+repository.edit.path=You are uploading to
 repository.upload.submit=Commit changes
 
 repository.viewFile.title=View file
