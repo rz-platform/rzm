@@ -50,7 +50,15 @@ class RepositoryController @Inject() (
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
   val createRepositoryForm: Form[RepositoryData] = Form(
-    mapping("name" -> nonEmptyText, "description" -> optional(text))(RepositoryData.apply)(RepositoryData.unapply)
+    mapping("name" -> nonEmptyText(minLength=1, maxLength=25),
+      "description" -> optional(text(maxLength = 255)))(RepositoryData.apply)(RepositoryData.unapply)
+      .verifying(
+        "",
+        fields =>
+          fields match {
+            case data => data.name.matches("^[A-Za-z\\d_-]+$")
+          }
+      )
   )
 
   val addCollaboratorForm: Form[NewCollaboratorData] = Form(
@@ -67,12 +75,12 @@ class RepositoryController @Inject() (
     mapping("path" -> text, "message" -> nonEmptyText)(UploadFileForm.apply)(UploadFileForm.unapply)
   )
 
-  val excludedSymbolsForFileName = List('/', ':', '#')
+  val excludedSymbolsForFileName = Array('/', ':', '#')
 
   val addNewItemToRepForm: Form[NewItem] = Form(
     mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply)
       .verifying(
-        "",
+        "File name contains forbidden symbols",
         fields =>
           fields match {
             case data => !excludedSymbolsForFileName.exists(data.name contains _)
@@ -451,7 +459,7 @@ class RepositoryController @Inject() (
       Ok.sendFile(
         gitRepository.createArchive("", revision),
         inline = false,
-        fileName = _ => repositoryName + "-" + revision + ".zip"
+        fileName = _ => Some(repositoryName + "-" + revision + ".zip")
       )
     }
   }

@@ -31,9 +31,9 @@ object Account {
   def buildNewAccount(userForm: AccountRegistrationData): Account = {
     Account(
       0,
-      userForm.userName,
+      userForm.userName.trim.toLowerCase,
       userForm.fullName.getOrElse(""),
-      userForm.mailAddress,
+      userForm.mailAddress.trim.toLowerCase,
       EncryptionService.getHash(userForm.password),
       registeredDate = Calendar.getInstance().getTime
     )
