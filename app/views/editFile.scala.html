@@ -22,7 +22,7 @@
 <input type="text" id="newFileName" name="newFileName" value="@path" />
 <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 
-<input type="text" id="message" name="message" value="Edited in web version" />
+<input type="text" id="message" name="message" value='@request.messages("repository.edit.commitmessage")' />
 <input type="text" id="oldFileName" name="oldFileName" value="@path" />
 <input type="submit" value='@request.messages("repository.edit.submit")'/>
 }

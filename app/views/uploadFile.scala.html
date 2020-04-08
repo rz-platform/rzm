@@ -5,14 +5,16 @@
 
 @auth(request.messages("repository.upload.title")) {
 @repositoryHeader()
-
+@if(!path.isEmpty) {
+<p>You are uploading to <strong>@path</strong></p>
+}
 @form(routes.RepositoryController.upload(request.repositoryWithOwner.owner.userName,
         request.repositoryWithOwner.repository.name), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 <input type="file" id="filepicker" name="fileList" multiple  accept="image/*,text/*" />
 <ul id="listing"></ul>
 
-@inputText(uploadForm("message"), Symbol("_label") -> "Commit name", Symbol("_help") -> "")
+<input type="text" id="message" name="message" value='@request.messages("repository.edit.commitmessage")' />
 
 <input type="hidden" name="path" value='@path' />
 
