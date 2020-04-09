@@ -35,17 +35,11 @@ class AuthController @Inject() (
 
   val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName" -> text.verifying(pattern("^[A-Za-z\\d_]+$".r,"Invalid  name")),
-      "fullName" -> optional(text(maxLength = 25)),
+      "userName" -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_]+$".r,"Invalid  name")),
+      "fullName" -> optional(text(maxLength = 36)),
       "password" -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
-//      .verifying("Incorrect name",
-//      fields =>
-//        fields match {
-//          case data => data.userName.trim.matches("^[A-Za-z\\d_]+$")
-//        }
-//    )
   )
 
   val userEditForm: Form[AccountData] = Form(

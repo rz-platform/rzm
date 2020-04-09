@@ -50,7 +50,7 @@ class RepositoryController @Inject() (
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
   val createRepositoryForm: Form[RepositoryData] = Form(
-    mapping("name" -> nonEmptyText(minLength=1, maxLength=25),
+    mapping("name" -> nonEmptyText(minLength=1, maxLength=36),
       "description" -> optional(text(maxLength = 255)))(RepositoryData.apply)(RepositoryData.unapply)
       .verifying(
         "",

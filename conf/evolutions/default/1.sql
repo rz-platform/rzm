@@ -2,9 +2,9 @@
 
 create table account (
   id                        bigserial primary key,
-  username                  varchar(25) not null UNIQUE,
+  username                  varchar(36) not null UNIQUE,
   password                  varchar(255) not null,
-  fullname                  varchar(25) not null default '',
+  fullname                  varchar(36) not null default '',
   isAdmin                   boolean not null default false,
   isRemoved                 boolean not null default false,
   mailAddress               varchar(50) not null UNIQUE,
@@ -15,7 +15,7 @@ create table account (
 
 create table repository (
  id bigserial primary key,
- name varchar(25) not null,
+ name varchar(36) not null,
  isPrivate boolean not null,
  description varchar(255) not null default '',
  defaultBranch varchar(255) not null,
