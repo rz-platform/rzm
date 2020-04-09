@@ -2,8 +2,7 @@ import java.sql.Statement
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import controllers.RepositoryController
-import controllers.routes
+import controllers.{AuthController, RepositoryController, routes}
 import git.GitRepository
 import models.AccessLevel
 import models.Account
@@ -42,7 +41,6 @@ class FunctionalRepoTest
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
   implicit val sys: ActorSystem       = ActorSystem("RepositoryTest")
-  implicit val mat: ActorMaterializer = ActorMaterializer()
 
   def getRandomString: String = {
     java.util.UUID.randomUUID.toString
@@ -51,6 +49,7 @@ class FunctionalRepoTest
   def databaseApi: DBApi               = app.injector.instanceOf[DBApi]
   def config: Configuration            = app.injector.instanceOf[Configuration]
   def controller: RepositoryController = app.injector.instanceOf[RepositoryController]
+  def authController: AuthController = app.injector.instanceOf[AuthController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
   def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
@@ -179,6 +178,20 @@ class FunctionalRepoTest
     val listRootFiles = listFileInRepo(git, Repository(0, repoName, true, null, "master", null, null), ".")
 
     listRootFiles.files.exists(_.name contains fileName) must equal(true)
+  }
+
+  "Attempt to create user with bad name" in {
+    val badUserNames = List("&", "!", "%", "киррилица", "with space")
+    badUserNames.map{username =>
+      val request = addCSRFToken(
+        FakeRequest(routes.AuthController.register())
+          .withFormUrlEncodedBody("userName" -> username, "fullName"-> getRandomString,
+            "password" -> getRandomString, "mailAddress"-> s"${getRandomString}@razam.dev")
+      )
+
+      val result = await(authController.register().apply(request))
+      result.header.status must equal(400)
+    }
   }
 
   "Create folder in repository" in {
