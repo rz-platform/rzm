@@ -181,15 +181,15 @@ class FunctionalRepoTest
   }
 
   "Attempt to create user with bad name" in {
-    val badUserNames = List("&", "!", "%", "киррилица", "with space")
+    val badUserNames = List("&", "!", "%", "киррилица" "with space")
     badUserNames.map{username =>
       val request = addCSRFToken(
-        FakeRequest(routes.AuthController.register())
+        FakeRequest(routes.AuthController.saveUser())
           .withFormUrlEncodedBody("userName" -> username, "fullName"-> getRandomString,
             "password" -> getRandomString, "mailAddress"-> s"${getRandomString}@razam.dev")
       )
 
-      val result = await(authController.register().apply(request))
+      val result = await(authController.saveUser().apply(request))
       result.header.status must equal(400)
     }
   }

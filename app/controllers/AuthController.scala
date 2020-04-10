@@ -13,20 +13,21 @@ import services.encryption._
 import views._
 import play.api.data.validation.Constraints._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class AuthController @Inject() (
-  accountService: AccountRepository,
-  userAction: UserInfoAction,
-  config: Configuration,
-  cc: MessagesControllerComponents
+    accountService: AccountRepository,
+    userAction: UserInfoAction,
+    config: Configuration,
+    cc: MessagesControllerComponents
 )(
-  implicit ec: ExecutionContext
+    implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val appHome = config.get[String]("play.server.dir")
+  private val appHome       = config.get[String]("play.server.dir")
   private val maxStaticSize = config.get[String]("play.server.media.max_size_bytes").toInt
 
   val loginForm: Form[AccountLoginData] = Form(
@@ -35,17 +36,17 @@ class AuthController @Inject() (
 
   val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName" -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_]+$".r,"Invalid  name")),
-      "fullName" -> optional(text(maxLength = 36)),
-      "password" -> nonEmptyText(maxLength = 255),
+      "userName"    -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_]+$".r, "Invalid  name")),
+      "fullName"    -> optional(text(maxLength = 36)),
+      "password"    -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
   )
 
   val userEditForm: Form[AccountData] = Form(
     mapping(
-      "userName" -> nonEmptyText,
-      "fullName" -> optional(text(maxLength = 25)),
+      "userName"    -> nonEmptyText,
+      "fullName"    -> optional(text(maxLength = 25)),
       "mailAddress" -> email,
       "description" -> optional(text(maxLength = 255))
     )(AccountData.apply)(AccountData.unapply)
@@ -89,7 +90,7 @@ class AuthController @Inject() (
 
   trait AuthException
   class UserDoesNotExist extends Exception with AuthException
-  class WrongPassword extends Exception with AuthException
+  class WrongPassword    extends Exception with AuthException
 
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
@@ -194,7 +195,7 @@ class AuthController @Inject() (
 
   trait FileUploadException
   class WrongContentType extends Exception("Only images is allowed") with FileUploadException
-  class ExceededMaxSize extends Exception("Image bigger than a max size") with FileUploadException
+  class ExceededMaxSize  extends Exception("Image bigger than a max size") with FileUploadException
 
   def uploadProfilePicture: Action[MultipartFormData[Files.TemporaryFile]] =
     Action(parse.multipartFormData) { request =>
