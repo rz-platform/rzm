@@ -20,3 +20,9 @@ jobs:
       node_js: 12
       before_install: cd $HOME/razamgit/razam && npm install
       script: cd $HOME/razamgit/razam && npm run build
+
+cache:
+  directories:
+    - "$HOME/.sbt"
+before_cache:
+  - find $HOME/.sbt  -name "*.lock"               -delete
