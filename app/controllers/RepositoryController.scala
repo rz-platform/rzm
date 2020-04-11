@@ -1,24 +1,21 @@
 package controllers
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import java.util.Calendar
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.FileIO
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.StreamConverters
+import akka.stream.scaladsl.{FileIO, Sink, StreamConverters}
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
-import org.apache.commons.io.FileUtils
-import org.eclipse.jgit.lib.Constants
-import org.eclipse.jgit.lib.FileMode
+import org.eclipse.jgit.lib.{Constants, FileMode}
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
+import play.api.data.validation.Constraints._
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.http.HttpEntity
 import play.api.i18n.MessagesApi
 import play.api.libs.streams.Accumulator
@@ -28,8 +25,7 @@ import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class RepositoryController @Inject() (
     gitEntitiesRepository: GitEntitiesRepository,
@@ -50,15 +46,11 @@ class RepositoryController @Inject() (
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
   val createRepositoryForm: Form[RepositoryData] = Form(
-    mapping("name" -> nonEmptyText(minLength=1, maxLength=36),
-      "description" -> optional(text(maxLength = 255)))(RepositoryData.apply)(RepositoryData.unapply)
-      .verifying(
-        "",
-        fields =>
-          fields match {
-            case data => data.name.matches("^[A-Za-z\\d_-]+$")
-          }
-      )
+    mapping(
+      "name" -> nonEmptyText(minLength = 1, maxLength = 36)
+        .verifying(pattern("^[A-Za-z\\d_\\-]+$".r, "Invalid repository name")),
+      "description" -> optional(text(maxLength = 255))
+    )(RepositoryData.apply)(RepositoryData.unapply)
   )
 
   val addCollaboratorForm: Form[NewCollaboratorData] = Form(
@@ -75,17 +67,17 @@ class RepositoryController @Inject() (
     mapping("path" -> text, "message" -> nonEmptyText)(UploadFileForm.apply)(UploadFileForm.unapply)
   )
 
-  val excludedSymbolsForFileName = Array('/', ':', '#')
+  val excludedSymbolsForFileName: List[Char] = List('/', ':', '#')
+
+  val checkForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
+    if (!excludedSymbolsForFileName.exists(itemName contains _))
+      Valid
+    else
+      Invalid("File name contains forbidden symbols.")
+  }
 
   val addNewItemToRepForm: Form[NewItem] = Form(
-    mapping("name" -> nonEmptyText)(NewItem.apply)(NewItem.unapply)
-      .verifying(
-        "File name contains forbidden symbols",
-        fields =>
-          fields match {
-            case data => !excludedSymbolsForFileName.exists(data.name contains _)
-          }
-      )
+    mapping("name" -> nonEmptyText.verifying(checkForExcludedSymbols))(NewItem.apply)(NewItem.unapply)
   )
 
   protected def createBadResult(msg: String, statusCode: Int = BAD_REQUEST): RequestHeader => Future[Result] = {
@@ -349,9 +341,9 @@ class RepositoryController @Inject() (
    */
   def upload(accountName: String, repositoryName: String): Action[MultipartFormData[File]] =
     userAction(parse.multipartFormData(handleFilePartAsFile))
-    .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
+      .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
         uploadFileForm.bindFromRequest.fold(
-          formWithErrors =>    BadRequest(html.uploadFile(formWithErrors, "")),
+          formWithErrors => BadRequest(html.uploadFile(formWithErrors, "")),
           (data: UploadFileForm) => {
             val gitRepository = new GitRepository(req.repositoryWithOwner.owner, repositoryName, gitHome)
 
