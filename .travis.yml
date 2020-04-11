@@ -18,8 +18,8 @@ jobs:
     - stage: frontend build
       language: node_js
       node_js: 12
-      before_install: cd $HOME/razamgit/razam && npm install
-      script: cd $HOME/razamgit/razam && npm run build
+      before_install: ls $TRAVIS_BUILD_DIR && cd $TRAVIS_BUILD_DIR/public && npm install
+      script: cd $TRAVIS_BUILD_DIR/public && npm run build
 
 cache:
   directories:
