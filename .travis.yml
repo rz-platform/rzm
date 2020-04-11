@@ -18,5 +18,5 @@ jobs:
     - stage: frontend build
       language: node_js
       node_js: 12
-      before_install: cd public && npm install
-      script: cd public && npm run build
+      before_install: cd $HOME/razamgit/razam && npm install
+      script: cd $HOME/razamgit/razam && npm run build
