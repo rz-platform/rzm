@@ -7,14 +7,13 @@ import models._
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
+import play.api.data.validation.Constraints._
 import play.api.libs.Files
 import play.api.mvc._
 import services.encryption._
 import views._
-import play.api.data.validation.Constraints._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuthController @Inject() (
     accountService: AccountRepository,
@@ -36,7 +35,7 @@ class AuthController @Inject() (
 
   val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName"    -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_]+$".r, "Invalid  name")),
+      "userName"    -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_\\-]+$".r, "Invalid  name")),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
