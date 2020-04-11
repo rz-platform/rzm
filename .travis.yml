@@ -1,3 +1,7 @@
+os: linux
+dist: xenial
+language: scala
+
 jobs:
   include:
     - stage: scalatest
@@ -13,4 +17,6 @@ jobs:
       script: sbt ++$TRAVIS_SCALA_VERSION test
     - stage: frontend build
       language: node_js
-      script: cd public && npm install && npm run build
+      node_js: 12
+      before_install: cd public && npm install
+      script: cd public && npm run build
