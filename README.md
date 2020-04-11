@@ -46,6 +46,18 @@ Run tests:
 sbt test
 ```
 
+### Production build
+
+```
+npm run build && sbt dist
+```
+
+If you want to run on your machine:
+```
+npm run build && sbt dist
+target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -Dplay.http.secret.key=secret
+```
+
 ## Copyright
 
 Copyright 2020 Eugene Bosiakov (@bosiakov). All rights reserved.

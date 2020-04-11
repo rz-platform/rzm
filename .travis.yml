@@ -1,11 +1,28 @@
+os: linux
+dist: xenial
 language: scala
-scala:
-  - 2.13.1
-services:
-  - postgresql
-before_script:
-  - psql -c 'create database razam;' -U postgres
-  - psql -c "create user razam with encrypted password 'razam';" -U postgres
-  - psql -c "grant all privileges on database razam to razam;" -U postgres
-script:
-  sbt ++$TRAVIS_SCALA_VERSION test
+
+jobs:
+  include:
+    - stage: scalatest
+      language: scala
+      scala:
+        - 2.13.1
+      services:
+        - postgresql
+      before_script:
+        - psql -c 'create database razam;' -U postgres
+        - psql -c "create user razam with encrypted password 'razam';" -U postgres
+        - psql -c "grant all privileges on database razam to razam;" -U postgres
+      script: sbt ++$TRAVIS_SCALA_VERSION test
+    - stage: frontend build
+      language: node_js
+      node_js: 12
+      before_install: cd $TRAVIS_BUILD_DIR/public && npm install
+      script: cd $TRAVIS_BUILD_DIR/public && npm run build
+
+cache:
+  directories:
+    - "$HOME/.sbt"
+before_cache:
+  - find $HOME/.sbt  -name "*.lock"               -delete
