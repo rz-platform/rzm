@@ -1,22 +1,28 @@
 package controllers
-
 import java.io.File
-import java.nio.file.{Files, Path}
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.Calendar
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Sink, StreamConverters}
+import akka.stream.scaladsl.FileIO
+import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.StreamConverters
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
-import org.eclipse.jgit.lib.{Constants, FileMode}
+import org.eclipse.jgit.lib.Constants
+import org.eclipse.jgit.lib.FileMode
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
-import play.api.data.validation.{Constraint, Invalid, Valid}
+import play.api.data.validation.Constraint
+import play.api.data.validation.Invalid
+import play.api.data.validation.Valid
 import play.api.http.HttpEntity
+import play.api.i18n.Messages
 import play.api.i18n.MessagesApi
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
@@ -24,8 +30,10 @@ import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
+import play.mvc.Http.Status._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class RepositoryController @Inject() (
     gitEntitiesRepository: GitEntitiesRepository,
@@ -36,8 +44,7 @@ class RepositoryController @Inject() (
     messagesApi: MessagesApi,
     cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
-    extends MessagesAbstractController(cc)
-    with play.api.i18n.I18nSupport {
+    extends MessagesAbstractController(cc) {
 
   private val logger = play.api.Logger(this.getClass)
 
@@ -48,7 +55,7 @@ class RepositoryController @Inject() (
   val createRepositoryForm: Form[RepositoryData] = Form(
     mapping(
       "name" -> nonEmptyText(minLength = 1, maxLength = 36)
-        .verifying(pattern("^[A-Za-z\\d_\\-]+$".r, "Invalid repository name")),
+        .verifying(pattern("^[A-Za-z\\d_\\-]+$".r)),
       "description" -> optional(text(maxLength = 255))
     )(RepositoryData.apply)(RepositoryData.unapply)
   )
@@ -73,7 +80,7 @@ class RepositoryController @Inject() (
     if (!excludedSymbolsForFileName.exists(itemName contains _))
       Valid
     else
-      Invalid("File name contains forbidden symbols.")
+      Invalid("")
   }
 
   val addNewItemToRepForm: Form[NewItem] = Form(
@@ -161,13 +168,15 @@ class RepositoryController @Inject() (
                     new GitRepository(request.account, repository.name, gitHome)
                   git.create()
                   Redirect(routes.RepositoryController.list())
-                    .flashing("success" -> s"Repository created")
+                    .flashing("success" -> Messages("repository.create.flash.success"))
                 }
             }
           case Some(_) =>
             val formBuiltFromRequest = createRepositoryForm.bindFromRequest
             val newForm = createRepositoryForm.bindFromRequest.copy(
-              errors = formBuiltFromRequest.errors ++ Seq(FormError("name", "Repository already exists."))
+              errors = formBuiltFromRequest.errors ++ Seq(
+                FormError("name", Messages("repository.create.error.alreadyexists"))
+              )
             )
             Future(BadRequest(html.createRepository(newForm)))
         }
@@ -197,7 +206,7 @@ class RepositoryController @Inject() (
           Future.successful {
             Ok(html.viewBlob(blob, path, buildTreeFromPath(path, isFile = true)))
           }
-        case None => errorHandler.onClientError(request, 404, "Not Found")
+        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
     }
 
@@ -215,7 +224,7 @@ class RepositoryController @Inject() (
               body = HttpEntity.Streamed(stream, Some(rawFile.contentLength.toLong), Some(rawFile.contentType))
             )
           }
-        case None => errorHandler.onClientError(request, 404, "Not Found")
+        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
 
     }
@@ -230,12 +239,12 @@ class RepositoryController @Inject() (
           Future.successful {
             Ok(html.editFile(editorForm, blob, decodeNameFromUrl(path), buildTreeFromPath(path, isFile = true)))
           }
-        case None => errorHandler.onClientError(request, 404, "Not Found")
+        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
     }
 
   def edit(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
       val rev           = "master" // TODO: Replace with rev
       val gitRepository = new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
       val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
@@ -271,8 +280,8 @@ class RepositoryController @Inject() (
             formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path)))),
             editFile
           )
-          Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path))
-        case None => NotFound
+          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path)))
+        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
     }
 
@@ -300,7 +309,7 @@ class RepositoryController @Inject() (
       addNewItemToRepForm.bindFromRequest.fold(
         _ =>
           Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
-            .flashing("error" -> s"Name is required"),
+            .flashing("error" -> Messages("repository.addNewItem.error.namereq")),
         newItem => {
           val gitRepository =
             new GitRepository(request.repositoryWithOwner.owner, repositoryName, gitHome)
@@ -329,7 +338,7 @@ class RepositoryController @Inject() (
             }
 
           Redirect(routes.RepositoryController.view(accountName, repositoryName, path))
-            .flashing("success" -> s"Item is successfully created")
+            .flashing("success" -> Messages("repository.addNewItem.success"))
         }
       )
     }
@@ -357,7 +366,7 @@ class RepositoryController @Inject() (
 
             gitRepository.commitUploadedFiles(files, req.account, "master", data.path, data.message)
             Redirect(routes.RepositoryController.view(accountName, repositoryName, data.path))
-              .flashing("success" -> s"Uploaded $files.length files")
+              .flashing("success" -> Messages("repository.upload.success"))
           }
         )
       }
@@ -396,8 +405,7 @@ class RepositoryController @Inject() (
                 .flatMap {
                   case None =>
                     gitEntitiesRepository
-                      .createCollaborator(
-                        req.repositoryWithOwner.repository.id,
+                      .createCollaborator(req.repositoryWithOwner.repository.id,
                         futureCollaborator.id,
                         AccessLevel.fromString(data.accessLevel)
                       )
@@ -407,10 +415,14 @@ class RepositoryController @Inject() (
                   case Some(_) =>
                     Future(
                       getCollaboratorPageRedirect(req)
-                        .flashing("error" -> s"User is already a collaborator")
+                        .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
                     )
                 }
-            case None => Future(getCollaboratorPageRedirect(req).flashing("error" -> s"No such user"))
+            case None =>
+              Future(
+                getCollaboratorPageRedirect(req)
+                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+              )
           }
       )
     }
@@ -434,7 +446,11 @@ class RepositoryController @Inject() (
                       .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
                   case None => Future(getCollaboratorPageRedirect(req))
                 }
-            case None => Future(getCollaboratorPageRedirect(req).flashing("error" -> s"No such user"))
+            case None =>
+              Future(
+                getCollaboratorPageRedirect(req)
+                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+              )
           }
       )
     }

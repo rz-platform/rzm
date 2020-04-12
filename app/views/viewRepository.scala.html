@@ -4,20 +4,8 @@
 @import helpers._
 
 @auth(request.repositoryWithOwner.repository.name) {
-@request.flash.get("success").map { message =>
-<div class="alert-message warning">
-    <strong>Done!</strong> @message
-</div>
-}
-
-@request.flash.get("error").map { message =>
-<div class="alert-message warning">
-    <strong>Error!</strong> @message
-</div>
-}
-
 @repositoryHeader()
-
+@notificationHeader()
 @repositoryFileTree(tree)
 
 <div class="repository-actions">

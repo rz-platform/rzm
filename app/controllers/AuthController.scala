@@ -8,6 +8,7 @@ import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
+import play.api.i18n.Messages
 import play.api.libs.Files
 import play.api.mvc._
 import services.encryption._
@@ -35,7 +36,7 @@ class AuthController @Inject() (
 
   val registerForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName"    -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_\\-]+$".r, "Invalid  name")),
+      "userName"    -> text(maxLength = 36).verifying(pattern("^[A-Za-z\\d_\\-]+$".r)),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
@@ -80,7 +81,7 @@ class AuthController @Inject() (
           case _ =>
             val formBuiltFromRequest = registerForm.bindFromRequest
             val newForm = registerForm.bindFromRequest.copy(
-              errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "User name or email already exists."))
+              errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
             )
             Future(BadRequest(html.userRegister(newForm)))
         }
@@ -111,10 +112,10 @@ class AuthController @Inject() (
               throw new UserDoesNotExist
           }
           .recover {
-            case e: Exception with AuthException =>
+            case _: AuthException =>
               val formBuiltFromRequest = loginForm.bindFromRequest
               val newForm = loginForm.bindFromRequest.copy(
-                errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", "Check username of password"))
+                errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
               )
               BadRequest(html.userLogin(newForm))
           }
@@ -122,9 +123,9 @@ class AuthController @Inject() (
     )
   }
 
-  def logout: Action[AnyContent] = Action {
+  def logout: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.AuthController.login()).withNewSession.flashing(
-      "success" -> "You are now logged out."
+      "success" -> Messages("logout")
     )
   }
 
@@ -159,7 +160,9 @@ class AuthController @Inject() (
           } else {
             val formBuiltFromRequest = userEditForm.bindFromRequest
             val newForm = userEditForm.bindFromRequest.copy(
-              errors = formBuiltFromRequest.errors ++ Seq(FormError("mailAddress", "Email already exists."))
+              errors = formBuiltFromRequest.errors ++ Seq(
+                FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
+              )
             )
             Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
           }
@@ -176,13 +179,15 @@ class AuthController @Inject() (
           val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
           accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
             Future(
-              Redirect(routes.AuthController.profilePage()).flashing("success" -> s"Password successfully updated")
+              Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
             )
           }
         } else {
           val formBuiltFromRequest = updatePasswordForm.bindFromRequest
           val newForm = updatePasswordForm.bindFromRequest.copy(
-            errors = formBuiltFromRequest.errors ++ Seq(FormError("oldPassword", "Current password is incorrect."))
+            errors = formBuiltFromRequest.errors ++ Seq(
+              FormError("oldPassword", Messages("profile.error.passisincorrect"))
+            )
           )
           Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))
         }
@@ -193,11 +198,11 @@ class AuthController @Inject() (
   val allowedContentTypes = List("image/png", "image/jpeg")
 
   trait FileUploadException
-  class WrongContentType extends Exception("Only images is allowed") with FileUploadException
-  class ExceededMaxSize  extends Exception("Image bigger than a max size") with FileUploadException
+  class WrongContentType extends Exception with FileUploadException
+  class ExceededMaxSize  extends Exception with FileUploadException
 
   def uploadProfilePicture: Action[MultipartFormData[Files.TemporaryFile]] =
-    Action(parse.multipartFormData) { request =>
+    Action(parse.multipartFormData) { implicit request =>
       val redirect = Redirect(routes.AuthController.profilePage())
       request.body
         .file("picture")
@@ -220,7 +225,8 @@ class AuthController @Inject() (
             picture.ref.copyTo(Paths.get(s"$appHome/public/pictures/$filename"), replace = true)
             redirect.flashing("success" -> "Profile picture updated")
           } catch {
-            case exc: FileUploadException => redirect.flashing("error" -> exc.getMessage)
+            case _: WrongContentType => redirect.flashing("error" -> Messages("profile.error.onlyimages"))
+            case _: ExceededMaxSize  => redirect.flashing("error" -> Messages("profile.error.imagetoobig"))
           }
         }
         .getOrElse {
