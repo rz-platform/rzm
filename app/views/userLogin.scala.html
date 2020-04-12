@@ -1,14 +1,12 @@
 @(loginForm: Form[AccountLoginData])(implicit request: MessagesRequestHeader)
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @main("Sign in") {
 <h1>Login</h1>
-@request.flash.get("error").map { message =>
-<div class="alert-message warning">
-    <strong>Error!</strong> @message
-</div>
-}
+@notificationHeader()
+
 @form(routes.AuthController.authenticate()) {
 <fieldset>
     @CSRF.formField

@@ -1,20 +1,10 @@
 @(userEditForm: Form[AccountData], passwordUpdateForm: Form[PasswordData])(implicit request: UserRequestHeader)
 @import views.html.helper._
 @import base._
+@import helpers._
 
 @auth(request.messages("profile.title")) {
-<h1>Profile edit</h1>
-@request.flash.get("error").map { message =>
-<div class="alert-message warning">
-    <strong>Error!</strong> @message
-</div>
-}
-
-@request.flash.get("success").map { message =>
-<div class="alert-message warning">
-    <strong>Success!</strong> @message
-</div>
-}
+@notificationHeader()
 @form(routes.AuthController.editProfile()) {
 <fieldset>
     @CSRF.formField

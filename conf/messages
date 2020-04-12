@@ -5,10 +5,15 @@ common.error=Error
 common.myRepositories=My repositories
 common.signout=Sign out
 
+error.notfound = Not Found
+
 signin.title=Sign in
 signin.head=Sign in
 signin.submit=Sign in
 signin.signupLink=Create an account
+signin.error.wrongcred = Check username or password
+
+logout = You are now logged out.
 
 signup.title=Sign up
 signup.head=Sign up
@@ -18,12 +23,18 @@ signup.form.email=Email address
 signup.form.fullname=Full Name
 signup.submit=Sign up
 signup.signInLink=Sign in
+signup.error.alreadyexists = User name or email already exists.
 
 profile.title=My profile
 profile.head=Profile edit
 profile.submitData=Update profile
 profile.submitPassword=Update password
 profile.submitPicture=Upload a photo
+profile.error.emailalreadyexists = Email already exists.
+profile.error.passisincorrect = Current password is incorrect.
+profile.flash.passupdated = Password successfully updated
+profile.error.onlyimages = Only images is allowed
+profile.error.imagetoobig = Image is bigger than allowed
 
 repository.collaborator.title=Repository collaborators
 repository.collaborator.emailOrLogin=User login or email
@@ -31,12 +42,19 @@ repository.collaborator.accessLevel=Access Level
 repository.collaborator.accessLevel.read=Read
 repository.collaborator.accessLevel.write=Write
 repository.collaborator.button=Invite a collaborator
+repository.collaborator.error.alreadycollab = User is already a collaborator
+repository.collaborator.error.nosuchuser = No such user
 
 repository.create.title=Create a New Repository
 repository.create.head =Create a New Repository
 repository.create.name=Repository name
 repository.create.desc=Description
 repository.create.submit=Create repository
+repository.create.error.alreadyexists = Repository already exists.
+repository.create.flash.success = Repository created
+
+repository.addNewItem.error.namereq = Name is required
+repository.addNewItem.success = Item is successfully created
 
 repository.edit.title=Edit file
 repository.edit.commitmessage=Edited in web version
@@ -52,6 +70,7 @@ repository.upload.completeDirectory=Complete Directory
 repository.edit.commitmessage=Uploaded via web
 repository.edit.path=You are uploading to
 repository.upload.submit=Commit changes
+repository.upload.success = Successfully uploaded
 
 repository.viewFile.title=View file
 repository.viewFile.raw=Raw
