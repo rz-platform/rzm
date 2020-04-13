@@ -94,10 +94,9 @@ class RepositoryController @Inject() (
 
   val editorForm: Form[EditedItem] = Form(
     mapping(
-      "content"     -> nonEmptyText,
-      "message"     -> nonEmptyText,
-      "newFileName" -> optional(text),
-      "oldFileName" -> nonEmptyText
+      "content"  -> nonEmptyText,
+      "message"  -> nonEmptyText,
+      "fileName" -> nonEmptyText.verifying(checkForExcludedSymbols)
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
@@ -226,8 +225,17 @@ class RepositoryController @Inject() (
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
-
     }
+
+  private def getFileName(path: String): String = {
+    new File(path).getName
+  }
+
+  private def fillEditForm(blob: Blob, path: String)(implicit req: RepositoryRequest[AnyContent]): Form[EditedItem] = {
+    editorForm.fill(
+      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), Some(path), path)
+    )
+  }
 
   def editFilePage(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
@@ -237,7 +245,14 @@ class RepositoryController @Inject() (
       blobInfo match {
         case Some(blob) =>
           Future.successful {
-            Ok(html.editFile(editorForm, blob, decodeNameFromUrl(path), buildTreeFromPath(path, isFile = true)))
+            Ok(
+              html.editFile(
+                fillEditForm(blob, path),
+                blob,
+                decodeNameFromUrl(path),
+                buildTreeFromPath(path, isFile = true)
+              )
+            )
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
@@ -250,12 +265,8 @@ class RepositoryController @Inject() (
       val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
 
       val editFile = { editedFile: EditedItem =>
-        val fName = editedFile.oldFileName
-        val content = if (editedFile.content.nonEmpty) {
-          editedFile.content.getBytes()
-        } else {
-          Array.emptyByteArray
-        }
+        val fName   = editedFile.fileName
+        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
         gitRepository
           .commitFiles(rev, ".", editedFile.message, request.account) {
             case (git, headTip, builder, inserter) =>
@@ -405,7 +416,8 @@ class RepositoryController @Inject() (
                 .flatMap {
                   case None =>
                     gitEntitiesRepository
-                      .createCollaborator(req.repositoryWithOwner.repository.id,
+                      .createCollaborator(
+                        req.repositoryWithOwner.repository.id,
                         futureCollaborator.id,
                         AccessLevel.fromString(data.accessLevel)
                       )
