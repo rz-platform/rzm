@@ -17,13 +17,15 @@
 @repositoryFileTree(tree)
 
 @form(routes.RepositoryController.edit(request.repositoryWithOwner.owner.userName,
-    request.repositoryWithOwner.repository.name, path), Symbol("enctype") -> "multipart/form-data") {
+    request.repositoryWithOwner.repository.name, path)) {
 @CSRF.formField
-<input type="text" id="newFileName" name="newFileName" value="@path" />
-<textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 
-<input type="text" id="message" name="message" value='@request.messages("repository.edit.commitmessage")' />
-<input type="text" id="oldFileName" name="oldFileName" value="@path" />
+@inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"))
+
+@textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code",  Symbol("_label") -> request.messages("repository.edit.form.content"))
+
+@inputText(editorForm("message"), Symbol("_label") -> request.messages("repository.edit.form.message"))
+
 <input type="submit" value='@request.messages("repository.edit.submit")'/>
 }
 <link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/edit.css")"/>

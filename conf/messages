@@ -58,6 +58,9 @@ repository.addNewItem.success = Item is successfully created
 
 repository.edit.title=Edit file
 repository.edit.commitmessage=Edited in web version
+repository.edit.form.filename = File name
+repository.edit.form.content = Content
+repository.edit.form.message = Commit message
 repository.edit.submit=Save
 
 repository.list.title=Repositories
