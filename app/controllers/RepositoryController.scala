@@ -1,39 +1,30 @@
 package controllers
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import java.util.Calendar
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.FileIO
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.StreamConverters
+import akka.stream.scaladsl.{FileIO, Sink, StreamConverters}
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
-import org.eclipse.jgit.lib.Constants
-import org.eclipse.jgit.lib.FileMode
+import org.eclipse.jgit.lib.{Constants, FileMode}
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
-import play.api.data.validation.Constraint
-import play.api.data.validation.Invalid
-import play.api.data.validation.Valid
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.http.HttpEntity
-import play.api.i18n.Messages
-import play.api.i18n.MessagesApi
+import play.api.i18n.{Messages, MessagesApi}
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
-import play.mvc.Http.Status._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class RepositoryController @Inject() (
     gitEntitiesRepository: GitEntitiesRepository,
@@ -233,7 +224,7 @@ class RepositoryController @Inject() (
 
   private def fillEditForm(blob: Blob, path: String)(implicit req: RepositoryRequest[AnyContent]): Form[EditedItem] = {
     editorForm.fill(
-      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), Some(path), path)
+      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), getFileName(path))
     )
   }
 
@@ -265,21 +256,13 @@ class RepositoryController @Inject() (
       val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
 
       val editFile = { editedFile: EditedItem =>
-        val fName   = editedFile.fileName
         val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
         gitRepository
           .commitFiles(rev, ".", editedFile.message, request.account) {
-            case (git, headTip, builder, inserter) =>
-              gitRepository.processTree(git, headTip) { (path, tree) =>
-                if (!fName.contains(path)) {
-                  builder.add(
-                    gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                  )
-                }
-              }
+            case (_, _, builder, inserter) =>
               builder.add(
                 gitRepository
-                  .createDirCacheEntry(fName, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
+                  .createDirCacheEntry(path, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
               )
               builder.finish()
           }
