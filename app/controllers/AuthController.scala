@@ -1,6 +1,7 @@
 package controllers
 
-import java.nio.file.Paths
+import java.io.File
+import java.io.IOException
 
 import javax.inject.Inject
 import models._
@@ -13,8 +14,10 @@ import play.api.libs.Files
 import play.api.mvc._
 import services.encryption._
 import views._
+import services.images.ImageService._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class AuthController @Inject() (
     accountService: AccountRepository,
@@ -27,8 +30,13 @@ class AuthController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val appHome       = config.get[String]("play.server.dir")
-  private val maxStaticSize = config.get[String]("play.server.media.max_size_bytes").toInt
+  private val picturesDir: File  = new File(config.get[String]("play.server.media.pictures_path"))
+  private val maxStaticSize: Int = config.get[String]("play.server.media.max_size_bytes").toInt
+  private val thumbSize: Int     = config.get[String]("play.server.media.default_thumbnail_size").toInt
+
+  if (!picturesDir.exists) {
+    picturesDir.mkdirs()
+  }
 
   val loginForm: Form[AccountLoginData] = Form(
     mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
@@ -195,42 +203,36 @@ class AuthController @Inject() (
     )
   }
 
-  val allowedContentTypes = List("image/png", "image/jpeg")
+  val allowedContentTypes = List("image/jpeg", "image/png")
 
   trait FileUploadException
   class WrongContentType extends Exception with FileUploadException
   class ExceededMaxSize  extends Exception with FileUploadException
 
   def uploadProfilePicture: Action[MultipartFormData[Files.TemporaryFile]] =
-    Action(parse.multipartFormData) { implicit request =>
+    userAction(parse.multipartFormData) { implicit request: UserRequest[MultipartFormData[Files.TemporaryFile]] =>
       val redirect = Redirect(routes.AuthController.profilePage())
       request.body
         .file("picture")
         .map { picture =>
-          // only get the last part of the filename
-          // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
-          val filename = Paths.get(picture.filename).getFileName
-          val fileSize = picture.fileSize
           try {
             val contentType = picture.contentType.getOrElse { throw new WrongContentType }
-
             if (!(allowedContentTypes contains contentType)) {
               throw new WrongContentType
             }
-
-            if (fileSize > maxStaticSize) {
+            if (picture.fileSize > maxStaticSize) {
               throw new ExceededMaxSize
             }
-
-            picture.ref.copyTo(Paths.get(s"$appHome/public/pictures/$filename"), replace = true)
-            redirect.flashing("success" -> "Profile picture updated")
+            createSquaredThumbnail(picture.ref, thumbSize, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
+            redirect.flashing("success" -> Messages("profile.picture.success"))
           } catch {
             case _: WrongContentType => redirect.flashing("error" -> Messages("profile.error.onlyimages"))
             case _: ExceededMaxSize  => redirect.flashing("error" -> Messages("profile.error.imagetoobig"))
+            case _: IOException      => redirect.flashing("error" -> Messages("profile.error.processing"))
           }
         }
         .getOrElse {
-          redirect.flashing("error" -> "Missing file")
+          redirect.flashing("error" -> Messages("profile.error.missingpicture"))
         }
     }
 }

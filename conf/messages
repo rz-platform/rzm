@@ -35,6 +35,9 @@ profile.error.passisincorrect = Current password is incorrect.
 profile.flash.passupdated = Password successfully updated
 profile.error.onlyimages = Only images is allowed
 profile.error.imagetoobig = Image is bigger than allowed
+profile.error.processing = Corrupted image
+profile.picture.success = Profile picture updated
+profile.error.missingpicture = File not attached
 
 repository.collaborator.title=Repository collaborators
 repository.collaborator.emailOrLogin=User login or email
