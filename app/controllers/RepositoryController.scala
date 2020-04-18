@@ -1,6 +1,6 @@
 package controllers
 import java.io.File
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util.Calendar
 
 import akka.stream.IOResult
@@ -351,9 +351,12 @@ class RepositoryController @Inject() (
             val gitRepository = new GitRepository(req.repositoryWithOwner.owner, repositoryName, gitHome)
 
             val files: Seq[CommitFile] = req.body.files.map(filePart => {
+              // only get the last part of the filename
+              // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
+              val filename = Paths.get(filePart.filename).getFileName.toString
               CommitFile(
-                filePart.filename,
-                name = if (data.path.trim.nonEmpty) s"${data.path}/${filePart.filename}" else filePart.filename,
+                filename,
+                name = if (data.path.trim.nonEmpty) s"${data.path}/${filename}" else filename,
                 filePart.ref
               )
             })
