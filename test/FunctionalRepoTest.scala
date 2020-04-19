@@ -75,7 +75,7 @@ class FunctionalRepoTest
     defaultDatabase.withConnection { connection =>
       val rs = connection.prepareStatement(s"select id from account where username='${userName}'").executeQuery()
       rs.next()
-      Account(rs.getInt(1), userName, null, null, null, false, null)
+      Account(rs.getInt(1), userName, null, null, null, isAdmin = false, null, hasPicture = false)
     }
   }
 
