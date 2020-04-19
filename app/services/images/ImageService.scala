@@ -12,34 +12,36 @@ object ImageService {
 
   private def cropImageToSquare(src: BufferedImage): BufferedImage = {
     val (width, height) = (src.getWidth, src.getHeight)
-    val (squareSide, x) = {
+    val (squareSide, x, y) = {
       if (width > height) {
-        (height, (width - height) / 2)
+        (height, (width - height) / 2, 0)
       } else {
-        (width, (height - width) / 2)
+        (width, 0, (height - width) / 2)
       }
     }
-    src.getSubimage(x, 0, squareSide, squareSide)
+    src.getSubimage(x, y, squareSide, squareSide)
   }
 
-  def createSquaredThumbnail(
+  def thumbImageName(name: String, size: Int): String = {
+    s"${name}_$size.$defaultExtension"
+  }
+
+  def createSquaredThumbnails(
       inputImgFile: File,
-      width: Int,
-      height: Int,
+      size: Int,
       destination: String,
       destinationName: String
-  ): File = {
-    val img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+  ): Boolean = {
+    val src = cropImageToSquare(ImageIO.read(inputImgFile))
+
+    val img = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB)
     img.createGraphics.drawImage(
-      ImageIO.read(inputImgFile).getScaledInstance(width, height, Image.SCALE_SMOOTH),
+      src.getScaledInstance(size, size, Image.SCALE_SMOOTH),
       0,
       0,
       null
     )
-    val squareImg = cropImageToSquare(img)
-
-    val outputFile = Paths.get(destination, s"$destinationName.$defaultExtension").toFile
-    ImageIO.write(squareImg, defaultExtension, outputFile)
-    outputFile
+    val outputFile = Paths.get(destination, thumbImageName(destinationName, size)).toFile
+    ImageIO.write(img, defaultExtension, outputFile)
   }
 }

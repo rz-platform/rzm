@@ -13,7 +13,7 @@
     @inputText(userEditForm("mailAddress"), Symbol("_label") -> "Mail address", Symbol("_help") -> "")
     @inputText(userEditForm("description"), Symbol("_label") -> "Your background", Symbol("_help") -> "")
 </fieldset>
-<div class="actions"><input type="submit" value='@request.messages("profile.submitData")' class="btn primary"/></div>
+<div class="actions"><input type="submit" value='@request.messages("profile.submit.data")' class="btn primary"/></div>
 }
 
 @form(routes.AuthController.updatePassword()) {
@@ -22,16 +22,22 @@
     @inputPassword(passwordUpdateForm("oldPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
     @inputPassword(passwordUpdateForm("newPassword"), Symbol("_label") -> "New Password", Symbol("_help") -> "")
 </fieldset>
-<div class="actions"><input type="submit" value='@request.messages("profile.submitPassword")' class="btn primary"/></div>
+<div class="actions"><input type="submit" value='@request.messages("profile.submit.password")' class="btn primary"/></div>
 }
 
 @helper.form(action = routes.AuthController.uploadProfilePicture, Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
+@if(request.account.hasPicture) {
+<p><img src="@routes.AuthController.profilePicture(request.account.userName)" /></p>
+}
 <input type="file" name="picture" />
 
 <p>
-    <input type="submit" value='@request.messages("profile.submitPicture")'>
+    <input type="submit" value='@request.messages("profile.submit.picture")'>
 </p>
-
+}
+@helper.form(action = routes.AuthController.removeProfilePicture) {
+    @CSRF.formField
+    <input type="submit" value='@request.messages("profile.delete.picture")'>
 }
 }

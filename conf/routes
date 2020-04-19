@@ -68,6 +68,8 @@ GET /repositories/:account/:repository/archive controllers.RepositoryController.
 # Profile editing page
 
 GET /profile controllers.AuthController.profilePage
+GET /profile/image/:account controllers.AuthController.profilePicture(account)
+POST /profile/image/delete controllers.AuthController.removeProfilePicture
 POST /profile controllers.AuthController.editProfile
 POST /profilePassword controllers.AuthController.updatePassword
 POST  /uploadProfilePage controllers.AuthController.uploadProfilePicture()

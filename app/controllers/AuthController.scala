@@ -1,7 +1,6 @@
 package controllers
 
-import java.io.File
-import java.io.IOException
+import java.io.{File, IOException}
 
 import javax.inject.Inject
 import models._
@@ -10,14 +9,13 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.i18n.Messages
-import play.api.libs.Files
 import play.api.mvc._
+import services.encryption.EncryptionService.md5HashString
 import services.encryption._
-import views._
 import services.images.ImageService._
+import views._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AuthController @Inject() (
     accountService: AccountRepository,
@@ -32,7 +30,7 @@ class AuthController @Inject() (
 
   private val picturesDir: File  = new File(config.get[String]("play.server.media.pictures_path"))
   private val maxStaticSize: Int = config.get[String]("play.server.media.max_size_bytes").toInt
-  private val thumbSize: Int     = config.get[String]("play.server.media.default_thumbnail_size").toInt
+  private val thumbSize: Int     = config.get[String]("play.server.media.thumbnail_size").toInt
 
   if (!picturesDir.exists) {
     picturesDir.mkdirs()
@@ -209,8 +207,8 @@ class AuthController @Inject() (
   class WrongContentType extends Exception with FileUploadException
   class ExceededMaxSize  extends Exception with FileUploadException
 
-  def uploadProfilePicture: Action[MultipartFormData[Files.TemporaryFile]] =
-    userAction(parse.multipartFormData) { implicit request: UserRequest[MultipartFormData[Files.TemporaryFile]] =>
+  def uploadProfilePicture: Action[MultipartFormData[play.api.libs.Files.TemporaryFile]] =
+    userAction(parse.multipartFormData).async { implicit request =>
       val redirect = Redirect(routes.AuthController.profilePage())
       request.body
         .file("picture")
@@ -223,18 +221,45 @@ class AuthController @Inject() (
             if (picture.fileSize > maxStaticSize) {
               throw new ExceededMaxSize
             }
-            createSquaredThumbnail(picture.ref, thumbSize, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
-            redirect.flashing("success" -> Messages("profile.picture.success"))
+            createSquaredThumbnails(picture.ref, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
+            accountService.hasPicture(request.account.id).flatMap { _ =>
+              Future(redirect.flashing("success" -> Messages("profile.picture.success")))
+            }
           } catch {
-            case _: WrongContentType => redirect.flashing("error" -> Messages("profile.error.onlyimages"))
-            case _: ExceededMaxSize  => redirect.flashing("error" -> Messages("profile.error.imagetoobig"))
-            case _: IOException      => redirect.flashing("error" -> Messages("profile.error.processing"))
+            case _: WrongContentType => Future(redirect.flashing("error" -> Messages("profile.error.onlyimages")))
+            case _: ExceededMaxSize  => Future(redirect.flashing("error" -> Messages("profile.error.imagetoobig")))
+            case _: IOException      => Future(redirect.flashing("error" -> Messages("profile.error.processing")))
           }
         }
         .getOrElse {
-          redirect.flashing("error" -> Messages("profile.error.missingpicture"))
+          Future(redirect.flashing("error" -> Messages("profile.error.missingpicture")))
         }
     }
+
+  def profilePicture(account: String): Action[AnyContent] = Action { implicit request =>
+    val profilePicture = new java.io.File(picturesDir.toString + "/" + thumbImageName(account, thumbSize))
+    if (profilePicture.exists()) {
+      val etag = md5HashString(profilePicture.lastModified().toString)
+
+      if (request.headers.get(IF_NONE_MATCH).getOrElse("") == etag) {
+        NotModified
+      } else {
+        Ok.sendFile(profilePicture).withHeaders(ETAG -> etag)
+      }
+    } else {
+      NotFound
+    }
+  }
+
+  def removeProfilePicture: Action[AnyContent] = userAction.async { implicit request =>
+    val profilePicture = new java.io.File(picturesDir.toString + "/" + thumbImageName(request.account.userName, thumbSize))
+    profilePicture.delete()
+    accountService.removePicture(request.account.id).flatMap { _ =>
+      Future(
+        Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.picture.delete.success"))
+      )
+    }
+  }
 }
 
 object AuthController {
