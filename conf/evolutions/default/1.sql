@@ -9,25 +9,25 @@ create table account (
   isRemoved                 boolean not null default false,
   mailAddress               varchar(50) not null UNIQUE,
   registeredDate            timestamp not null default current_timestamp,
-  image                     varchar(255) not null default '',
+  hasPicture                boolean not null default false,
   description               varchar(255) not null default ''
 );
 
 create table repository (
- id bigserial primary key,
- name varchar(36) not null,
- isPrivate boolean not null,
- description varchar(255) not null default '',
- defaultBranch varchar(255) not null,
- registeredDate  timestamp not null default current_timestamp,
- lastActivityDate timestamp not null
+ id                 bigserial primary key,
+ name               varchar(36) not null,
+ isPrivate          boolean not null,
+ description        varchar(255) not null default '',
+ defaultBranch      varchar(255) not null,
+ registeredDate     timestamp not null default current_timestamp,
+ lastActivityDate   timestamp not null
 );
 
 create table collaborator (
- id bigserial primary key,
- userId bigint not null REFERENCES account(id),
- repositoryId bigint not null REFERENCES repository(id),
- role smallint not null,
+ id             bigserial primary key,
+ userId         bigint not null REFERENCES account(id),
+ repositoryId   bigint not null REFERENCES repository(id),
+ role           smallint not null,
  unique (userId, repositoryId)
 );
 

@@ -6,6 +6,9 @@
         RAZAM
     </div>
     <div class="auth-user">
+        @if(request.account.hasPicture) {
+            <img src="@routes.AuthController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
+        }
         <a href="@routes.AuthController.profilePage">@request.account.userName</a>
     </div>
     <div class="repositories">

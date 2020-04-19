@@ -12,16 +12,16 @@ import scala.collection.immutable.HashMap
 import scala.concurrent.Future
 
 case class Account(
-  id: Long,
-  userName: String,
-  fullName: String = "",
-  mailAddress: String,
-  password: String,
-  isAdmin: Boolean = false,
-  registeredDate: java.util.Date,
-  image: String = "",
-  isRemoved: Boolean = false,
-  description: String = ""
+    id: Long,
+    userName: String,
+    fullName: String = "",
+    mailAddress: String,
+    password: String,
+    isAdmin: Boolean = false,
+    registeredDate: java.util.Date,
+    hasPicture: Boolean,
+    isRemoved: Boolean = false,
+    description: String = ""
 )
 
 object Account {
@@ -35,13 +35,14 @@ object Account {
       userForm.fullName.getOrElse(""),
       userForm.mailAddress.trim.toLowerCase,
       EncryptionService.getHash(userForm.password),
-      registeredDate = Calendar.getInstance().getTime
+      registeredDate = Calendar.getInstance().getTime,
+      hasPicture = false
     )
   }
 }
 
 object AccessLevel {
-  val owner = 0
+  val owner   = 0
   val canEdit = 20
   val canView = 30
 
@@ -72,18 +73,18 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
    * Parse a Computer from a ResultSet
    */
   private[models] val simple = {
-    get[Long]("account.id") ~
+    (get[Long]("account.id") ~
       get[String]("account.userName") ~
       get[String]("account.fullName") ~
       get[String]("account.mailAddress") ~
       get[String]("account.password") ~
       get[Boolean]("account.isAdmin") ~
       get[Date]("account.registeredDate") ~
-      get[String]("account.image") ~
+      get[Boolean]("account.hasPicture") ~
       get[Boolean]("account.isRemoved") ~
-      get[String]("account.description") map {
-      case id ~ userName ~ fullName ~ mailAddress ~ password ~ isAdmin ~ registeredDate ~ image ~ isRemoved ~ description =>
-        Account(id, userName, fullName, mailAddress, password, isAdmin, registeredDate, image, isRemoved, description)
+      get[String]("account.description")).map {
+      case id ~ userName ~ fullName ~ mailAddress ~ password ~ isAdmin ~ registeredDate ~ hasPicture ~ isRemoved ~ description =>
+        Account(id, userName, fullName, mailAddress, password, isAdmin, registeredDate, hasPicture, isRemoved, description)
     }
   }
   private val logger = play.api.Logger(this.getClass)
@@ -118,8 +119,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into account (userName,fullName,mailAddress,password,isAdmin,registeredDate,image,isRemoved,description) values (
-          {userName}, {fullName}, {mailAddress}, {password}, {isAdmin}, {registeredDate}, {image}, {isRemoved}, {description}
+        insert into account (userName,fullName,mailAddress,password,isAdmin,registeredDate,hasPicture,isRemoved,description) values (
+          {userName}, {fullName}, {mailAddress}, {password}, {isAdmin}, {registeredDate}, {hasPicture}, {isRemoved}, {description}
         )
       """).bind(account).executeInsert()
       }
@@ -145,11 +146,35 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
           mailAddress = {mailAddress},
           description = {description}
           WHERE account.id = {id}
-      """).on("fullName" -> accountData.fullName.getOrElse(""),
-              "mailAddress" -> accountData.mailAddress,
-              "description" -> accountData.description.getOrElse(""),
-              "id" -> id)
+      """).on(
+            "fullName"    -> accountData.fullName.getOrElse(""),
+            "mailAddress" -> accountData.mailAddress,
+            "description" -> accountData.description.getOrElse(""),
+            "id"          -> id
+          )
           .executeUpdate()
+      }
+    }(ec)
+
+  def hasPicture(id: Long): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+          UPDATE account
+          SET hasPicture = true
+          WHERE id = ${id}
+      """).executeUpdate()
+      }
+    }(ec)
+
+  def removePicture(id: Long): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+          UPDATE account
+          SET hasPicture = false
+          WHERE id = ${id}
+      """).executeUpdate()
       }
     }(ec)
 

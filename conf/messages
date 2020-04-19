@@ -27,9 +27,9 @@ signup.error.alreadyexists = User name or email already exists.
 
 profile.title=My profile
 profile.head=Profile edit
-profile.submitData=Update profile
-profile.submitPassword=Update password
-profile.submitPicture=Upload a photo
+profile.submit.data=Update profile
+profile.submit.password=Update password
+profile.submit.picture=Upload a photo
 profile.error.emailalreadyexists = Email already exists.
 profile.error.passisincorrect = Current password is incorrect.
 profile.flash.passupdated = Password successfully updated
@@ -38,6 +38,8 @@ profile.error.imagetoobig = Image is bigger than allowed
 profile.error.processing = Corrupted image
 profile.picture.success = Profile picture updated
 profile.error.missingpicture = File not attached
+profile.picture.delete.success = Profile picture has been deleted
+profile.delete.picture = Delete picture
 
 repository.collaborator.title=Repository collaborators
 repository.collaborator.emailOrLogin=User login or email
