@@ -145,10 +145,9 @@ class AuthController @Inject() (
 
   def profilePage: Action[AnyContent] = userAction.async { implicit request =>
     accountService
-      .getRichModelByLoginOrEmail(request.account.userName)
-      .map {
-        case Some(account) => Ok(html.userProfile(filledProfileForm(account), updatePasswordForm))
-        case None => Ok
+      .getRichModelById(request.account.id)
+      .map { account =>
+        Ok(html.userProfile(filledProfileForm(account), updatePasswordForm))
       }
   }
 
@@ -184,29 +183,37 @@ class AuthController @Inject() (
     )
   }
 
-  def updatePassword(): Action[AnyContent] = userAction { implicit request =>
-      Ok("123")
-    //    updatePasswordForm.bindFromRequest.fold(
-//      formWithErrors => Future(BadRequest(html.userProfile(filledProfileForm(request.account), formWithErrors))),
-//      passwordData => {
-//        if (EncryptionService.checkHash(passwordData.oldPassword, request.account.password)) {
-//          val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
-//          accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
-//            Future(
-//              Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
-//            )
-//          }
-//        } else {
-//          val formBuiltFromRequest = updatePasswordForm.bindFromRequest
-//          val newForm = updatePasswordForm.bindFromRequest.copy(
-//            errors = formBuiltFromRequest.errors ++ Seq(
-//              FormError("oldPassword", Messages("profile.error.passisincorrect"))
-//            )
-//          )
-//          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))
-//        }
-//      }
-//    )
+  def updatePassword(): Action[AnyContent] = userAction.async { implicit request =>
+    updatePasswordForm.bindFromRequest.fold(
+      formWithErrors =>
+        accountService
+          .getRichModelById(request.account.id)
+          .flatMap { account =>
+            Future(BadRequest(html.userProfile(filledProfileForm(account), formWithErrors)))
+          },
+      passwordData => {
+        accountService
+          .getRichModelById(request.account.id)
+          .flatMap { account =>
+            if (EncryptionService.checkHash(passwordData.oldPassword, account.password)) {
+              val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
+              accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
+                Future(
+                  Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
+                )
+              }
+            } else {
+              val formBuiltFromRequest = updatePasswordForm.bindFromRequest
+              val newForm = updatePasswordForm.bindFromRequest.copy(
+                errors = formBuiltFromRequest.errors ++ Seq(
+                  FormError("oldPassword", Messages("profile.error.passisincorrect"))
+                )
+              )
+              Future(BadRequest(html.userProfile(filledProfileForm(account), newForm)))
+            }
+          }
+      }
+    )
   }
 
   val allowedContentTypes = List("image/jpeg", "image/png")

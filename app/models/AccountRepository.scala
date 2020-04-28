@@ -147,6 +147,20 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     }(ec)
 
   /**
+   * Retrieve a rich account from id
+   */
+  def getRichModelById(accountId: Long): Future[RichAccount] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+             select *
+             from account where id=$accountId
+             """)
+          .as(rich.single)
+      }
+    }(ec)
+
+  /**
    * Insert a new user
    *
    */
@@ -177,7 +191,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       db.withConnection { implicit connection =>
         SQL(s"""
           UPDATE account
-          SET fullName = {fullName},
+          SET full_name = {fullName},
           email = {email},
           description = {description}
           WHERE account.id = {id}
