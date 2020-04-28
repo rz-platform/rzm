@@ -3,22 +3,22 @@
 @import base._
 @import helpers._
 
-@auth(request.repositoryWithOwner.repository.name) {
+@auth(request.repository.name) {
 @repositoryHeader()
 @notificationHeader()
 @repositoryFileTree(tree)
 
 <div class="repository-actions">
     <a class="button"
-       href="@routes.RepositoryController.uploadPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">
+       href="@routes.RepositoryController.uploadPage(request.repository.owner.userName, request.repository.name, path)">
         @request.messages("repository.tree.uploadFiles")
     </a>
     <a class="button"
-       href="@routes.RepositoryController.addCollaboratorPage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">
+       href="@routes.RepositoryController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
         @request.messages("repository.tree.collaborators")
     </a>
     <a class="button"
-       href="@routes.RepositoryController.downloadRepositoryArchive(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name)">
+       href="@routes.RepositoryController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
         @request.messages("repository.tree.downloads")
     </a>
 
@@ -26,8 +26,7 @@
         <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>
 
         <div id="add-folder-form"  class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName,
-            request.repositoryWithOwner.repository.name, path, true)) {
+        @form(routes.RepositoryController.addNewItem(request.repository.owner.userName, request.repository.name, path, true)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
@@ -42,8 +41,7 @@
         <button id="create-file-tooltip">Create file</button>
 
         <div id="add-file-form" class="tooltip">
-        @form(routes.RepositoryController.addNewItem(request.repositoryWithOwner.owner.userName,
-            request.repositoryWithOwner.repository.name, path, false)) {
+        @form(routes.RepositoryController.addNewItem(request.repository.owner.userName, request.repository.name, path, false)) {
         <fieldset>
             @CSRF.formField
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
@@ -60,10 +58,10 @@
         case (file) => {
             <p>
                 @if(file.isDirectory) {
-                <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, file.path)">
+                <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, file.path)">
                 <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
                 } else {
-                <a href="@routes.RepositoryController.blob(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, file.path)">
+                <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
                 <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
                 }
                 @file.name

@@ -1,41 +1,47 @@
 package models
 
-import java.util.{Calendar, Date}
+import java.util.Calendar
+import java.util.Date
 
 import anorm.SqlParser.get
 import anorm._
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+import javax.inject.Singleton
 import play.api.db.DBApi
 import services.encryption.EncryptionService
 
 import scala.collection.immutable.HashMap
 import scala.concurrent.Future
 
-case class Account(
+case class Account(id: Long, userName: String, email: String, hasPicture: Boolean)
+
+object Account {
+  implicit def toParameters: ToParameterList[Account] = Macro.toParameters[Account]
+}
+
+case class RichAccount(
     id: Long,
     userName: String,
     fullName: String = "",
-    mailAddress: String,
+    email: String,
     password: String,
     isAdmin: Boolean = false,
-    registeredDate: java.util.Date,
+    created: java.util.Date,
     hasPicture: Boolean,
-    isRemoved: Boolean = false,
     description: String = ""
 )
 
-object Account {
-  implicit def toParameters: ToParameterList[Account] =
-    Macro.toParameters[Account]
+object RichAccount {
+  implicit def toParameters: ToParameterList[RichAccount] = Macro.toParameters[RichAccount]
 
-  def buildNewAccount(userForm: AccountRegistrationData): Account = {
-    Account(
+  def buildNewAccount(userForm: AccountRegistrationData): RichAccount = {
+    RichAccount(
       0,
       userForm.userName.trim.toLowerCase,
       userForm.fullName.getOrElse(""),
-      userForm.mailAddress.trim.toLowerCase,
+      userForm.email.trim.toLowerCase,
       EncryptionService.getHash(userForm.password),
-      registeredDate = Calendar.getInstance().getTime,
+      created = Calendar.getInstance().getTime,
       hasPicture = false
     )
   }
@@ -57,9 +63,9 @@ object AccessLevel {
   }
 }
 
-case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, mailAddress: String)
+case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
 
-case class AccountData(userName: String, fullName: Option[String], mailAddress: String, description: Option[String])
+case class AccountData(userName: String, fullName: Option[String], email: String, description: Option[String])
 
 case class PasswordData(oldPassword: String, newPassword: String)
 
@@ -67,27 +73,40 @@ case class AccountLoginData(userName: String, password: String)
 
 @Singleton
 class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionContext) {
-  private val db = dbapi.database("default")
+  private val db     = dbapi.database("default")
+  private val logger = play.api.Logger(this.getClass)
 
-  /**
-   * Parse a Computer from a ResultSet
-   */
   private[models] val simple = {
-    (get[Long]("account.id") ~
-      get[String]("account.userName") ~
-      get[String]("account.fullName") ~
-      get[String]("account.mailAddress") ~
-      get[String]("account.password") ~
-      get[Boolean]("account.isAdmin") ~
-      get[Date]("account.registeredDate") ~
-      get[Boolean]("account.hasPicture") ~
-      get[Boolean]("account.isRemoved") ~
-      get[String]("account.description")).map {
-      case id ~ userName ~ fullName ~ mailAddress ~ password ~ isAdmin ~ registeredDate ~ hasPicture ~ isRemoved ~ description =>
-        Account(id, userName, fullName, mailAddress, password, isAdmin, registeredDate, hasPicture, isRemoved, description)
+    (get[Long]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
+      ~ get[Boolean]("account.has_picture")).map {
+      case id ~ userName ~ email ~ hasPicture => Account(id, userName, email, hasPicture)
     }
   }
-  private val logger = play.api.Logger(this.getClass)
+
+  private[models] val rich = {
+    (get[Long]("account.id") ~
+      get[String]("account.username") ~
+      get[String]("account.full_name") ~
+      get[String]("account.email") ~
+      get[String]("account.password") ~
+      get[Boolean]("account.is_admin") ~
+      get[Date]("account.created_at") ~
+      get[Boolean]("account.has_picture") ~
+      get[String]("account.description")).map {
+      case id ~ userName ~ fullName ~ email ~ password ~ isAdmin ~ registeredDate ~ hasPicture ~ description =>
+        RichAccount(
+          id,
+          userName,
+          fullName,
+          email,
+          password,
+          isAdmin,
+          registeredDate,
+          hasPicture,
+          description
+        )
+    }
+  }
 
   /**
    * Retrieve a user from the id.
@@ -95,19 +114,35 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def findById(id: Long): Future[Option[Account]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL"select * from account where id = $id".as(simple.singleOpt)
+        SQL"select id, username, email, has_picture from account where id = $id".as(simple.singleOpt)
       }
     }(ec)
 
   /**
-   * Retrieve a user from login
+   * Retrieve a simple account from login
    */
-  def findByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[Account]] =
+  def getByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[Account]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select * from account where userName= {usernameOrEmail} or mailAddress ={email}""")
+        SQL(s"""
+             select id, username, email, has_picture
+             from account where userName= {usernameOrEmail} or email ={email}""".stripMargin)
           .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
           .as(simple.singleOpt)
+      }
+    }(ec)
+
+  /**
+   * Retrieve a rich account from login
+   */
+  def getRichModelByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[RichAccount]] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""
+             select *
+             from account where userName= {usernameOrEmail} or email ={email}""".stripMargin)
+          .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
+          .as(rich.singleOpt)
       }
     }(ec)
 
@@ -115,12 +150,12 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
    * Insert a new user
    *
    */
-  def insert(account: Account): Future[Option[Long]] =
+  def insert(account: RichAccount): Future[Option[Long]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into account (userName,fullName,mailAddress,password,isAdmin,registeredDate,hasPicture,isRemoved,description) values (
-          {userName}, {fullName}, {mailAddress}, {password}, {isAdmin}, {registeredDate}, {hasPicture}, {isRemoved}, {description}
+        insert into account (userName,full_name,email,password,is_admin, has_picture,description) values (
+          {userName}, {fullName}, {email}, {password}, {isAdmin}, {hasPicture},  {description}
         )
       """).bind(account).executeInsert()
       }
@@ -143,12 +178,12 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
         SQL(s"""
           UPDATE account
           SET fullName = {fullName},
-          mailAddress = {mailAddress},
+          email = {email},
           description = {description}
           WHERE account.id = {id}
       """).on(
             "fullName"    -> accountData.fullName.getOrElse(""),
-            "mailAddress" -> accountData.mailAddress,
+            "email"       -> accountData.email,
             "description" -> accountData.description.getOrElse(""),
             "id"          -> id
           )
@@ -161,7 +196,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       db.withConnection { implicit connection =>
         SQL(s"""
           UPDATE account
-          SET hasPicture = true
+          SET has_picture = true
           WHERE id = ${id}
       """).executeUpdate()
       }
@@ -172,7 +207,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       db.withConnection { implicit connection =>
         SQL(s"""
           UPDATE account
-          SET hasPicture = false
+          SET has_picture = false
           WHERE id = ${id}
       """).executeUpdate()
       }

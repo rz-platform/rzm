@@ -1,6 +1,7 @@
 package controllers
 
-import java.io.{File, IOException}
+import java.io.File
+import java.io.IOException
 
 import javax.inject.Inject
 import models._
@@ -15,7 +16,8 @@ import services.encryption._
 import services.images.ImageService._
 import views._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 class AuthController @Inject() (
     accountService: AccountRepository,
@@ -77,9 +79,9 @@ class AuthController @Inject() (
     registerForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
       (user: AccountRegistrationData) =>
-        accountService.findByLoginOrEmail(user.userName, user.mailAddress).flatMap {
+        accountService.getByLoginOrEmail(user.userName, user.email).flatMap {
           case None =>
-            val acc = Account.buildNewAccount(user)
+            val acc = RichAccount.buildNewAccount(user)
             accountService.insert(acc).map { accountId =>
               Redirect(routes.RepositoryController.list())
                 .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
@@ -103,7 +105,7 @@ class AuthController @Inject() (
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
       user => {
         accountService
-          .findByLoginOrEmail(user.userName)
+          .getRichModelByLoginOrEmail(user.userName)
           .flatMap {
             case Some(account) =>
               if (EncryptionService.checkHash(user.password, account.password)) {
@@ -135,19 +137,24 @@ class AuthController @Inject() (
     )
   }
 
-  private def filledProfileForm(account: Account): Form[AccountData] = {
+  private def filledProfileForm(account: RichAccount): Form[AccountData] = {
     userEditForm.fill(
-      AccountData(account.userName, Some(account.fullName), account.mailAddress, Some(account.description))
+      AccountData(account.userName, Some(account.fullName), account.email, Some(account.description))
     )
   }
 
-  def profilePage: Action[AnyContent] = userAction { implicit request =>
-    Ok(html.userProfile(filledProfileForm(request.account), updatePasswordForm))
+  def profilePage: Action[AnyContent] = userAction.async { implicit request =>
+    accountService
+      .getRichModelByLoginOrEmail(request.account.userName)
+      .map {
+        case Some(account) => Ok(html.userProfile(filledProfileForm(account), updatePasswordForm))
+        case None => Ok
+      }
   }
 
   private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] = {
     if (currentEmail != newEmail) {
-      accountService.findByLoginOrEmail("", newEmail).flatMap {
+      accountService.getByLoginOrEmail("", newEmail).flatMap {
         case Some(_) => Future(false)
         case None    => Future(true)
       }
@@ -158,7 +165,7 @@ class AuthController @Inject() (
     userEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
       accountData => {
-        isEmailAvailable(request.account.mailAddress, accountData.mailAddress).flatMap { available =>
+        isEmailAvailable(request.account.email, accountData.email).flatMap { available =>
           if (available) {
             accountService.updateProfileInfo(request.account.id, accountData).flatMap { _ =>
               Future(Ok(html.userProfile(userEditForm.bindFromRequest, updatePasswordForm)))
@@ -177,28 +184,29 @@ class AuthController @Inject() (
     )
   }
 
-  def updatePassword(): Action[AnyContent] = userAction.async { implicit request =>
-    updatePasswordForm.bindFromRequest.fold(
-      formWithErrors => Future(BadRequest(html.userProfile(filledProfileForm(request.account), formWithErrors))),
-      passwordData => {
-        if (EncryptionService.checkHash(passwordData.oldPassword, request.account.password)) {
-          val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
-          accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
-            Future(
-              Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
-            )
-          }
-        } else {
-          val formBuiltFromRequest = updatePasswordForm.bindFromRequest
-          val newForm = updatePasswordForm.bindFromRequest.copy(
-            errors = formBuiltFromRequest.errors ++ Seq(
-              FormError("oldPassword", Messages("profile.error.passisincorrect"))
-            )
-          )
-          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))
-        }
-      }
-    )
+  def updatePassword(): Action[AnyContent] = userAction { implicit request =>
+      Ok("123")
+    //    updatePasswordForm.bindFromRequest.fold(
+//      formWithErrors => Future(BadRequest(html.userProfile(filledProfileForm(request.account), formWithErrors))),
+//      passwordData => {
+//        if (EncryptionService.checkHash(passwordData.oldPassword, request.account.password)) {
+//          val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
+//          accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
+//            Future(
+//              Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
+//            )
+//          }
+//        } else {
+//          val formBuiltFromRequest = updatePasswordForm.bindFromRequest
+//          val newForm = updatePasswordForm.bindFromRequest.copy(
+//            errors = formBuiltFromRequest.errors ++ Seq(
+//              FormError("oldPassword", Messages("profile.error.passisincorrect"))
+//            )
+//          )
+//          Future(BadRequest(html.userProfile(filledProfileForm(request.account), newForm)))
+//        }
+//      }
+//    )
   }
 
   val allowedContentTypes = List("image/jpeg", "image/png")
@@ -251,8 +259,9 @@ class AuthController @Inject() (
     }
   }
 
-  def removeProfilePicture: Action[AnyContent] = userAction.async { implicit request =>
-    val profilePicture = new java.io.File(picturesDir.toString + "/" + thumbImageName(request.account.userName, thumbSize))
+  def removeProfilePicture(): Action[AnyContent] = userAction.async { implicit request =>
+    val profilePicture =
+      new java.io.File(picturesDir.toString + "/" + thumbImageName(request.account.userName, thumbSize))
     profilePicture.delete()
     accountService.removePicture(request.account.id).flatMap { _ =>
       Future(

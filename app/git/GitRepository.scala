@@ -443,7 +443,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
           builder.getDirCache.writeTree(inserter),
           headName,
           loginAccount.userName, // TODO: fullName
-          loginAccount.mailAddress,
+          loginAccount.email,
           message
         )
 
@@ -500,7 +500,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
         builder.getDirCache.writeTree(inserter),
         Constants.HEAD,
         account.userName, // TODO: fullName
-        account.mailAddress,
+        account.email,
         commitName
       )
     }

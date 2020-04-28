@@ -2,9 +2,9 @@
 
 
 @if(!tree.isEmpty) {
-    <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, ".")">@request.repositoryWithOwner.repository.name</a> /
+    <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, ".")">@request.repository.name</a> /
 }
 
 @for(breadcrumb <- tree){
-    <a href="@routes.RepositoryController.view(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, breadcrumb.path)">@breadcrumb.name</a> /
+    <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, breadcrumb.path)">@breadcrumb.name</a> /
 }
