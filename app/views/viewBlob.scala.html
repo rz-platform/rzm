@@ -8,24 +8,24 @@
 @repositoryFileTree(tree)
 
 <p><a class="button"
-      href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">
+      href="@routes.RepositoryController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
     @request.messages("repository.viewFile.raw")
 </a>
 </p>
 
 @if(blob.content.viewType == "text"){
-<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, path)">
+<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repository.owner.userName, request.repository.name, path)">
     @request.messages("repository.viewFile.edit")
 </a></p>
     <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
 
 @if(blob.content.viewType == "image"){
-<img src="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)" />
+<img src="@routes.RepositoryController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)" />
 }
 
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
-<a href="@routes.RepositoryController.raw(request.repositoryWithOwner.owner.userName, request.repositoryWithOwner.repository.name, request.repositoryWithOwner.repository.defaultBranch, path)">
+<a href="@routes.RepositoryController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
     @request.messages("repository.viewFile.cant")
 </a>
 }

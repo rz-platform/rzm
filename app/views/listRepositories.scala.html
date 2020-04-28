@@ -1,4 +1,4 @@
-@(currentPage: List[RepositoryWithOwner])(implicit request: UserRequestHeader)
+@(currentPage: List[Repository])(implicit request: UserRequestHeader)
 
 @import base._
 
@@ -7,9 +7,8 @@
 
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
                 @repositories.map {
-                    case (repoAndOwn) => {
-<p><a href="@routes.RepositoryController.view(repoAndOwn.owner.userName, repoAndOwn.repository.name, ".")">
-    @repoAndOwn.owner.userName / @repoAndOwn.repository.name</a>  - @repoAndOwn.repository.lastActivityDate</p>
+                    case (repository) => {
+<p><a href="@routes.RepositoryController.view(repository.owner.userName, repository.name, ".")"> @repository.owner.userName / @repository.name</a> </p>
                     }
                 }
     }.getOrElse {

@@ -1,4 +1,4 @@
-@(addCollaboratorForm: Form[NewCollaboratorData], collaborators: List[Account])(implicit request: RepositoryRequestHeader )
+@(addCollaboratorForm: Form[NewCollaboratorData], collaborators: List[Account])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
@@ -11,21 +11,18 @@
 @collaborators.map {
     case (collaborator) => {
 <p>@collaborator.userName
-    @if(request.account.mailAddress != collaborator.mailAddress) {
+    @if(request.account.email != collaborator.email) {
 
-    @form(routes.RepositoryController.removeCollaboratorAction(request.repositoryWithOwner.owner.userName,
-    request.repositoryWithOwner.repository.name)) {
+    @form(routes.RepositoryController.removeCollaboratorAction(request.repository.owner.userName, request.repository.name)) {
     @CSRF.formField
-    <input type="hidden" name="email" value='@collaborator.mailAddress' />
+    <input type="hidden" name="email" value='@collaborator.email' />
     <button type="submit">X </button>
     }
-
     }
 </p>
     }
     }
-    @form(routes.RepositoryController.addCollaboratorAction(request.repositoryWithOwner.owner.userName,
-                                                        request.repositoryWithOwner.repository.name)) {
+    @form(routes.RepositoryController.addCollaboratorAction(request.repository.owner.userName, request.repository.name)) {
     <fieldset>
         @CSRF.formField
         @inputText(addCollaboratorForm("emailOrLogin"),

@@ -75,7 +75,7 @@ class FunctionalRepoTest
     defaultDatabase.withConnection { connection =>
       val rs = connection.prepareStatement(s"select id from account where username='${userName}'").executeQuery()
       rs.next()
-      Account(rs.getInt(1), userName, null, null, null, isAdmin = false, null, hasPicture = false)
+      Account(rs.getInt(1), userName, null, hasPicture = false)
     }
   }
 
@@ -221,7 +221,7 @@ class FunctionalRepoTest
       createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
 
       val git           = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val listRootFiles = listFileInRepo(git, Repository(0, repoName, true, null, "master", null, null), ".")
+      val listRootFiles = listFileInRepo(git, Repository(0, account, repoName, "master"), ".")
 
       listRootFiles.files.exists(_.name contains fileName) must equal(true)
     }
@@ -236,7 +236,7 @@ class FunctionalRepoTest
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
 
       val git          = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo         = Repository(0, repoName, true, null, "master", null, null)
+      val repo         = Repository(0, account, repoName, "master")
       val rootFileList = listFileInRepo(git, repo, ".")
 
       rootFileList.files.exists(_.name contains folderName) must equal(true)
@@ -284,7 +284,7 @@ class FunctionalRepoTest
       createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = true, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, repoName, true, null, "master", null, null)
+      val repo           = Repository(0, account, repoName, "master")
       val folderFileList = listFileInRepo(git, repo, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
     }
@@ -302,7 +302,7 @@ class FunctionalRepoTest
       createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, repoName, true, null, "master", null, null)
+      val repo           = Repository(0, account, repoName, "master")
       val folderFileList = listFileInRepo(git, repo, folderName)
       folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
     }
@@ -320,7 +320,7 @@ class FunctionalRepoTest
       createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, repoName, true, null, "master", null, null)
+      val repo           = Repository(0, account, repoName, "master")
       val folderFileList = listFileInRepo(git, repo, folderName)
       folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
     }
@@ -338,7 +338,7 @@ class FunctionalRepoTest
       createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = true, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, repoName, true, null, "master", null, null)
+      val repo           = Repository(0, account, repoName, "master")
       val folderFileList = listFileInRepo(git, repo, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
     }
@@ -354,8 +354,8 @@ class FunctionalRepoTest
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
-            s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
-              s"and repositoryid=(select id FROM repository WHERE name='$repoName')" +
+            s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
+              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
               s"and role=${AccessLevel.canEdit}"
           )
           .executeQuery()
@@ -373,8 +373,8 @@ class FunctionalRepoTest
       defaultDatabase.withConnection { connection =>
         val isCollaboratorExist = connection
           .prepareStatement(
-            s"select 1 FROM collaborator WHERE userid=${collaborator.id} and " +
-              s"repositoryid=(select id FROM repository WHERE name='$repoName')"
+            s"select 1 FROM collaborator WHERE user_id=${collaborator.id} and " +
+              s"repository_id=(select id FROM repository WHERE name='$repoName')"
           )
           .executeQuery()
         isCollaboratorExist.next() must equal(false)
@@ -392,8 +392,8 @@ class FunctionalRepoTest
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
-            s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
-              s"and repositoryid=(select id FROM repository WHERE name='$repoName')" +
+            s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
+              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
               s"and role=${AccessLevel.canEdit}"
           )
           .executeQuery()
@@ -414,8 +414,8 @@ class FunctionalRepoTest
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
-            s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
-              s"and repositoryid=(select id FROM repository WHERE name='$repoName')" +
+            s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
+              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
               s"and role=${AccessLevel.canEdit}"
           )
           .executeQuery()
@@ -428,8 +428,8 @@ class FunctionalRepoTest
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
-            s"select 1 FROM collaborator WHERE userid=${collaborator.id}" +
-              s"and repositoryid=(select id FROM repository WHERE name='$repoName')"
+            s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
+              s"and repository_id=(select id FROM repository WHERE name='$repoName')"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(false)

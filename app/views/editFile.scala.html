@@ -16,8 +16,7 @@
 @repositoryHeader()
 @repositoryFileTree(tree)
 
-@form(routes.RepositoryController.edit(request.repositoryWithOwner.owner.userName,
-    request.repositoryWithOwner.repository.name, path)) {
+@form(routes.RepositoryController.edit(request.repository.owner.userName, request.repository.name, path)) {
 @CSRF.formField
 
 @inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"), Symbol("readonly")->"readonly")

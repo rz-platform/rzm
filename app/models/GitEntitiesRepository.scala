@@ -1,29 +1,30 @@
 package models
 
-import java.util.Date
 import java.io.File
 import java.io.InputStream
+import java.util.Date
 
+import anorm.SqlParser.get
+import anorm._
 import javax.inject.Inject
 import javax.inject.Singleton
-import play.api.db.DBApi
-import anorm._
-import anorm.SqlParser.get
-import anorm.SqlParser.str
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
+import play.api.db.DBApi
 
 import scala.concurrent.Future
 
 case class Repository(
     id: Long,
+    owner: Account,
     name: String,
-    isPrivate: Boolean = true,
-    description: String = "",
-    defaultBranch: String = "master",
-    registeredDate: java.util.Date,
-    lastActivityDate: java.util.Date
+    defaultBranch: String
 )
+
+object Repository {
+  implicit def toParameters: ToParameterList[Repository] = Macro.toParameters[Repository]
+  val defaultBranchName = "master"
+}
 
 case class RepositoryData(name: String, description: Option[String])
 
@@ -97,8 +98,6 @@ case class Blob(
     isLfsFile: Boolean
 )
 
-case class RepositoryWithOwner(repository: Repository, owner: Account)
-
 case class PathBreadcrumb(name: String, path: String)
 
 case class RawFile(inputStream: InputStream, contentLength: Integer, contentType: String)
@@ -135,7 +134,7 @@ case class CommitInfo(
       rev.getName,
       rev.getShortMessage,
       rev.getFullMessage,
-      rev.getParents().map(_.name).toList,
+      rev.getParents.map(_.name).toList,
       rev.getAuthorIdent.getWhen,
       rev.getAuthorIdent.getName,
       rev.getAuthorIdent.getEmailAddress,
@@ -145,11 +144,6 @@ case class CommitInfo(
     )
 
   def isDifferentFromAuthor: Boolean = authorName != committerName || authorEmailAddress != committerEmailAddress
-}
-
-object Repository {
-  implicit def toParameters: ToParameterList[Repository] =
-    Macro.toParameters[Repository]
 }
 
 object Collaborator {
@@ -168,38 +162,26 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    */
   private val simple = {
     (get[Long]("repository.id") ~
+      accountRepository.simple ~
       get[String]("repository.name") ~
-      get[Boolean]("repository.isPrivate") ~
-      get[String]("repository.description") ~
-      get[String]("repository.defaultBranch") ~
-      get[Date]("repository.registeredDate") ~
-      get[Date]("repository.lastActivityDate")).map {
-      case id ~ name ~ isPrivate ~ description ~ defaultBranch ~ registeredDate ~ lastActivityDate =>
-        Repository(id, name, isPrivate, description, defaultBranch, registeredDate, lastActivityDate)
+      get[String]("repository.default_branch")).map {
+      case id ~ owner ~ name ~ defaultBranch =>
+        Repository(id, owner, name, defaultBranch)
     }
   }
 
-  /**
-   * Parse a (Computer,Company) from a ResultSet
-   */
-  private val withOwner = (simple ~ accountRepository.simple).map {
-    case repository ~ account => RepositoryWithOwner(repository, account) // repository -> account
-  }
-
-  def getByAuthorAndName(author: String, repName: String): Future[Option[RepositoryWithOwner]] =
+  def getByAuthorAndName(owner: String, repoName: String): Future[Option[Repository]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL"""
-        select * from repository
-        join collaborator
-        on collaborator.repositoryId = repository.id
-        join account
-        on account.id = collaborator.userid
-        where repository.name = $repName
-        and account.username = $author
-        and collaborator.role = ${AccessLevel.owner}
-      """.as(withOwner.singleOpt)
-
+        SQL("""
+        select repository.id, repository.name, repository.default_branch,
+        account.id, account.username, account.has_picture, account.email 
+        from repository
+        join account on repository.owner_id = account.id
+        where
+        account.username = {owner} and
+        repository.name = {repoName}
+      """).on("owner" -> owner, "repoName" -> repoName).as(simple.singleOpt)
       }
     }(ec)
 
@@ -208,13 +190,10 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       db.withConnection { implicit connection =>
         SQL"""
         select repository.id from repository
-        join collaborator
-        on collaborator.repositoryId = repository.id
-        join account
-        on account.id = collaborator.userid
-        where repository.name = $repName
-        and account.username = $author
-        and collaborator.role = ${AccessLevel.owner}
+        join account on repository.owner_id = account.id
+        where
+        repository.name = {repoName} and
+        account.username = {owner}
       """.as(SqlParser.int("repository.id").single)
 
       }
@@ -223,7 +202,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
   def createCollaborator(repositoryId: Long, collaboratorId: Long, role: Int): Future[Option[Long]] = Future {
     db.withConnection { implicit connection =>
       SQL("""
-        insert into collaborator (userId, repositoryId, role) values ({userId}, {repositoryId}, {role})
+        insert into collaborator (user_id, repository_id, role) values ({userId}, {repositoryId}, {role})
       """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId, "role" -> role).executeInsert()
     }
   }
@@ -231,7 +210,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
   def removeCollaborator(repositoryId: Long, collaboratorId: Long): Future[Int] = Future {
     db.withConnection { implicit connection =>
       SQL("""
-        DELETE FROM collaborator WHERE userId={userId} and repositoryId={repositoryId}
+        DELETE FROM collaborator WHERE user_id={userId} and repository_id={repositoryId}
       """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId).executeUpdate()
     }
   }
@@ -240,23 +219,24 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Insert a new repository
    *
    */
-  def insertRepository(repository: Repository): Future[Option[Long]] =
+  def insertRepository(ownerId: Long, repository: RepositoryData): Future[Option[Long]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into repository (name, isPrivate, description, defaultBranch, registeredDate, lastActivityDate) values (
-          {name},{isPrivate},{description},{defaultBranch},{registeredDate}, {lastActivityDate}
+        insert into repository (name, owner_id, description, default_branch) values (
+          {name},{owner_id},{description},{defaultBranch}
         )
-      """).bind(repository).executeInsert()
+      """).on("name" -> repository.name, "owner_id"-> ownerId, "description" -> repository.description.getOrElse(""),
+          "defaultBranch" -> Repository.defaultBranchName).executeInsert()
       }
     }(ec)
 
   def isUserCollaborator(repository: Repository, userId: Long): Future[Option[Int]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select role from collaborator
-        where collaborator.userId = {collaboratorId}
-        and repositoryId = {repositoryId}
+        SQL(s"""
+        select role from collaborator 
+        where collaborator.user_id = {collaboratorId} and repository_id = {repositoryId}
           """)
           .on("collaboratorId" -> userId, "repositoryId" -> repository.id)
           .as(SqlParser.int("role").singleOpt)
@@ -269,28 +249,26 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         SQL(s"""
         select * from collaborator
         join account
-        on account.id = collaborator.userId
-        where repositoryId = {repositoryId}
+        on account.id = collaborator.user_id
+        where repository_id = {repositoryId}
         """)
           .on("repositoryId" -> repository.id)
           .as(accountRepository.simple.*)
       }
     }(ec)
 
-  def listRepositories(accountId: Long): Future[List[RepositoryWithOwner]] =
+  def listRepositories(accountId: Long): Future[List[Repository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL"""
-             select r.*, a.* from repository r
-             join collaborator c1
-             on r.id = c1.repositoryid
-             join collaborator c2
-             on r.id = c2.repositoryid and c2.role = 0
-             join account a
-             on a.id = c2.userid
-             where c1.userid = $accountId;
-             ;
-      """.as(withOwner.*)
+          select repository.id, repository.name, repository.default_branch,
+          account.id, account.username, account.has_picture, account.email
+          from repository
+          join account on repository.owner_id = account.id
+          join collaborator on repository.id = collaborator.repository_id
+          where repository.owner_id = $accountId
+          or (collaborator.user_id = $accountId)
+      """.as(simple.*)
       }
     }(ec)
 }
