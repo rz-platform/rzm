@@ -1,24 +1,25 @@
 Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE) [![Build Status](https://travis-ci.org/razamgit/razam.svg?branch=master)](https://travis-ci.org/razamgit/razam)
 =====
 
-*RZ* (Razam) is web-based Git repository hosting (much like GitHub) for writing science papers in a browser and full integration with TeX.
+Razam is web-based Git repository hosting (much like GitHub) for writing scientific papers in a browser and full integration with TeX.
 
 Build a TeX template, write an article in an online editor, invite collaborators. You can do everything without leaving your browser.
 
 Or use any Git-client and write an article in your favorite editor.
 
-This is [Play](https://playframework.com/documentation/latest/Home) application that uses Scala on the front end, and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
+Fully-functional Git Server with authentication against Razam implemented in [Razam Git Server](https://github.com/razamgit/gitserver).
 
-Package *git* contains parts of code inherited from GitBucket project.
+## Development
 
-*In heavy development*
+This is [Play](https://playframework.com/documentation/latest/Home) application that uses Scala and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
 
-## Local development
+Front-end is written in VanillaJS and packaged using Parcel.
 
-Init psql db:
+---
+
+Razam requires Postgres database. You can find default credentials in [application.conf](https://github.com/razamgit/razam/blob/master/conf/application.conf) (db.default section). Snippet for creation:
 
 ```
-sudo -u postgres psql
 create database razam;
 create user razam with encrypted password 'razam';
 grant all privileges on database razam to razam;
@@ -40,7 +41,7 @@ sbt run
 
 Open http://localhost:9000
 
-Run tests:
+### Run tests
 
 ```
 sbt test
@@ -50,14 +51,11 @@ sbt test
 
 ```
 npm run build && sbt dist
-```
-
-If you want to run on your machine:
-```
-npm run build && sbt dist
 target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -Dplay.http.secret.key=secret
 ```
 
 ## Copyright
 
-Copyright 2020 Eugene Bosiakov (@bosiakov). All rights reserved.
+Copyright 2020 Eugene Bosiakov (@bosiakov). 
+
+Package *git* contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
