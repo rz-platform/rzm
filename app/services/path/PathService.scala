@@ -28,7 +28,7 @@ object PathService {
         val fullPath = path.split("/")
         val breadcrumbs = fullPath.zipWithIndex.map {
           case (element, index) =>
-            PathBreadcrumb(element, fullPath.slice(0, index + 1).mkString("/"))
+            PathBreadcrumb(decodeNameFromUrl(element), fullPath.slice(0, index + 1).mkString("/"))
         }
         if (isFile) {
           breadcrumbs.dropRight(1) // we don't need a file name in path
