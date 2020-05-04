@@ -16,14 +16,16 @@
 @repositoryHeader()
 @repositoryFileTree(tree)
 
-@form(routes.RepositoryController.edit(request.repository.owner.userName, request.repository.name, path)) {
+@form(routes.RepositoryController.edit(request.repository.owner.userName, request.repository.name)) {
 @CSRF.formField
 
-@inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"), Symbol("readonly")->"readonly")
+@inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
 
-@textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code",  Symbol("_label") -> request.messages("repository.edit.form.content"))
+@inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"), Symbol("_help") -> "")
 
-@inputText(editorForm("message"), Symbol("_label") -> request.messages("repository.edit.form.message"))
+@textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code",  Symbol("_label") -> request.messages("repository.edit.form.content"), Symbol("_help") -> "")
+
+@inputText(editorForm("message"), Symbol("_label") -> request.messages("repository.edit.form.message"), Symbol("_help") -> "")
 
 <input type="submit" value='@request.messages("repository.edit.submit")'/>
 }

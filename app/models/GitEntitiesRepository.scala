@@ -41,7 +41,7 @@ case class RemoveCollaboratorData(email: String)
 
 case class CommitFile(id: String, name: String, file: File)
 
-case class EditedItem(content: String, message: String, fileName: String)
+case class EditedItem(content: String, message: String, path: String, fileName: String)
 
 case class UploadFileForm(path: String, message: String)
 

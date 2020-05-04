@@ -58,7 +58,7 @@ POST /repositories/:account/:repository/collaborators/remove controllers.Reposit
 # Creation / Editing
 
 GET /repositories/:account/:repository/edit/*path controllers.RepositoryController.editFilePage(account:String, repository:String, path: String)
-POST /repositories/:account/:repository/edit/*path controllers.RepositoryController.edit(account:String, repository:String, path: String)
+POST /repositories/:account/:repository/edit controllers.RepositoryController.edit(account:String, repository:String)
 POST /repositories/:account/:repository/createItem controllers.RepositoryController.addNewItem(account: String, repository: String, path: String, isFolder: Boolean)
 
 # Repository archive

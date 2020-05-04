@@ -96,6 +96,7 @@ class RepositoryController @Inject() (
     mapping(
       "content"  -> nonEmptyText,
       "message"  -> nonEmptyText,
+      "path"     -> nonEmptyText,
       "fileName" -> nonEmptyText.verifying(checkForExcludedSymbols)
     )(EditedItem.apply)(EditedItem.unapply)
   )
@@ -158,15 +159,16 @@ class RepositoryController @Inject() (
       repository => {
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
-            gitEntitiesRepository.insertRepository(request.account.id, repository).flatMap { repositoryId: Option[Long] =>
-              gitEntitiesRepository
-                .createCollaborator(repositoryId.get, request.account.id, 0)
-                .map { _ =>
-                  val git = new GitRepository(request.account, repository.name, gitHome)
-                  git.create()
-                  Redirect(routes.RepositoryController.list())
-                    .flashing("success" -> Messages("repository.create.flash.success"))
-                }
+            gitEntitiesRepository.insertRepository(request.account.id, repository).flatMap {
+              repositoryId: Option[Long] =>
+                gitEntitiesRepository
+                  .createCollaborator(repositoryId.get, request.account.id, 0)
+                  .map { _ =>
+                    val git = new GitRepository(request.account, repository.name, gitHome)
+                    git.create()
+                    Redirect(routes.RepositoryController.list())
+                      .flashing("success" -> Messages("repository.create.flash.success"))
+                  }
             }
           case Some(_) =>
             val formBuiltFromRequest = createRepositoryForm.bindFromRequest
@@ -231,7 +233,7 @@ class RepositoryController @Inject() (
 
   private def fillEditForm(blob: Blob, path: String)(implicit req: RepositoryRequest[AnyContent]): Form[EditedItem] = {
     editorForm.fill(
-      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), getFileName(path))
+      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), getFileName(path), decodeNameFromUrl(path))
     )
   }
 
@@ -245,7 +247,7 @@ class RepositoryController @Inject() (
           Future.successful {
             Ok(
               html.editFile(
-                fillEditForm(blob, path),
+                fillEditForm(blob, decodeNameFromUrl(path)),
                 blob,
                 decodeNameFromUrl(path),
                 buildTreeFromPath(path, isFile = true)
@@ -256,34 +258,53 @@ class RepositoryController @Inject() (
       }
     }
 
-  def edit(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
+  def edit(accountName: String, repositoryName: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
-      val rev           = "master" // TODO: Replace with rev
-      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
-
-      val editFile = { editedFile: EditedItem =>
-        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
-        gitRepository
-          .commitFiles(rev, ".", editedFile.message, request.account) {
-            case (_, _, builder, inserter) =>
-              builder.add(
-                gitRepository
-                  .createDirCacheEntry(path, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, content))
-              )
-              builder.finish()
-          }
-      }
-
-      blobInfo match {
-        case Some(blob) =>
-          editorForm.bindFromRequest.fold(
-            formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path)))),
-            editFile
-          )
-          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path)))
-        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-      }
+      Future(Ok)
+      //      val rev           = "master" // TODO: Replace with rev
+//      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+//      val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
+//
+//      val editFile = { editedFile: EditedItem =>
+//        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
+//        gitRepository.commitFiles(rev, ".", editedFile.message, request.account) {
+//          case (git, headTip, builder, inserter) =>
+//            val permission = gitRepository
+//              .processTree(git, headTip) { (path, tree) =>
+//                // Add all entries except the editing file
+//                if (!newPath.contains(path) && !oldPath.contains(path)) {
+//                  builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
+//                }
+//                // Retrieve permission if file exists to keep it
+//                oldPath.collect { case x if x == path => tree.getEntryFileMode.getBits }
+//              }
+//              .flatten
+//              .headOption
+//
+//            builder.add(
+//              gitRepository.createDirCacheEntry(
+//                newPath,
+//                permission
+//                  .map { bits =>
+//                    FileMode.fromBits(bits)
+//                  }
+//                  .getOrElse(FileMode.REGULAR_FILE),
+//                inserter.insert(Constants.OBJ_BLOB, content)
+//              )
+//            )
+//            builder.finish()
+//        }
+//      }
+//
+//      blobInfo match {
+//        case Some(blob) =>
+//          editorForm.bindFromRequest.fold(
+//            formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path)))),
+//            editFile
+//          )
+//          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path)))
+//        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+//      }
     }
 
   /**
@@ -347,7 +368,6 @@ class RepositoryController @Inject() (
   /**
    * Uploads a multipart file as a POST request.
    *
-   * @return
    */
   def upload(accountName: String, repositoryName: String): Action[MultipartFormData[File]] =
     userAction(parse.multipartFormData(handleFilePartAsFile))
@@ -361,11 +381,8 @@ class RepositoryController @Inject() (
               // only get the last part of the filename
               // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
               val filename = Paths.get(filePart.filename).getFileName.toString
-              CommitFile(
-                filename,
-                name = if (data.path.trim.nonEmpty) s"${data.path}/${filename}" else filename,
-                filePart.ref
-              )
+              val filePath = buildFilePath(data.path, filename, isFolder = false)
+              CommitFile(filename, name = filePath, filePart.ref)
             })
 
             gitRepository.commitUploadedFiles(files, req.account, "master", data.path, data.message)
@@ -377,7 +394,7 @@ class RepositoryController @Inject() (
 
   def uploadPage(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      Ok(html.uploadFile(uploadFileForm, path))
+      Ok(html.uploadFile(uploadFileForm, decodeNameFromUrl(path)))
     }
 
   def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =
