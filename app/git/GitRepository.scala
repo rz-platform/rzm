@@ -29,7 +29,9 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.transport.ReceiveCommand
 import org.eclipse.jgit.transport.ReceivePack
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
+import org.eclipse.jgit.treewalk.filter.AndTreeFilter
 import org.eclipse.jgit.treewalk.filter.PathFilter
+import org.eclipse.jgit.treewalk.filter.TreeFilter
 import org.eclipse.jgit.treewalk.CanonicalTreeParser
 import org.eclipse.jgit.treewalk.TreeWalk
 import org.eclipse.jgit.treewalk.WorkingTreeOptions
@@ -506,8 +508,70 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
   }
 
+  def getCommitsLog(
+      revision: String,
+      page: Int = 1,
+      limit: Int = 0,
+      path: String = ""
+  ): Either[String, (List[CommitInfo], Boolean)] = {
+    Using.resource(Git.open(repositoryDir)) { git =>
+      getCommitLog(git, revision, page, limit, path)
+    }
+  }
+
+  /**
+   * Returns the commit list of the specified branch.
+   *
+   * @param git the Git object
+   * @param revision the branch name or commit id
+   * @param page the page number (1-)
+   * @param limit the number of commit info per page. 0 (default) means unlimited.
+   * @param path filters by this path. default is no filter.
+   * @return a tuple of the commit list and whether has next, or the error message
+   */
+  def getCommitLog(
+      git: Git,
+      revision: String,
+      page: Int = 1,
+      limit: Int = 0,
+      path: String = ""
+  ): Either[String, (List[CommitInfo], Boolean)] = {
+    val fixedPage = if (page <= 0) 1 else page
+
+    @scala.annotation.tailrec
+    def getCommitLog(
+        i: java.util.Iterator[RevCommit],
+        count: Int,
+        logs: List[CommitInfo]
+    ): (List[CommitInfo], Boolean) =
+      if (i.hasNext) {
+        val commit = i.next
+        getCommitLog(
+          i,
+          count + 1,
+          if (limit <= 0 || (fixedPage - 1) * limit <= count) logs :+ new CommitInfo(commit) else logs
+        )
+      } else {
+        (logs, i.hasNext)
+      }
+
+    Using.resource(new RevWalk(git.getRepository)) { revWalk =>
+      defining(git.getRepository.resolve(revision)) { objectId =>
+        if (objectId == null) {
+          Left(s"${revision} can't be resolved.")
+        } else {
+          revWalk.markStart(revWalk.parseCommit(objectId))
+          if (path.nonEmpty) {
+            revWalk.setTreeFilter(AndTreeFilter.create(PathFilter.create(path), TreeFilter.ANY_DIFF))
+          }
+          Right(getCommitLog(revWalk.iterator, 0, Nil))
+        }
+      }
+    }
+  }
+
   private def initRepo(): Unit = {
-    Using(new RepositoryBuilder().setGitDir(repositoryDir).setBare.build) { repository =>
+    Using(new RepositoryBuilder().setGitDir(repositoryDir).setBare().build) { repository =>
       repository.create(true)
       setReceivePack(repository)
     }

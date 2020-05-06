@@ -93,3 +93,5 @@ repository.tree.createFolder.formName=Folder name
 
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name
+
+repository.commitLog.title=Commits
