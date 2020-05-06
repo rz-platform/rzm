@@ -233,7 +233,12 @@ class RepositoryController @Inject() (
 
   private def fillEditForm(blob: Blob, path: String)(implicit req: RepositoryRequest[AnyContent]): Form[EditedItem] = {
     editorForm.fill(
-      EditedItem(blob.content.content.getOrElse(""), Messages("repository.edit.commitmessage"), getFileName(path), decodeNameFromUrl(path))
+      EditedItem(
+        blob.content.content.getOrElse(""),
+        Messages("repository.edit.commitmessage"),
+        decodeNameFromUrl(path),
+        getFileName(path)
+      )
     )
   }
 
@@ -260,51 +265,61 @@ class RepositoryController @Inject() (
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
-      Future(Ok)
-      //      val rev           = "master" // TODO: Replace with rev
-//      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
-//      val blobInfo      = gitRepository.blobFile(decodeNameFromUrl(path), rev)
-//
-//      val editFile = { editedFile: EditedItem =>
-//        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
-//        gitRepository.commitFiles(rev, ".", editedFile.message, request.account) {
-//          case (git, headTip, builder, inserter) =>
-//            val permission = gitRepository
-//              .processTree(git, headTip) { (path, tree) =>
-//                // Add all entries except the editing file
-//                if (!newPath.contains(path) && !oldPath.contains(path)) {
-//                  builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
-//                }
-//                // Retrieve permission if file exists to keep it
-//                oldPath.collect { case x if x == path => tree.getEntryFileMode.getBits }
-//              }
-//              .flatten
-//              .headOption
-//
-//            builder.add(
-//              gitRepository.createDirCacheEntry(
-//                newPath,
-//                permission
-//                  .map { bits =>
-//                    FileMode.fromBits(bits)
-//                  }
-//                  .getOrElse(FileMode.REGULAR_FILE),
-//                inserter.insert(Constants.OBJ_BLOB, content)
-//              )
-//            )
-//            builder.finish()
-//        }
-//      }
-//
-//      blobInfo match {
-//        case Some(blob) =>
-//          editorForm.bindFromRequest.fold(
-//            formWithErrors => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path)))),
-//            editFile
-//          )
-//          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", path)))
-//        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-//      }
+      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+      val rev = "master"
+
+      val editFile = { editedFile: EditedItem =>
+        val oldPath       = decodeNameFromUrl(editedFile.path)
+        val newPath       = buildFilePath(getPathWithoutFilename(editedFile.path), editedFile.fileName, isFolder = false)
+
+        val content  = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
+
+        gitRepository.commitFiles(rev, getPathWithoutFilename(oldPath), editedFile.message, request.account) {
+          case (git, headTip, builder, inserter) =>
+            val permission = gitRepository
+              .processTree(git, headTip) { (path, tree) =>
+                // Add all entries except the editing file
+                if (!newPath.contains(path) && !oldPath.contains(path)) {
+                  builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
+                }
+                // Retrieve permission if file exists to keep it
+                oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
+              }
+              .flatten
+              .headOption
+
+            builder.add(
+              gitRepository.createDirCacheEntry(
+                newPath,
+                permission
+                  .map { bits =>
+                    FileMode.fromBits(bits)
+                  }
+                  .getOrElse(FileMode.REGULAR_FILE),
+                inserter.insert(Constants.OBJ_BLOB, content)
+              )
+            )
+            builder.finish()
+        }
+        Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", newPath)))
+      }
+
+      editorForm.bindFromRequest.fold(
+        formWithErrors => {
+          val path = formWithErrors.data.get("path")
+          path match {
+            case Some(path) =>
+              logger.info(path)
+              val blob = gitRepository.blobFile(decodeNameFromUrl(path), rev)
+              blob match {
+                case Some(blob) => Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
+                case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+              }
+            case None => Future(Redirect(routes.RepositoryController.view(accountName, repositoryName, ".")))
+          }
+        },
+        editFile
+      )
     }
 
   /**
