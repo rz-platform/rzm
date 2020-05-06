@@ -1,0 +1,13 @@
+@(commitLog: Seq[CommitInfo], rev: String)(implicit request: RepositoryRequestHeader)
+
+@import base._
+@import helpers._
+
+@auth(request.messages("repository.commitLog.title")) {
+@repositoryHeader()
+<h2>Commits on @rev</h2>
+@commitLog.map { commitInfo =>
+    <p>@commitInfo.authorName - @commitInfo.fullMessage - @commitInfo.commitTime</p>
+}
+
+}

@@ -73,3 +73,6 @@ POST /profile/image/delete controllers.AuthController.removeProfilePicture
 POST /profile controllers.AuthController.editProfile
 POST /profilePassword controllers.AuthController.updatePassword
 POST  /uploadProfilePage controllers.AuthController.uploadProfilePicture()
+
+# Commit log
+GET /repositories/:account/:repository/commits/:rev controllers.RepositoryController.commitLog(account:String, repository:String, rev: String)

@@ -498,14 +498,24 @@ class RepositoryController @Inject() (
       revision: String = "master"
   ): Action[AnyContent] = {
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
-      val gitRepository =
-        new GitRepository(request.repository.owner, repositoryName, gitHome)
+      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
       Ok.sendFile(
         gitRepository.createArchive("", revision),
         inline = false,
         fileName = _ => Some(repositoryName + "-" + revision + ".zip")
       )
+    }
+  }
+
+  def commitLog(accountName: String, repositoryName: String, rev: String) ={
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
+      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+      val commitLog = gitRepository.getCommitsLog(rev, 1)
+      commitLog match {
+        case Right((logs, hasNext)) => Ok(html.commitLog(logs, rev))
+        case Left(_) => NotFound
+      }
     }
   }
 }
