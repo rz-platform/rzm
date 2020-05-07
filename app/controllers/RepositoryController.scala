@@ -508,13 +508,14 @@ class RepositoryController @Inject() (
     }
   }
 
-  def commitLog(accountName: String, repositoryName: String, rev: String) ={
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
+  def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] ={
+    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)).async { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val commitLog = gitRepository.getCommitsLog(rev, 1)
+
+      val commitLog = gitRepository.getCommitsLog(rev, page, 30)
       commitLog match {
-        case Right((logs, hasNext)) => Ok(html.commitLog(logs, rev))
-        case Left(_) => NotFound
+        case Right((logs, hasNext)) => Future(Ok(html.commitLog(logs, rev, hasNext, page)))
+        case Left(_) => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
     }
   }
