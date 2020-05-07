@@ -1,13 +1,24 @@
-@(commitLog: Seq[CommitInfo], rev: String)(implicit request: RepositoryRequestHeader)
+@(commitLog: Seq[CommitInfo], rev: String, hasNext: Boolean, page: Int)(implicit request: RepositoryRequestHeader)
 
 @import base._
 @import helpers._
 
 @auth(request.messages("repository.commitLog.title")) {
 @repositoryHeader()
-<h2>Commits on @rev</h2>
+
+<h2>@request.messages("repository.commitLog.header") @rev</h2>
+
 @commitLog.map { commitInfo =>
     <p>@commitInfo.authorName - @commitInfo.fullMessage - @commitInfo.commitTime</p>
+}
+
+@if(hasNext) {
+    <a class="button"
+       href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)">Next page</a>
+}
+@if(page > 1) {
+<a class="button"
+   href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)">Previous page</a>
 }
 
 }

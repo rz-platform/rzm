@@ -75,4 +75,5 @@ POST /profilePassword controllers.AuthController.updatePassword
 POST  /uploadProfilePage controllers.AuthController.uploadProfilePicture()
 
 # Commit log
-GET /repositories/:account/:repository/commits/:rev controllers.RepositoryController.commitLog(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/commits/:rev controllers.RepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
+GET /repositories/:account/:repository/commits/:rev/:page controllers.RepositoryController.commitLog(account:String, repository:String, rev: String, page: Int)

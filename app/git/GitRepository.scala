@@ -510,14 +510,15 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
 
   def getCommitsLog(
       revision: String,
-      page: Int = 1,
-      limit: Int = 0,
+      page: Int,
+      limit: Int,
       path: String = ""
   ): Either[String, (List[CommitInfo], Boolean)] = {
     Using.resource(Git.open(repositoryDir)) { git =>
       getCommitLog(git, revision, page, limit, path)
     }
   }
+
 
   /**
    * Returns the commit list of the specified branch.
@@ -530,29 +531,30 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
    * @return a tuple of the commit list and whether has next, or the error message
    */
   def getCommitLog(
-      git: Git,
-      revision: String,
-      page: Int = 1,
-      limit: Int = 0,
-      path: String = ""
-  ): Either[String, (List[CommitInfo], Boolean)] = {
+                    git: Git,
+                    revision: String,
+                    page: Int = 1,
+                    limit: Int = 0,
+                    path: String = ""
+                  ): Either[String, (List[CommitInfo], Boolean)] = {
     val fixedPage = if (page <= 0) 1 else page
 
     @scala.annotation.tailrec
     def getCommitLog(
-        i: java.util.Iterator[RevCommit],
-        count: Int,
-        logs: List[CommitInfo]
-    ): (List[CommitInfo], Boolean) =
-      if (i.hasNext) {
-        val commit = i.next
-        getCommitLog(
-          i,
-          count + 1,
-          if (limit <= 0 || (fixedPage - 1) * limit <= count) logs :+ new CommitInfo(commit) else logs
-        )
-      } else {
-        (logs, i.hasNext)
+                      i: java.util.Iterator[RevCommit],
+                      count: Int,
+                      logs: List[CommitInfo]
+                    ): (List[CommitInfo], Boolean) =
+      i.hasNext match {
+        case true if (limit <= 0 || logs.size < limit) => {
+          val commit = i.next
+          getCommitLog(
+            i,
+            count + 1,
+            if (limit <= 0 || (fixedPage - 1) * limit <= count) logs :+ new CommitInfo(commit) else logs
+          )
+        }
+        case _ => (logs, i.hasNext)
       }
 
     Using.resource(new RevWalk(git.getRepository)) { revWalk =>
@@ -569,6 +571,7 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
       }
     }
   }
+
 
   private def initRepo(): Unit = {
     Using(new RepositoryBuilder().setGitDir(repositoryDir).setBare().build) { repository =>

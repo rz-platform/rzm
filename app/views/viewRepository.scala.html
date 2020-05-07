@@ -21,6 +21,10 @@
        href="@routes.RepositoryController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
         @request.messages("repository.tree.downloads")
     </a>
+    <a class="button"
+       href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
+        @request.messages("repository.tree.commits")
+    </a>
 
     <div class="repository-actions-with-tooltip">
         <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>

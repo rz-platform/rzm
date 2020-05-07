@@ -90,8 +90,10 @@ repository.tree.collaborators=Collaborators
 repository.tree.downloads=Download ZIP
 repository.tree.createFolder=Create new folder
 repository.tree.createFolder.formName=Folder name
+repository.tree.commits=Changes
 
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name
 
 repository.commitLog.title=Commits
+repository.commitLog.header=Commits on
