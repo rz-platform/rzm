@@ -187,11 +187,11 @@ class RepositoryController @Inject() (
     Ok(html.createRepository(createRepositoryForm))
   }
 
-  def view(accountName: String, repositoryName: String, path: String = "."): Action[AnyContent] =
+  def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val gitData = git
-        .fileList(request.repository, path = decodeNameFromUrl(path))
+        .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
         .getOrElse(RepositoryGitData(List(), None))
       Ok(html.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
     }
@@ -384,7 +384,7 @@ class RepositoryController @Inject() (
    * Uploads a multipart file as a POST request.
    *
    */
-  def upload(accountName: String, repositoryName: String): Action[MultipartFormData[File]] =
+  def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
     userAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
         uploadFileForm.bindFromRequest.fold(
@@ -399,15 +399,14 @@ class RepositoryController @Inject() (
               val filePath = buildFilePath(data.path, filename, isFolder = false)
               CommitFile(filename, name = filePath, filePart.ref)
             })
-
-            gitRepository.commitUploadedFiles(files, req.account, "master", data.path, data.message)
+            gitRepository.commitUploadedFiles(files, req.account, if (!rev.isEmpty) rev else req.repository.defaultBranch, data.path, data.message)
             Redirect(routes.RepositoryController.view(accountName, repositoryName, data.path))
               .flashing("success" -> Messages("repository.upload.success"))
           }
         )
       }
 
-  def uploadPage(accountName: String, repositoryName: String, path: String): Action[AnyContent] =
+  def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
       Ok(html.uploadFile(uploadFileForm, decodeNameFromUrl(path)))
     }

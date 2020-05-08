@@ -9,14 +9,18 @@
 @repositoryFileTree(tree)
 
 <div class="repository-actions">
+    @if(request.role <= AccessLevel.canEdit) {
     <a class="button"
        href="@routes.RepositoryController.uploadPage(request.repository.owner.userName, request.repository.name, path)">
         @request.messages("repository.tree.uploadFiles")
     </a>
+    }
+    @if(request.role == AccessLevel.owner) {
     <a class="button"
        href="@routes.RepositoryController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
         @request.messages("repository.tree.collaborators")
     </a>
+    }
     <a class="button"
        href="@routes.RepositoryController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
         @request.messages("repository.tree.downloads")
@@ -25,7 +29,7 @@
        href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
         @request.messages("repository.tree.commits")
     </a>
-
+    @if(request.role <= AccessLevel.canEdit) {
     <div class="repository-actions-with-tooltip">
         <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>
 
@@ -55,6 +59,7 @@
         }
         </div>
     </div>
+    }
 </div>
 
 <div class="file-list">
@@ -62,10 +67,10 @@
         case (file) => {
             <p>
                 @if(file.isDirectory) {
-                <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, file.path)">
+                <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, file.path, request.repository.defaultBranch)">
                 <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
                 } else {
-                <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
+                <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path, request.repository.defaultBranch)">
                 <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
                 }
                 @file.name

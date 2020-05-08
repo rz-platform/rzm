@@ -14,9 +14,11 @@
 </p>
 
 @if(blob.content.viewType == "text"){
+@if(request.role <= AccessLevel.canEdit) {
 <p><a class="button" href="@routes.RepositoryController.editFilePage(request.repository.owner.userName, request.repository.name, path)">
     @request.messages("repository.viewFile.edit")
 </a></p>
+}
     <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
 
