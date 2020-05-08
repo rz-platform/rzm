@@ -9,16 +9,16 @@
 <h2>@request.messages("repository.commitLog.header") @rev</h2>
 
 @commitLog.map { commitInfo =>
-    <p>@commitInfo.authorName - @commitInfo.fullMessage - @commitInfo.commitTime</p>
+<p>@commitInfo.authorName - @commitInfo.fullMessage <span class="time">@commitInfo.commitTime</span></p>
 }
 
 @if(hasNext) {
     <a class="button"
-       href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)">Next page</a>
+       href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)">@request.messages("repository.commitLog.nextPage")</a>
 }
 @if(page > 1) {
 <a class="button"
-   href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)">Previous page</a>
+   href="@routes.RepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)">@request.messages("repository.commitLog.previousPage")</a>
 }
-
+<link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/common.css")"/>
 }

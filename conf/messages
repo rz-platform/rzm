@@ -97,3 +97,5 @@ repository.tree.createFile.formName=File name
 
 repository.commitLog.title=Commits
 repository.commitLog.header=Commits on
+repository.commitLog.nextPage=Next page
+repository.commitLog.previousPage=Previous page
