@@ -28,9 +28,7 @@ grant all privileges on database razam to razam;
 Build front-end:
 
 ```
-cd public
-npm install
-npm run build
+cd public && npm install && npm run build
 ```
 
 Run app in live-reload mode:
@@ -50,7 +48,8 @@ sbt test
 ### Production build
 
 ```
-npm run build && sbt dist
+cd public && npm run build
+cd .. &&  sbt dist
 target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -Dplay.http.secret.key=secret
 ```
 

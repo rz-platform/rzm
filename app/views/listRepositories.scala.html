@@ -13,7 +13,8 @@
                 }
     }.getOrElse {
         <div class="well">
-            <em>Nothing to display</em>
+            @request.messages("repository.list.empty")
         </div>
     }
+
 }
