@@ -1,4 +1,4 @@
-@(blob:Blob, path:String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
+@(blob:Blob, path:String, rev: String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
 @import base._
 @import helpers._
 
@@ -8,14 +8,14 @@
 @repositoryFileTree(tree)
 
 <p><a class="button"
-      href="@routes.RepositoryController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
+      href="@routes.RepositoryController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
     @request.messages("repository.viewFile.raw")
 </a>
 </p>
 
 @if(blob.content.viewType == "text"){
 @if(request.role <= AccessLevel.canEdit) {
-<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repository.owner.userName, request.repository.name, path)">
+<p><a class="button" href="@routes.RepositoryController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
     @request.messages("repository.viewFile.edit")
 </a></p>
 }

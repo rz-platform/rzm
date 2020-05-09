@@ -8,7 +8,7 @@
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
                 @repositories.map {
                     case (repository) => {
-<p><a href="@routes.RepositoryController.view(repository.owner.userName, repository.name, ".")"> @repository.owner.userName / @repository.name</a> </p>
+<p><a href="@routes.RepositoryController.view(repository.owner.userName, repository.name, ".", repository.defaultBranch)"> @repository.owner.userName / @repository.name</a> </p>
                     }
                 }
     }.getOrElse {
