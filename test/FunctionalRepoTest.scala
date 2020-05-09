@@ -52,6 +52,8 @@ class FunctionalRepoTest
 
   val defaultDatabase: Database = databaseApi.database("default")
 
+  val defaultBranch = "master"
+
   override def beforeAll(): Unit = {
     Evolutions.applyEvolutions(databaseApi.database("default"))
   }
@@ -130,7 +132,7 @@ class FunctionalRepoTest
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
-        .withFormUrlEncodedBody("name" -> name)
+        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch)
         .withSession(("user_id", creator.id.toString))
     )
 
