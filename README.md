@@ -1,4 +1,5 @@
 Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE) [![Build Status](https://travis-ci.org/razamgit/razam.svg?branch=master)](https://travis-ci.org/razamgit/razam)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Frazamgit%2Frazam.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Frazamgit%2Frazam?ref=badge_shield)
 =====
 
 Razam is web-based Git repository hosting (much like GitHub) for writing scientific papers in a browser and full integration with TeX.
@@ -58,3 +59,7 @@ target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -
 Copyright 2020 Eugene Bosiakov (@bosiakov). 
 
 Package *git* contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Frazamgit%2Frazam.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Frazamgit%2Frazam?ref=badge_large)
