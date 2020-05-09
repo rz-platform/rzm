@@ -30,7 +30,7 @@ POST /repositories/create controllers.RepositoryController.saveRepository
 
 # Repository view
 
-GET /repositories/:account/:repository/tree controllers.RepositoryController.view(account:String, repository:String, path: String = ".", rev = "")
+GET /repositories/:account/:repository/tree/:rev controllers.RepositoryController.view(account:String, repository:String, path: String = ".", rev)
 GET /repositories/:account/:repository/tree/:rev/*path controllers.RepositoryController.view(account:String, repository:String, path: String, rev: String)
 
 # Blob view
@@ -46,7 +46,7 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.RepositoryCont
 
 GET /repositories/:account/:repository/upload/:rev controllers.RepositoryController.uploadPage(account:String, repository:String, rev: String, path: String = "")
 GET /repositories/:account/:repository/upload/:rev/*path controllers.RepositoryController.uploadPage(account:String, repository:String, rev: String, path: String)
-POST /repositories/:account/:repository/upload controllers.RepositoryController.upload(account:String, repository:String)
+POST /repositories/:account/:repository/upload/:rev controllers.RepositoryController.upload(account:String, repository:String, rev: String)
 
 
 # Collaborators

@@ -11,7 +11,7 @@
 <div class="repository-actions">
     @if(request.role <= AccessLevel.canEdit) {
     <a class="button"
-       href="@routes.RepositoryController.uploadPage(request.repository.owner.userName, request.repository.name, path)">
+       href="@routes.RepositoryController.uploadPage(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
         @request.messages("repository.tree.uploadFiles")
     </a>
     }
@@ -37,12 +37,13 @@
         @form(routes.RepositoryController.addNewItem(request.repository.owner.userName, request.repository.name, path, true)) {
         <fieldset>
             @CSRF.formField
+            <input type="hidden" name="rev" value='@request.repository.defaultBranch' />
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
         </fieldset>
         <div class="actions">
             <input type="submit" value="Create folder" class="btn primary"/></div>
-        }
         </div>
+        }
     </div>
 
     <div class="repository-actions-with-tooltip">
@@ -52,12 +53,13 @@
         @form(routes.RepositoryController.addNewItem(request.repository.owner.userName, request.repository.name, path, false)) {
         <fieldset>
             @CSRF.formField
+            <input type="hidden" name="rev" value='@request.repository.defaultBranch' />
             @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
         </fieldset>
         <div class="actions">
             <input type="submit" value="Create file" class="btn primary"/></div>
-        }
         </div>
+        }
     </div>
     }
 </div>
@@ -70,7 +72,7 @@
                 <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, file.path, request.repository.defaultBranch)">
                 <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
                 } else {
-                <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path, request.repository.defaultBranch)">
+                <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
                 <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
                 }
                 @file.name

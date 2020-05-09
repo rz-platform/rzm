@@ -21,6 +21,8 @@
 
 @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
 
+@inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
+
 @inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"), Symbol("_help") -> "")
 
 @textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code",  Symbol("_label") -> request.messages("repository.edit.form.content"), Symbol("_help") -> "")

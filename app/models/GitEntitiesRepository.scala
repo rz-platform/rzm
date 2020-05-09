@@ -41,7 +41,7 @@ case class RemoveCollaboratorData(email: String)
 
 case class CommitFile(id: String, name: String, file: File)
 
-case class EditedItem(content: String, message: String, path: String, fileName: String)
+case class EditedItem(content: String, message: String, rev: String, path: String, fileName: String)
 
 case class UploadFileForm(path: String, message: String)
 
@@ -74,7 +74,7 @@ case class FileInfo(
 
 case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
 
-case class NewItem(name: String)
+case class NewItem(name: String, rev: String)
 
 /**
  * The file content data for the file content view of the repository viewer.
