@@ -1,47 +1,30 @@
 package git
 
-import models._
-import org.apache.commons.compress.archivers.ArchiveEntry
-import org.apache.commons.compress.archivers.ArchiveOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 
-import akka.util.ByteString
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import models._
+import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
+import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.apache.commons.compress.utils.{ IOUtils => CompressIOUtils }
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
+import org.apache.commons.io.{ FileUtils, IOUtils }
 import org.apache.commons.io.input.BOMInputStream
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.dircache.DirCache
-import org.eclipse.jgit.dircache.DirCacheBuilder
-import org.eclipse.jgit.dircache.DirCacheEntry
+import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder, DirCacheEntry }
 import org.eclipse.jgit.errors.MissingObjectException
 import org.eclipse.jgit.lib.{ Repository => _, _ }
-import org.eclipse.jgit.revwalk.RevCommit
-import org.eclipse.jgit.revwalk.RevTag
-import org.eclipse.jgit.revwalk.RevTree
-import org.eclipse.jgit.revwalk.RevWalk
-import org.eclipse.jgit.transport.ReceiveCommand
-import org.eclipse.jgit.transport.ReceivePack
+import org.eclipse.jgit.revwalk.{ RevCommit, RevTag, RevTree, RevWalk }
+import org.eclipse.jgit.transport.{ ReceiveCommand, ReceivePack }
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
-import org.eclipse.jgit.treewalk.filter.AndTreeFilter
-import org.eclipse.jgit.treewalk.filter.PathFilter
-import org.eclipse.jgit.treewalk.filter.TreeFilter
-import org.eclipse.jgit.treewalk.CanonicalTreeParser
-import org.eclipse.jgit.treewalk.TreeWalk
-import org.eclipse.jgit.treewalk.WorkingTreeOptions
+import org.eclipse.jgit.treewalk.{ CanonicalTreeParser, TreeWalk, WorkingTreeOptions }
+import org.eclipse.jgit.treewalk.filter.{ AndTreeFilter, PathFilter, TreeFilter }
 import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
 
-import scala.util.Using.Releasable
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 import scala.util.Using
+import scala.util.Using.Releasable
 
 // Package contains parts of code inherited from GitBucket project
 
@@ -519,7 +502,6 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
     }
   }
 
-
   /**
    * Returns the commit list of the specified branch.
    *
@@ -531,20 +513,20 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
    * @return a tuple of the commit list and whether has next, or the error message
    */
   def getCommitLog(
-                    git: Git,
-                    revision: String,
-                    page: Int = 1,
-                    limit: Int = 0,
-                    path: String = ""
-                  ): Either[String, (List[CommitInfo], Boolean)] = {
+      git: Git,
+      revision: String,
+      page: Int = 1,
+      limit: Int = 0,
+      path: String = ""
+  ): Either[String, (List[CommitInfo], Boolean)] = {
     val fixedPage = if (page <= 0) 1 else page
 
     @scala.annotation.tailrec
     def getCommitLog(
-                      i: java.util.Iterator[RevCommit],
-                      count: Int,
-                      logs: List[CommitInfo]
-                    ): (List[CommitInfo], Boolean) =
+        i: java.util.Iterator[RevCommit],
+        count: Int,
+        logs: List[CommitInfo]
+    ): (List[CommitInfo], Boolean) =
       i.hasNext match {
         case true if (limit <= 0 || logs.size < limit) => {
           val commit = i.next
@@ -571,7 +553,6 @@ class GitRepository(val owner: Account, val repositoryName: String, val gitHome:
       }
     }
   }
-
 
   private def initRepo(): Unit = {
     Using(new RepositoryBuilder().setGitDir(repositoryDir).setBare().build) { repository =>

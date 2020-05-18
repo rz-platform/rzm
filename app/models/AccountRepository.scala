@@ -1,12 +1,10 @@
 package models
 
-import java.util.Calendar
-import java.util.Date
+import java.util.{ Calendar, Date }
 
 import anorm.SqlParser.get
 import anorm._
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{ Inject, Singleton }
 import play.api.db.DBApi
 import services.encryption.EncryptionService
 

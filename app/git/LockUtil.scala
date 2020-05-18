@@ -1,7 +1,7 @@
 package git
 
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.{Lock, ReentrantLock}
+import java.util.concurrent.locks.{ Lock, ReentrantLock }
 
 object LockUtil {
   private def defining[A, B](value: A)(f: A => B): B = f(value)

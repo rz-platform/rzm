@@ -1,13 +1,11 @@
 package models
 
-import java.io.File
-import java.io.InputStream
+import java.io.{ File, InputStream }
 import java.util.Date
 
 import anorm.SqlParser.get
 import anorm._
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{ Inject, Singleton }
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
 import play.api.db.DBApi
@@ -23,7 +21,7 @@ case class Repository(
 
 object Repository {
   implicit def toParameters: ToParameterList[Repository] = Macro.toParameters[Repository]
-  val defaultBranchName = "master"
+  val defaultBranchName                                  = "master"
 }
 
 case class RepositoryData(name: String, description: Option[String])
@@ -175,7 +173,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       db.withConnection { implicit connection =>
         SQL("""
         select repository.id, repository.name, repository.default_branch,
-        account.id, account.username, account.has_picture, account.email 
+        account.id, account.username, account.has_picture, account.email
         from repository
         join account on repository.owner_id = account.id
         where
@@ -226,8 +224,13 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         insert into repository (name, owner_id, description, default_branch) values (
           {name},{owner_id},{description},{defaultBranch}
         )
-      """).on("name" -> repository.name, "owner_id"-> ownerId, "description" -> repository.description.getOrElse(""),
-          "defaultBranch" -> Repository.defaultBranchName).executeInsert()
+      """).on(
+            "name"          -> repository.name,
+            "owner_id"      -> ownerId,
+            "description"   -> repository.description.getOrElse(""),
+            "defaultBranch" -> Repository.defaultBranchName
+          )
+          .executeInsert()
       }
     }(ec)
 
@@ -235,7 +238,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
-        select role from collaborator 
+        select role from collaborator
         where collaborator.user_id = {collaboratorId} and repository_id = {repositoryId}
           """)
           .on("collaboratorId" -> userId, "repositoryId" -> repository.id)

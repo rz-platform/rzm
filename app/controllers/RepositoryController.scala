@@ -1,30 +1,21 @@
 package controllers
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.Calendar
+import java.nio.file.{ Files, Path, Paths }
 
 import akka.stream.IOResult
-import akka.stream.scaladsl.FileIO
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.StreamConverters
+import akka.stream.scaladsl.{ FileIO, Sink, StreamConverters }
 import akka.util.ByteString
 import git.GitRepository
 import javax.inject.Inject
 import models._
-import org.eclipse.jgit.lib.Constants
-import org.eclipse.jgit.lib.FileMode
+import org.eclipse.jgit.lib.{ Constants, FileMode }
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
-import play.api.data.validation.Constraint
-import play.api.data.validation.Invalid
-import play.api.data.validation.Valid
+import play.api.data.validation.{ Constraint, Invalid, Valid }
 import play.api.http.HttpEntity
-import play.api.i18n.Messages
-import play.api.i18n.MessagesApi
+import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
@@ -32,8 +23,7 @@ import play.core.parsers.Multipart.FileInfo
 import services.path.PathService._
 import views._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class RepositoryController @Inject() (
     gitEntitiesRepository: GitEntitiesRepository,
@@ -162,11 +152,11 @@ class RepositoryController @Inject() (
       repository => {
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
-            gitEntitiesRepository.insertRepository(request.account.id, repository).map {
-              repositoryId: Option[Long] =>
-                val git = new GitRepository(request.account, repository.name, gitHome)
-                git.create()
-                Redirect(routes.RepositoryController.list()).flashing("success" -> Messages("repository.create.flash.success"))
+            gitEntitiesRepository.insertRepository(request.account.id, repository).map { repositoryId: Option[Long] =>
+              val git = new GitRepository(request.account, repository.name, gitHome)
+              git.create()
+              Redirect(routes.RepositoryController.list())
+                .flashing("success" -> Messages("repository.create.flash.success"))
             }
           case Some(_) =>
             val formBuiltFromRequest = createRepositoryForm.bindFromRequest
@@ -346,8 +336,14 @@ class RepositoryController @Inject() (
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
       addNewItemToRepForm.bindFromRequest.fold(
         formWithErrors =>
-          Redirect(routes.RepositoryController.view(accountName, repositoryName, path, formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)))
-            .flashing("error" -> Messages("repository.addNewItem.error.namereq")),
+          Redirect(
+            routes.RepositoryController.view(
+              accountName,
+              repositoryName,
+              path,
+              formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
+            )
+          ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
         newItem => {
           val gitRepository =
             new GitRepository(request.repository.owner, repositoryName, gitHome)
@@ -389,7 +385,14 @@ class RepositoryController @Inject() (
     userAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
         uploadFileForm.bindFromRequest.fold(
-          formWithErrors => BadRequest(html.uploadFile(formWithErrors, formWithErrors.data.getOrElse("rev", req.repository.defaultBranch), formWithErrors.data.getOrElse("path", "."))),
+          formWithErrors =>
+            BadRequest(
+              html.uploadFile(
+                formWithErrors,
+                formWithErrors.data.getOrElse("rev", req.repository.defaultBranch),
+                formWithErrors.data.getOrElse("path", ".")
+              )
+            ),
           (data: UploadFileForm) => {
             val gitRepository = new GitRepository(req.repository.owner, repositoryName, gitHome)
 

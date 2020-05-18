@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.http.Status.PERMANENT_REDIRECT
-import play.api.mvc.{EssentialAction, EssentialFilter, RequestHeader, Results}
+import play.api.mvc.{ EssentialAction, EssentialFilter, RequestHeader, Results }
 
 @Singleton
 class TrailingSlashFilter extends EssentialFilter {
