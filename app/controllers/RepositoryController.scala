@@ -26,13 +26,13 @@ import views._
 import scala.concurrent.{ ExecutionContext, Future }
 
 class RepositoryController @Inject() (
-    gitEntitiesRepository: GitEntitiesRepository,
-    accountRepository: AccountRepository,
-    userAction: UserInfoAction,
-    errorHandler: ErrorHandler,
-    config: Configuration,
-    messagesApi: MessagesApi,
-    cc: MessagesControllerComponents
+  gitEntitiesRepository: GitEntitiesRepository,
+  accountRepository: AccountRepository,
+  userAction: UserInfoAction,
+  errorHandler: ErrorHandler,
+  config: Configuration,
+  messagesApi: MessagesApi,
+  cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
@@ -80,8 +80,7 @@ class RepositoryController @Inject() (
   )
 
   protected def createBadResult(msg: String, statusCode: Int = BAD_REQUEST): RequestHeader => Future[Result] = {
-    request =>
-      errorHandler.onClientError(request, statusCode, msg)
+    request => errorHandler.onClientError(request, statusCode, msg)
   }
 
   val editorForm: Form[EditedItem] = Form(
@@ -102,38 +101,36 @@ class RepositoryController @Inject() (
     what.map(_.getOrElse(throw ifNot))
 
   def repositoryActionOn(
-      username: String,
-      repositoryName: String,
-      minimumAccessLevel: Int = AccessLevel.canView
+    username: String,
+    repositoryName: String,
+    minimumAccessLevel: Int = AccessLevel.canView
   ): ActionRefiner[UserRequest, RepositoryRequest] =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
       def refine[A](
-          request: UserRequest[A]
+        request: UserRequest[A]
       ): Future[Either[Result, controllers.RepositoryRequest[A]]] = {
         val items = for {
           repository <- getOrElse(new NoRepo)(
-            gitEntitiesRepository.getByAuthorAndName(username, repositoryName)
-          )
+                         gitEntitiesRepository.getByAuthorAndName(username, repositoryName)
+                       )
           collaborator <- gitEntitiesRepository.isUserCollaborator(repository, request.account.id)
         } yield (repository, collaborator)
 
-        items
-          .map(data => {
-            val accessLevel = data._2 match {
-              case None if data._1.owner.id == request.account.id => AccessLevel.owner
-              case Some(accessLevel)                              => accessLevel
-              case None                                           => throw new NoCollaborator()
-            }
+        items.map { data =>
+          val accessLevel = data._2 match {
+            case None if data._1.owner.id == request.account.id => AccessLevel.owner
+            case Some(accessLevel)                              => accessLevel
+            case None                                           => throw new NoCollaborator()
+          }
 
-            if (accessLevel <= minimumAccessLevel) {
-              Right(new RepositoryRequest[A](request, data._1, request.account, accessLevel, messagesApi))
-            } else {
-              Left(NotFound("Access denied"))
-            }
-          })
-          .recover { case ex: Exception with RepositoryAccessException => Left(BadRequest(ex.getMessage)) }
+          if (accessLevel <= minimumAccessLevel) {
+            Right(new RepositoryRequest[A](request, data._1, request.account, accessLevel, messagesApi))
+          } else {
+            Left(NotFound("Access denied"))
+          }
+        }.recover { case ex: Exception with RepositoryAccessException => Left(BadRequest(ex.getMessage)) }
       }
     }
 
@@ -149,7 +146,7 @@ class RepositoryController @Inject() (
   def saveRepository: Action[AnyContent] = userAction.async { implicit request =>
     createRepositoryForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
-      repository => {
+      repository =>
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
             gitEntitiesRepository.insertRepository(request.account.id, repository).map { repositoryId: Option[Long] =>
@@ -167,7 +164,6 @@ class RepositoryController @Inject() (
             )
             Future(BadRequest(html.createRepository(newForm)))
         }
-      }
     )
   }
 
@@ -215,13 +211,12 @@ class RepositoryController @Inject() (
       }
     }
 
-  private def getFileName(path: String): String = {
+  private def getFileName(path: String): String =
     new File(path).getName
-  }
 
   private def fillEditForm(blob: Blob, rev: String, path: String)(
-      implicit req: RepositoryRequest[AnyContent]
-  ): Form[EditedItem] = {
+    implicit req: RepositoryRequest[AnyContent]
+  ): Form[EditedItem] =
     editorForm.fill(
       EditedItem(
         blob.content.content.getOrElse(""),
@@ -231,7 +226,6 @@ class RepositoryController @Inject() (
         getFileName(path)
       )
     )
-  }
 
   def editFilePage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
@@ -281,11 +275,7 @@ class RepositoryController @Inject() (
               builder.add(
                 gitRepository.createDirCacheEntry(
                   newPath,
-                  permission
-                    .map { bits =>
-                      FileMode.fromBits(bits)
-                    }
-                    .getOrElse(FileMode.REGULAR_FILE),
+                  permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
                   inserter.insert(Constants.OBJ_BLOB, content)
                 )
               )
@@ -396,13 +386,13 @@ class RepositoryController @Inject() (
           (data: UploadFileForm) => {
             val gitRepository = new GitRepository(req.repository.owner, repositoryName, gitHome)
 
-            val files: Seq[CommitFile] = req.body.files.map(filePart => {
+            val files: Seq[CommitFile] = req.body.files.map { filePart =>
               // only get the last part of the filename
               // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
               val filename = Paths.get(filePart.filename).getFileName.toString
               val filePath = buildFilePath(data.path, filename, isFolder = false)
               CommitFile(filename, name = filePath, filePart.ref)
-            })
+            }
             gitRepository.commitUploadedFiles(
               files,
               req.account,
@@ -428,12 +418,11 @@ class RepositoryController @Inject() (
       }
     }
 
-  private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result = {
+  private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
     Redirect(
       routes.RepositoryController
         .addCollaboratorPage(req.repository.owner.userName, req.repository.name)
     )
-  }
 
   def addCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit req =>
@@ -455,9 +444,7 @@ class RepositoryController @Inject() (
                         futureCollaborator.id,
                         AccessLevel.fromString(data.accessLevel)
                       )
-                      .flatMap { _ =>
-                        Future(getCollaboratorPageRedirect(req))
-                      }
+                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
                   case Some(_) =>
                     Future(
                       getCollaboratorPageRedirect(req)
@@ -502,10 +489,10 @@ class RepositoryController @Inject() (
     }
 
   def downloadRepositoryArchive(
-      accountName: String,
-      repositoryName: String,
-      revision: String = "master"
-  ): Action[AnyContent] = {
+    accountName: String,
+    repositoryName: String,
+    revision: String = "master"
+  ): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
@@ -515,9 +502,8 @@ class RepositoryController @Inject() (
         fileName = _ => Some(repositoryName + "-" + revision + ".zip")
       )
     }
-  }
 
-  def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] = {
+  def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
     userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)).async { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
@@ -527,5 +513,4 @@ class RepositoryController @Inject() (
         case Left(_)                => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
     }
-  }
 }

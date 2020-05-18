@@ -38,9 +38,8 @@ class FunctionalRepoTest
 
   implicit val sys: ActorSystem = ActorSystem("RepositoryTest")
 
-  def getRandomString: String = {
+  def getRandomString: String =
     java.util.UUID.randomUUID.toString
-  }
 
   def databaseApi: DBApi               = app.injector.instanceOf[DBApi]
   def config: Configuration            = app.injector.instanceOf[Configuration]
@@ -54,13 +53,11 @@ class FunctionalRepoTest
 
   val defaultBranch = "master"
 
-  override def beforeAll(): Unit = {
+  override def beforeAll(): Unit =
     Evolutions.applyEvolutions(databaseApi.database("default"))
-  }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     Evolutions.cleanupEvolutions(databaseApi.database("default"))
-  }
 
   def createUser(): Account = {
     val userName = getRandomString
@@ -92,11 +89,11 @@ class FunctionalRepoTest
   }
 
   def addCollaborator(
-      controller: RepositoryController,
-      repositoryName: String,
-      owner: Account,
-      collaboratorName: String,
-      accessLevel: String
+    controller: RepositoryController,
+    repositoryName: String,
+    owner: Account,
+    collaboratorName: String,
+    accessLevel: String
   ): Result = {
     val request = addCSRFToken(
       FakeRequest(routes.RepositoryController.addCollaboratorAction(owner.userName, repositoryName))
@@ -108,10 +105,10 @@ class FunctionalRepoTest
   }
 
   def removeCollaborator(
-      controller: RepositoryController,
-      repositoryName: String,
-      owner: Account,
-      collaboratorName: String
+    controller: RepositoryController,
+    repositoryName: String,
+    owner: Account,
+    collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
       FakeRequest(routes.RepositoryController.removeCollaboratorAction(owner.userName, repositoryName))
@@ -123,12 +120,12 @@ class FunctionalRepoTest
   }
 
   def createNewItem(
-      controller: RepositoryController,
-      name: String,
-      repositoryName: String,
-      creator: Account,
-      isFolder: Boolean,
-      path: String
+    controller: RepositoryController,
+    name: String,
+    repositoryName: String,
+    creator: Account,
+    isFolder: Boolean,
+    path: String
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
@@ -142,12 +139,10 @@ class FunctionalRepoTest
     await(result)
   }
 
-  def listFileInRepo(gitRepository: GitRepository, repository: Repository, path: String): RepositoryGitData = {
+  def listFileInRepo(gitRepository: GitRepository, repository: Repository, path: String): RepositoryGitData =
     gitRepository
       .fileList(repository, path = path)
       .getOrElse(RepositoryGitData(List(), None))
-
-  }
 
   "AuthController" must {
     "Attempt to create user with bad name" in {

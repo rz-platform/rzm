@@ -21,16 +21,14 @@ object PathService {
     }
   }
 
-  def getPathWithoutFilename(path: String): String = {
+  def getPathWithoutFilename(path: String): String =
     try {
       Paths.get(path).getParent.toString
     } catch {
       case _: java.lang.NullPointerException => "." // if path is a filename, we are in root directory
     }
 
-  }
-
-  def buildTreeFromPath(path: String, isFile: Boolean = false): Array[PathBreadcrumb] = {
+  def buildTreeFromPath(path: String, isFile: Boolean = false): Array[PathBreadcrumb] =
     path match {
       case "." => Array()
       case _ =>
@@ -45,6 +43,5 @@ object PathService {
           breadcrumbs
         }
     }
-  }
 
 }

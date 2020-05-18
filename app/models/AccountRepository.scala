@@ -18,21 +18,21 @@ object Account {
 }
 
 case class RichAccount(
-    id: Long,
-    userName: String,
-    fullName: String = "",
-    email: String,
-    password: String,
-    isAdmin: Boolean = false,
-    created: java.util.Date,
-    hasPicture: Boolean,
-    description: String = ""
+  id: Long,
+  userName: String,
+  fullName: String = "",
+  email: String,
+  password: String,
+  isAdmin: Boolean = false,
+  created: java.util.Date,
+  hasPicture: Boolean,
+  description: String = ""
 )
 
 object RichAccount {
   implicit def toParameters: ToParameterList[RichAccount] = Macro.toParameters[RichAccount]
 
-  def buildNewAccount(userForm: AccountRegistrationData): RichAccount = {
+  def buildNewAccount(userForm: AccountRegistrationData): RichAccount =
     RichAccount(
       0,
       userForm.userName.trim.toLowerCase,
@@ -42,7 +42,6 @@ object RichAccount {
       created = Calendar.getInstance().getTime,
       hasPicture = false
     )
-  }
 }
 
 object AccessLevel {
@@ -55,10 +54,9 @@ object AccessLevel {
 
   val map: HashMap[String, Int] = HashMap((canEditName, canEdit), (canViewName, canView))
 
-  def fromString(accessLevel: String): Int = {
+  def fromString(accessLevel: String): Int =
     if (AccessLevel.map.contains(accessLevel)) AccessLevel.map(accessLevel)
     else AccessLevel.canView
-  }
 }
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
