@@ -18,12 +18,12 @@ import views._
 import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthController @Inject() (
-    accountService: AccountRepository,
-    userAction: UserInfoAction,
-    config: Configuration,
-    cc: MessagesControllerComponents
+  accountService: AccountRepository,
+  userAction: UserInfoAction,
+  config: Configuration,
+  cc: MessagesControllerComponents
 )(
-    implicit ec: ExecutionContext
+  implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
 
   private val logger = play.api.Logger(this.getClass)
@@ -65,13 +65,9 @@ class AuthController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def login: Action[AnyContent] = Action { implicit request =>
-    Ok(html.userLogin(loginForm))
-  }
+  def login: Action[AnyContent] = Action(implicit request => Ok(html.userLogin(loginForm)))
 
-  def register: Action[AnyContent] = Action { implicit request =>
-    Ok(html.userRegister(registerForm))
-  }
+  def register: Action[AnyContent] = Action(implicit request => Ok(html.userRegister(registerForm)))
 
   def saveUser: Action[AnyContent] = Action.async { implicit request =>
     registerForm.bindFromRequest.fold(
@@ -101,7 +97,7 @@ class AuthController @Inject() (
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
-      user => {
+      user =>
         accountService
           .getRichModelByLoginOrEmail(user.userName)
           .flatMap {
@@ -125,7 +121,6 @@ class AuthController @Inject() (
               )
               BadRequest(html.userLogin(newForm))
           }
-      }
     )
   }
 
@@ -135,33 +130,29 @@ class AuthController @Inject() (
     )
   }
 
-  private def filledProfileForm(account: RichAccount): Form[AccountData] = {
+  private def filledProfileForm(account: RichAccount): Form[AccountData] =
     userEditForm.fill(
       AccountData(account.userName, Some(account.fullName), account.email, Some(account.description))
     )
-  }
 
   def profilePage: Action[AnyContent] = userAction.async { implicit request =>
     accountService
       .getRichModelById(request.account.id)
-      .map { account =>
-        Ok(html.userProfile(filledProfileForm(account), updatePasswordForm))
-      }
+      .map(account => Ok(html.userProfile(filledProfileForm(account), updatePasswordForm)))
   }
 
-  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] = {
+  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
     if (currentEmail != newEmail) {
       accountService.getByLoginOrEmail("", newEmail).flatMap {
         case Some(_) => Future(false)
         case None    => Future(true)
       }
     } else Future(true)
-  }
 
   def editProfile: Action[AnyContent] = userAction.async { implicit request =>
     userEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
-      accountData => {
+      accountData =>
         isEmailAvailable(request.account.email, accountData.email).flatMap { available =>
           if (available) {
             accountService.updateProfileInfo(request.account.id, accountData).flatMap { _ =>
@@ -177,7 +168,6 @@ class AuthController @Inject() (
             Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
           }
         }
-      }
     )
   }
 
@@ -186,10 +176,8 @@ class AuthController @Inject() (
       formWithErrors =>
         accountService
           .getRichModelById(request.account.id)
-          .flatMap { account =>
-            Future(BadRequest(html.userProfile(filledProfileForm(account), formWithErrors)))
-          },
-      passwordData => {
+          .flatMap(account => Future(BadRequest(html.userProfile(filledProfileForm(account), formWithErrors)))),
+      passwordData =>
         accountService
           .getRichModelById(request.account.id)
           .flatMap { account =>
@@ -211,7 +199,6 @@ class AuthController @Inject() (
               Future(BadRequest(html.userProfile(filledProfileForm(account), newForm)))
             }
           }
-      }
     )
   }
 
@@ -228,7 +215,7 @@ class AuthController @Inject() (
         .file("picture")
         .map { picture =>
           try {
-            val contentType = picture.contentType.getOrElse { throw new WrongContentType }
+            val contentType = picture.contentType.getOrElse(throw new WrongContentType)
             if (!(allowedContentTypes contains contentType)) {
               throw new WrongContentType
             }

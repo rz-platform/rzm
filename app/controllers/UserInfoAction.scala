@@ -25,11 +25,11 @@ trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesReq
 }
 
 class RepositoryRequest[A](
-    request: UserRequest[A],
-    val repository: Repository,
-    val account: Account,
-    val role: Int,
-    val messagesApi: MessagesApi
+  request: UserRequest[A],
+  val repository: Repository,
+  val account: Account,
+  val role: Int,
+  val messagesApi: MessagesApi
 ) extends WrappedRequest[A](request)
     with RepositoryRequestHeader
 
@@ -39,9 +39,9 @@ class RepositoryRequest[A](
  */
 @Singleton
 class UserInfoAction @Inject() (
-    accountService: AccountRepository,
-    playBodyParsers: PlayBodyParsers,
-    messagesApi: MessagesApi
+  accountService: AccountRepository,
+  playBodyParsers: PlayBodyParsers,
+  messagesApi: MessagesApi
 )(implicit val executionContext: ExecutionContext)
     extends ActionBuilder[UserRequest, AnyContent]
     with Results {
@@ -49,8 +49,8 @@ class UserInfoAction @Inject() (
   override def parser: BodyParser[AnyContent] = playBodyParsers.anyContent
 
   override def invokeBlock[A](
-      request: Request[A],
-      block: UserRequest[A] => Future[Result]
+    request: Request[A],
+    block: UserRequest[A] => Future[Result]
   ): Future[Result] = {
     // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {

@@ -19,11 +19,10 @@ class TrailingSlashFilter extends EssentialFilter {
     }
   }
 
-  protected def getPath(req: RequestHeader): String = {
+  protected def getPath(req: RequestHeader): String =
     if (req.rawQueryString.isEmpty) {
       req.path.stripSuffix("/")
     } else {
       s"${req.path.stripSuffix("/")}?${req.rawQueryString}"
     }
-  }
 }

@@ -11,10 +11,10 @@ import scala.concurrent._
 
 @Singleton
 class ErrorHandler @Inject() (
-    env: Environment,
-    config: Configuration,
-    sourceMapper: OptionalSourceMapper,
-    router: Provider[Router]
+  env: Environment,
+  config: Configuration,
+  sourceMapper: OptionalSourceMapper,
+  router: Provider[Router]
 ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
   override def onProdServerError(request: RequestHeader, exception: UsefulException): Future[Result] =
     Future.successful {

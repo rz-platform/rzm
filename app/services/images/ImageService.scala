@@ -22,15 +22,14 @@ object ImageService {
     src.getSubimage(x, y, squareSide, squareSide)
   }
 
-  def thumbImageName(name: String, size: Int): String = {
+  def thumbImageName(name: String, size: Int): String =
     s"${name}_$size.$defaultExtension"
-  }
 
   def createSquaredThumbnails(
-      inputImgFile: File,
-      size: Int,
-      destination: String,
-      destinationName: String
+    inputImgFile: File,
+    size: Int,
+    destination: String,
+    destinationName: String
   ): Boolean = {
     val src = cropImageToSquare(ImageIO.read(inputImgFile))
 

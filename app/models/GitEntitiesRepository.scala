@@ -13,10 +13,10 @@ import play.api.db.DBApi
 import scala.concurrent.Future
 
 case class Repository(
-    id: Long,
-    owner: Account,
-    name: String,
-    defaultBranch: String
+  id: Long,
+  owner: Account,
+  name: String,
+  defaultBranch: String
 )
 
 object Repository {
@@ -27,10 +27,10 @@ object Repository {
 case class RepositoryData(name: String, description: Option[String])
 
 case class Collaborator(
-    id: Long,
-    userId: Long,
-    repositoryId: Long,
-    role: Long
+  id: Long,
+  userId: Long,
+  repositoryId: Long,
+  role: Long
 )
 
 case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
@@ -58,16 +58,16 @@ case class UploadFileForm(path: String, message: String)
  * @param linkUrl     the url of submodule
  */
 case class FileInfo(
-    id: ObjectId,
-    isDirectory: Boolean,
-    name: String,
-    path: String,
-    message: String,
-    commitId: String,
-    time: Date,
-    author: String,
-    mailAddress: String,
-    linkUrl: Option[String]
+  id: ObjectId,
+  isDirectory: Boolean,
+  name: String,
+  path: String,
+  message: String,
+  commitId: String,
+  time: Date,
+  author: String,
+  mailAddress: String,
+  linkUrl: Option[String]
 )
 
 case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
@@ -91,9 +91,9 @@ case class ContentInfo(viewType: String, size: Option[Long], content: Option[Str
 }
 
 case class Blob(
-    content: ContentInfo,
-    latestCommit: CommitInfo,
-    isLfsFile: Boolean
+  content: ContentInfo,
+  latestCommit: CommitInfo,
+  isLfsFile: Boolean
 )
 
 case class PathBreadcrumb(name: String, path: String)
@@ -115,16 +115,16 @@ case class RawFile(inputStream: InputStream, contentLength: Integer, contentType
  * @param committerEmailAddress the mail address of the committer
  */
 case class CommitInfo(
-    id: String,
-    shortMessage: String,
-    fullMessage: String,
-    parents: List[String],
-    authorTime: Date,
-    authorName: String,
-    authorEmailAddress: String,
-    commitTime: Date,
-    committerName: String,
-    committerEmailAddress: String
+  id: String,
+  shortMessage: String,
+  fullMessage: String,
+  parents: List[String],
+  authorTime: Date,
+  authorName: String,
+  authorEmailAddress: String,
+  commitTime: Date,
+  committerName: String,
+  committerEmailAddress: String
 ) {
 
   def this(rev: org.eclipse.jgit.revwalk.RevCommit) =
@@ -151,7 +151,7 @@ object Collaborator {
 
 @Singleton
 class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dbapi: DBApi)(
-    implicit ec: DatabaseExecutionContext
+  implicit ec: DatabaseExecutionContext
 ) {
   private val db = dbapi.database("default")
 
