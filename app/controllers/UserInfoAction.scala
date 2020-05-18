@@ -1,11 +1,11 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
-import models.{Account, AccountRepository, Repository}
+import javax.inject.{ Inject, Singleton }
+import models.{ Account, AccountRepository, Repository }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait RequestWithUser extends PreferredMessagesProvider with MessagesRequestHeader {
   def account: Account

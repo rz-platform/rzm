@@ -1,8 +1,7 @@
 package models
 
-import javax.inject._
-
 import akka.actor.ActorSystem
+import javax.inject._
 import play.api.libs.concurrent.CustomExecutionContext
 
 /**

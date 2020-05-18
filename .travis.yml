@@ -14,15 +14,25 @@ jobs:
         - psql -c 'create database razam;' -U postgres
         - psql -c "create user razam with encrypted password 'razam';" -U postgres
         - psql -c "grant all privileges on database razam to razam;" -U postgres
-      script: sbt ++$TRAVIS_SCALA_VERSION test
+      script: sbt ++$TRAVIS_SCALA_VERSION scalafmtCheck test
     - stage: frontend build
       language: node_js
       node_js: 12
-      before_install: cd $TRAVIS_BUILD_DIR/public && npm install
-      script: cd $TRAVIS_BUILD_DIR/public && npm run build
+      before_install: cd $TRAVIS_BUILD_DIR/public && npm install && npm install -g eclint
+      script: eclint check * "public/**/*.js" && cd $TRAVIS_BUILD_DIR/public && npm run build
+
 
 cache:
   directories:
-    - "$HOME/.sbt"
+    - $HOME/.sbt/1.0/dependency
+    - $HOME/.sbt/boot/scala*
+    - $HOME/.sbt/launchers
+    - $HOME/.ivy2/cache
+    - $HOME/.coursier
+
 before_cache:
-  - find $HOME/.sbt  -name "*.lock"               -delete
+  - du -h -d 1 $HOME/.ivy2/cache
+  - du -h -d 2 $HOME/.sbt/
+  - find $HOME/.sbt -name "*.lock" -type f -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
+  - rm -rf $HOME/.ivy2/local

@@ -19,17 +19,17 @@ document.getElementById("directory").addEventListener('change', function() {
 })
 
 inputFile.addEventListener("change", function(event) {
-  let output = document.getElementById("listing");
-  let files = event.target.files;
+    let output = document.getElementById("listing");
+    let files = event.target.files;
 
-  for (let i=0; i < files.length; i++) {
-    let item = document.createElement("li");
-    console.log(files[i])
-    let name = files[i].name;
-    if (files[i].webkitRelativePath && files[i].webkitRelativePath != "") {
-        name = files[i].webkitRelativePath;
-    }
-    item.innerHTML = name;
-    output.appendChild(item);
-  };
+    for (let i=0; i < files.length; i++) {
+        let item = document.createElement("li");
+        console.log(files[i])
+        let name = files[i].name;
+        if (files[i].webkitRelativePath && files[i].webkitRelativePath != "") {
+            name = files[i].webkitRelativePath;
+        }
+        item.innerHTML = name;
+        output.appendChild(item);
+    };
 }, false);

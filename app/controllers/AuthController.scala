@@ -1,7 +1,6 @@
 package controllers
 
-import java.io.File
-import java.io.IOException
+import java.io.{ File, IOException }
 
 import javax.inject.Inject
 import models._
@@ -16,8 +15,7 @@ import services.encryption._
 import services.images.ImageService._
 import views._
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthController @Inject() (
     accountService: AccountRepository,
@@ -199,7 +197,8 @@ class AuthController @Inject() (
               val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
               accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
                 Future(
-                  Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.flash.passupdated"))
+                  Redirect(routes.AuthController.profilePage())
+                    .flashing("success" -> Messages("profile.flash.passupdated"))
                 )
               }
             } else {
