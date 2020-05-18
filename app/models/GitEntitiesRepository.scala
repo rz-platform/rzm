@@ -265,7 +265,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
           account.id, account.username, account.has_picture, account.email
           from repository
           join account on repository.owner_id = account.id
-          join collaborator on repository.id = collaborator.repository_id
+          left join collaborator on repository.id = collaborator.repository_id
           where repository.owner_id = $accountId
           or (collaborator.user_id = $accountId)
       """.as(simple.*)
