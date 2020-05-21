@@ -70,13 +70,13 @@
             <p>
                 @if(file.isDirectory) {
                 <a href="@routes.RepositoryController.view(request.repository.owner.userName, request.repository.name, file.path, request.repository.defaultBranch)">
-                <img src="@routes.Assets.at("icons/folder.svg")" class="svg-icon" />
+                <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" />
+                </a>
                 } else {
                 <a href="@routes.RepositoryController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
-                <img src="@routes.Assets.at("icons/document.svg")" class="svg-icon" />
-                }
+                <img src='@routes.Assets.at("images/document.svg")' class="svg-icon" />
+                </a>}
                 @file.name
-                </a>
 
                 <span class="time">@file.time</span>
             </p>
@@ -84,6 +84,6 @@
     }
 </div>
 
-<link rel="stylesheet" media="screen" href="@routes.Assets.at("dist/stylesheets/repo.css")"/>
-<script src="@routes.Assets.at("dist/js/repo.js")" type="text/javascript"></script>
+<link rel="stylesheet" media="screen" href='@routes.Assets.at("dist/stylesheets/repo.css")'/>
+<script src='@routes.Assets.at("dist/javascript/repo.js")' type="text/javascript"></script>
 }

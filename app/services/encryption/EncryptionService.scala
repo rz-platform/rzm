@@ -6,10 +6,8 @@ import java.security.MessageDigest
 import org.mindrot.jbcrypt.BCrypt
 
 object EncryptionService {
-  def getHash(str: String): String =
-    BCrypt.hashpw(str, BCrypt.gensalt())
-  def checkHash(str: String, strHashed: String): Boolean =
-    BCrypt.checkpw(str, strHashed)
+  def getHash(str: String): String                       = BCrypt.hashpw(str, BCrypt.gensalt())
+  def checkHash(str: String, strHashed: String): Boolean = BCrypt.checkpw(str, strHashed)
 
   def md5HashString(s: String): String = {
     val md           = MessageDigest.getInstance("MD5")
