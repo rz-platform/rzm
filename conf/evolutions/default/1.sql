@@ -2,26 +2,31 @@
 
 create table account (
   id                        bigserial primary key,
-  username                  varchar(36) not null UNIQUE,
-  password                  varchar(255) not null,
-  full_name                 varchar(36) not null default '',
+  username                  varchar not null UNIQUE,
+  password                  varchar not null,
+  full_name                 varchar,
   is_admin                  boolean not null default false,
-  email                     varchar(50) not null UNIQUE,
-  created_at                timestamp not null default current_timestamp,
+  email                     varchar not null UNIQUE,
+  created_at                timestamp with time zone not null default now(),
   has_picture               boolean not null default false,
-  description               varchar(255) not null default ''
+  description               varchar not null default '',
+  check (username <> ''),
+  check (password <> ''),
+  check (email <> '')
 );
 
 create table repository (
  id                  bigserial primary key,
  owner_id            bigint not null REFERENCES account(id),
- name                varchar(36) not null,
+ name                varchar not null,
  is_private          boolean not null default true,
- description         varchar(255) not null default '',
- default_branch      varchar(255) not null,
- created_at          timestamp with time zone not null default current_timestamp,
- updated_at          timestamp with time zone not null default current_timestamp,
- unique (owner_id, name)
+ description         varchar not null default '',
+ default_branch      varchar not null,
+ created_at          timestamp with time zone not null default now(),
+ updated_at          timestamp with time zone not null default now(),
+ unique (owner_id, name),
+ check (name <> ''),
+ check (default_branch <> '')
 );
 
 create table collaborator (

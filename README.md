@@ -28,10 +28,10 @@ grant all privileges on database razam to razam;
 Build front-end:
 
 ```
-cd public && npm install && npm run build
+cd frontend && npm install && npm run build
 ```
 
-Run app in live-reload mode:
+Run app in live-reload mode (from repository root):
 
 ```
 sbt run
@@ -48,13 +48,13 @@ sbt test
 ### Production build
 
 ```
-cd public && npm run build
+cd frontend && npm run build
 cd .. &&  sbt dist
 target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -Dplay.http.secret.key=secret
 ```
 
 ## Copyright
 
-Copyright 2020 Eugene Bosiakov (@bosiakov). 
+Copyright 2020 Eugene Bosiakov (@bosiakov).
 
 Package *git* contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.

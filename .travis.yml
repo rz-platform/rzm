@@ -18,8 +18,8 @@ jobs:
     - stage: frontend build
       language: node_js
       node_js: 12
-      before_install: cd $TRAVIS_BUILD_DIR/public && npm install && npm install -g eclint
-      script: eclint check * "public/**/*.js" && cd $TRAVIS_BUILD_DIR/public && npm run build
+      before_install: cd $TRAVIS_BUILD_DIR/frontend && npm install && npm install -g eclint
+      script: eclint check "frontend/javascript/*.js" && cd $TRAVIS_BUILD_DIR/frontend && npm run build
 
 
 cache:

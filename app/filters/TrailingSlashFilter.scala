@@ -1,4 +1,4 @@
-package controllers
+package filters
 
 import javax.inject.Singleton
 import play.api.Logger
