@@ -1,4 +1,4 @@
-package models
+package repositories
 
 import akka.actor.ActorSystem
 import javax.inject._

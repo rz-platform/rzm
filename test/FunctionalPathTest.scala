@@ -1,7 +1,5 @@
-import models.PathBreadcrumb
-import org.scalatestplus.play.PlaySpec
-import services.path.PathService
 import org.scalatest._
+import services.PathService
 
 import scala.util.Random
 

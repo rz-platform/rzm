@@ -10,16 +10,17 @@ import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.i18n.Messages
 import play.api.mvc._
-import services.encryption.EncryptionService.md5HashString
-import services.encryption._
-import services.images.ImageService._
+import repositories.AccountRepository
+import services.EncryptionService
+import services.EncryptionService.md5HashString
+import services.ImageService._
 import views._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class AuthController @Inject() (
+class AccountController @Inject() (
   accountService: AccountRepository,
-  userAction: UserInfoAction,
+  userAction: AuthenticatedRequest,
   config: Configuration,
   cc: MessagesControllerComponents
 )(
@@ -78,7 +79,7 @@ class AuthController @Inject() (
             val acc = RichAccount.buildNewAccount(user)
             accountService.insert(acc).map { accountId =>
               Redirect(routes.RepositoryController.list())
-                .withSession(AuthController.SESSION_NAME -> accountId.get.toString)
+                .withSession(AccountController.SESSION_NAME -> accountId.get.toString)
             }
           case _ =>
             val formBuiltFromRequest = registerForm.bindFromRequest
@@ -105,7 +106,7 @@ class AuthController @Inject() (
               if (EncryptionService.checkHash(user.password, account.password)) {
                 Future(
                   Redirect(routes.RepositoryController.list())
-                    .withSession(AuthController.SESSION_NAME -> account.id.toString)
+                    .withSession(AccountController.SESSION_NAME -> account.id.toString)
                 )
               } else {
                 throw new WrongPassword
@@ -264,6 +265,6 @@ class AuthController @Inject() (
   }
 }
 
-object AuthController {
+object AccountController {
   val SESSION_NAME = "user_id"
 }
