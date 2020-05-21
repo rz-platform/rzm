@@ -57,4 +57,4 @@ target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -
 
 Copyright 2020 Eugene Bosiakov (@bosiakov).
 
-Package *git* contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
+Project contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.

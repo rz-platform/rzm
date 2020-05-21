@@ -1,4 +1,4 @@
-package services.images
+package services
 
 import java.awt.Image
 import java.awt.image.BufferedImage

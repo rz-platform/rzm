@@ -1,25 +1,26 @@
 package controllers
 
 import javax.inject.{ Inject, Singleton }
-import models.{ Account, AccountRepository, Repository }
+import models.{ Repository, SimpleAccount }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
+import repositories.AccountRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 trait RequestWithUser extends PreferredMessagesProvider with MessagesRequestHeader {
-  def account: Account
+  def account: SimpleAccount
 }
 
 trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
-  def account: Account
+  def account: SimpleAccount
 }
-class UserRequest[A](request: Request[A], val account: Account, val messagesApi: MessagesApi)
+class UserRequest[A](request: Request[A], val account: SimpleAccount, val messagesApi: MessagesApi)
     extends WrappedRequest[A](request)
     with UserRequestHeader
 
 trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
-  def account: Account
+  def account: SimpleAccount
   def repository: Repository
   def role: Int
 }
@@ -27,7 +28,7 @@ trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesReq
 class RepositoryRequest[A](
   request: UserRequest[A],
   val repository: Repository,
-  val account: Account,
+  val account: SimpleAccount,
   val role: Int,
   val messagesApi: MessagesApi
 ) extends WrappedRequest[A](request)
@@ -38,7 +39,7 @@ class RepositoryRequest[A](
  * with only the secret key stored on the server.
  */
 @Singleton
-class UserInfoAction @Inject() (
+class AuthenticatedRequest @Inject() (
   accountService: AccountRepository,
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
@@ -54,7 +55,7 @@ class UserInfoAction @Inject() (
   ): Future[Result] = {
     // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {
-      sessionId <- request.session.get(AuthController.SESSION_NAME)
+      sessionId <- request.session.get(AccountController.SESSION_NAME)
     } yield {
       accountService.findById(sessionId.toLong).flatMap {
         case Some(account) =>

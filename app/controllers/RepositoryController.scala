@@ -5,7 +5,6 @@ import java.nio.file.{ Files, Path, Paths }
 import akka.stream.IOResult
 import akka.stream.scaladsl.{ FileIO, Sink, StreamConverters }
 import akka.util.ByteString
-import git.GitRepository
 import javax.inject.Inject
 import models._
 import org.eclipse.jgit.lib.{ Constants, FileMode }
@@ -20,7 +19,8 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
-import services.path.PathService._
+import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
+import services.PathService._
 import views._
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -28,7 +28,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class RepositoryController @Inject() (
   gitEntitiesRepository: GitEntitiesRepository,
   accountRepository: AccountRepository,
-  userAction: UserInfoAction,
+  authenticatedAction: AuthenticatedRequest,
   errorHandler: ErrorHandler,
   config: Configuration,
   messagesApi: MessagesApi,
@@ -137,13 +137,13 @@ class RepositoryController @Inject() (
   /**
    * Display list of repositories.
    */
-  def list: Action[AnyContent] = userAction.async { implicit request =>
+  def list: Action[AnyContent] = authenticatedAction.async { implicit request =>
     gitEntitiesRepository.listRepositories(request.account.id).map { repositories =>
       Ok(html.listRepositories(repositories))
     }
   }
 
-  def saveRepository: Action[AnyContent] = userAction.async { implicit request =>
+  def saveRepository: Action[AnyContent] = authenticatedAction.async { implicit request =>
     createRepositoryForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
       repository =>
@@ -167,12 +167,12 @@ class RepositoryController @Inject() (
     )
   }
 
-  def createRepository: Action[AnyContent] = userAction { implicit request =>
+  def createRepository: Action[AnyContent] = authenticatedAction { implicit request =>
     Ok(html.createRepository(createRepositoryForm))
   }
 
   def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val gitData = git
         .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
@@ -181,7 +181,7 @@ class RepositoryController @Inject() (
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
       val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
       blobInfo match {
@@ -194,7 +194,7 @@ class RepositoryController @Inject() (
     }
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val raw = git.getRawFile("master", decodeNameFromUrl(path))
 
@@ -228,79 +228,81 @@ class RepositoryController @Inject() (
     )
 
   def editFilePage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
-      val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
-      blobInfo match {
-        case Some(blob) =>
-          Future.successful {
-            Ok(
-              html.editFile(
-                fillEditForm(blob, rev, decodeNameFromUrl(path)),
-                blob,
-                decodeNameFromUrl(path),
-                buildTreeFromPath(path, isFile = true)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async {
+      implicit request =>
+        val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
+        val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+        blobInfo match {
+          case Some(blob) =>
+            Future.successful {
+              Ok(
+                html.editFile(
+                  fillEditForm(blob, rev, decodeNameFromUrl(path)),
+                  blob,
+                  decodeNameFromUrl(path),
+                  buildTreeFromPath(path, isFile = true)
+                )
               )
-            )
-          }
-        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-      }
+            }
+          case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+        }
     }
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async { implicit request =>
-      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async {
+      implicit request =>
+        val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
-      val editFile = { editedFile: EditedItem =>
-        val oldPath = decodeNameFromUrl(editedFile.path)
-        val newPath = buildFilePath(getPathWithoutFilename(editedFile.path), editedFile.fileName, isFolder = false)
+        val editFile = { editedFile: EditedItem =>
+          val oldPath = decodeNameFromUrl(editedFile.path)
+          val newPath = buildFilePath(getPathWithoutFilename(editedFile.path), editedFile.fileName, isFolder = false)
 
-        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
+          val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
 
-        gitRepository
-          .commitFiles(editedFile.rev, getPathWithoutFilename(oldPath), editedFile.message, request.account) {
-            case (git, headTip, builder, inserter) =>
-              val permission = gitRepository
-                .processTree(git, headTip) { (path, tree) =>
-                  // Add all entries except the editing file
-                  if (!newPath.contains(path) && !oldPath.contains(path)) {
-                    builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
+          gitRepository
+            .commitFiles(editedFile.rev, getPathWithoutFilename(oldPath), editedFile.message, request.account) {
+              case (git, headTip, builder, inserter) =>
+                val permission = gitRepository
+                  .processTree(git, headTip) { (path, tree) =>
+                    // Add all entries except the editing file
+                    if (!newPath.contains(path) && !oldPath.contains(path)) {
+                      builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
+                    }
+                    // Retrieve permission if file exists to keep it
+                    oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
                   }
-                  // Retrieve permission if file exists to keep it
-                  oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
-                }
-                .flatten
-                .headOption
+                  .flatten
+                  .headOption
 
-              builder.add(
-                gitRepository.createDirCacheEntry(
-                  newPath,
-                  permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
-                  inserter.insert(Constants.OBJ_BLOB, content)
+                builder.add(
+                  gitRepository.createDirCacheEntry(
+                    newPath,
+                    permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
+                    inserter.insert(Constants.OBJ_BLOB, content)
+                  )
                 )
-              )
-              builder.finish()
-          }
-        Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", newPath)))
-      }
+                builder.finish()
+            }
+          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", newPath)))
+        }
 
-      editorForm.bindFromRequest.fold(
-        formWithErrors => {
-          val rev  = formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
-          val path = formWithErrors.data.get("path")
-          path match {
-            case Some(path) =>
-              val blob = gitRepository.blobFile(decodeNameFromUrl(path), rev)
-              blob match {
-                case Some(blob) =>
-                  Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
-                case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-              }
-            case None => Future(Redirect(routes.RepositoryController.view(accountName, repositoryName, ".", rev)))
-          }
-        },
-        editFile
-      )
+        editorForm.bindFromRequest.fold(
+          formWithErrors => {
+            val rev  = formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
+            val path = formWithErrors.data.get("path")
+            path match {
+              case Some(path) =>
+                val blob = gitRepository.blobFile(decodeNameFromUrl(path), rev)
+                blob match {
+                  case Some(blob) =>
+                    Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
+                  case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+                }
+              case None => Future(Redirect(routes.RepositoryController.view(accountName, repositoryName, ".", rev)))
+            }
+          },
+          editFile
+        )
     }
 
   /**
@@ -323,48 +325,49 @@ class RepositoryController @Inject() (
   }
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      addNewItemToRepForm.bindFromRequest.fold(
-        formWithErrors =>
-          Redirect(
-            routes.RepositoryController.view(
-              accountName,
-              repositoryName,
-              path,
-              formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
-            )
-          ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
-        newItem => {
-          val gitRepository =
-            new GitRepository(request.repository.owner, repositoryName, gitHome)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
+      implicit request =>
+        addNewItemToRepForm.bindFromRequest.fold(
+          formWithErrors =>
+            Redirect(
+              routes.RepositoryController.view(
+                accountName,
+                repositoryName,
+                path,
+                formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
+              )
+            ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
+          newItem => {
+            val gitRepository =
+              new GitRepository(request.repository.owner, repositoryName, gitHome)
 
-          val fName = buildFilePath(path, newItem.name, isFolder)
-          // TODO: replace with rev
-          gitRepository
-            .commitFiles("master", path, "Added file", request.account) {
-              case (git, headTip, builder, inserter) =>
-                gitRepository.processTree(git, headTip) { (path, tree) =>
-                  if (!fName.contains(path)) {
-                    builder.add(
-                      gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                    )
+            val fName = buildFilePath(path, newItem.name, isFolder)
+            // TODO: replace with rev
+            gitRepository
+              .commitFiles("master", path, "Added file", request.account) {
+                case (git, headTip, builder, inserter) =>
+                  gitRepository.processTree(git, headTip) { (path, tree) =>
+                    if (!fName.contains(path)) {
+                      builder.add(
+                        gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
+                      )
+                    }
                   }
-                }
-                val emptyArray = Array.empty[Byte]
-                builder.add(
-                  gitRepository.createDirCacheEntry(
-                    fName,
-                    FileMode.REGULAR_FILE,
-                    inserter.insert(Constants.OBJ_BLOB, emptyArray)
+                  val emptyArray = Array.empty[Byte]
+                  builder.add(
+                    gitRepository.createDirCacheEntry(
+                      fName,
+                      FileMode.REGULAR_FILE,
+                      inserter.insert(Constants.OBJ_BLOB, emptyArray)
+                    )
                   )
-                )
-                builder.finish()
-            }
+                  builder.finish()
+              }
 
-          Redirect(routes.RepositoryController.view(accountName, repositoryName, path, newItem.rev))
-            .flashing("success" -> Messages("repository.addNewItem.success"))
-        }
-      )
+            Redirect(routes.RepositoryController.view(accountName, repositoryName, path, newItem.rev))
+              .flashing("success" -> Messages("repository.addNewItem.success"))
+          }
+        )
     }
 
   /**
@@ -372,7 +375,7 @@ class RepositoryController @Inject() (
    *
    */
   def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
-    userAction(parse.multipartFormData(handleFilePartAsFile))
+    authenticatedAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit req =>
         uploadFileForm.bindFromRequest.fold(
           formWithErrors =>
@@ -407,15 +410,16 @@ class RepositoryController @Inject() (
       }
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) { implicit request =>
-      Ok(html.uploadFile(uploadFileForm, rev, decodeNameFromUrl(path)))
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
+      implicit request => Ok(html.uploadFile(uploadFileForm, rev, decodeNameFromUrl(path)))
     }
 
   def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit request =>
-      gitEntitiesRepository.getCollaborators(request.repository).map { collaborators =>
-        Ok(html.addCollaborator(addCollaboratorForm, collaborators))
-      }
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
+      implicit request =>
+        gitEntitiesRepository.getCollaborators(request.repository).map { collaborators =>
+          Ok(html.addCollaborator(addCollaboratorForm, collaborators))
+        }
     }
 
   private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
@@ -425,67 +429,69 @@ class RepositoryController @Inject() (
     )
 
   def addCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit req =>
-      addCollaboratorForm.bindFromRequest.fold(
-        formWithErrors =>
-          gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.addCollaborator(formWithErrors, collaborators))
-          },
-        (data: NewCollaboratorData) =>
-          accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
-            case Some(futureCollaborator) =>
-              gitEntitiesRepository
-                .isUserCollaborator(req.repository, futureCollaborator.id)
-                .flatMap {
-                  case None =>
-                    gitEntitiesRepository
-                      .createCollaborator(
-                        req.repository.id,
-                        futureCollaborator.id,
-                        AccessLevel.fromString(data.accessLevel)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
+      implicit req =>
+        addCollaboratorForm.bindFromRequest.fold(
+          formWithErrors =>
+            gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
+              BadRequest(html.addCollaborator(formWithErrors, collaborators))
+            },
+          (data: NewCollaboratorData) =>
+            accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
+              case Some(futureCollaborator) =>
+                gitEntitiesRepository
+                  .isUserCollaborator(req.repository, futureCollaborator.id)
+                  .flatMap {
+                    case None =>
+                      gitEntitiesRepository
+                        .createCollaborator(
+                          req.repository.id,
+                          futureCollaborator.id,
+                          AccessLevel.fromString(data.accessLevel)
+                        )
+                        .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
+                    case Some(_) =>
+                      Future(
+                        getCollaboratorPageRedirect(req)
+                          .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
                       )
-                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
-                  case Some(_) =>
-                    Future(
-                      getCollaboratorPageRedirect(req)
-                        .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
-                    )
-                }
-            case None =>
-              Future(
-                getCollaboratorPageRedirect(req)
-                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
-              )
-          }
-      )
+                  }
+              case None =>
+                Future(
+                  getCollaboratorPageRedirect(req)
+                    .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+                )
+            }
+        )
     }
 
   def removeCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async { implicit req =>
-      removeCollaboratorForm.bindFromRequest.fold(
-        _ =>
-          gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
-          },
-        data =>
-          accountRepository.getByLoginOrEmail(data.email).flatMap {
-            case Some(collaborator) =>
-              gitEntitiesRepository
-                .isUserCollaborator(req.repository, collaborator.id)
-                .flatMap {
-                  case Some(_) =>
-                    gitEntitiesRepository
-                      .removeCollaborator(req.repository.id, collaborator.id)
-                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
-                  case None => Future(getCollaboratorPageRedirect(req))
-                }
-            case None =>
-              Future(
-                getCollaboratorPageRedirect(req)
-                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
-              )
-          }
-      )
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
+      implicit req =>
+        removeCollaboratorForm.bindFromRequest.fold(
+          _ =>
+            gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
+              BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
+            },
+          data =>
+            accountRepository.getByLoginOrEmail(data.email).flatMap {
+              case Some(collaborator) =>
+                gitEntitiesRepository
+                  .isUserCollaborator(req.repository, collaborator.id)
+                  .flatMap {
+                    case Some(_) =>
+                      gitEntitiesRepository
+                        .removeCollaborator(req.repository.id, collaborator.id)
+                        .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
+                    case None => Future(getCollaboratorPageRedirect(req))
+                  }
+              case None =>
+                Future(
+                  getCollaboratorPageRedirect(req)
+                    .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+                )
+            }
+        )
     }
 
   def downloadRepositoryArchive(
@@ -493,24 +499,26 @@ class RepositoryController @Inject() (
     repositoryName: String,
     revision: String = "master"
   ): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) { implicit request =>
-      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)) {
+      implicit request =>
+        val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
-      Ok.sendFile(
-        gitRepository.createArchive("", revision),
-        inline = false,
-        fileName = _ => Some(repositoryName + "-" + revision + ".zip")
-      )
+        Ok.sendFile(
+          gitRepository.createArchive("", revision),
+          inline = false,
+          fileName = _ => Some(repositoryName + "-" + revision + ".zip")
+        )
     }
 
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
-    userAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)).async { implicit request =>
-      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canView)).async {
+      implicit request =>
+        val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
-      val commitLog = gitRepository.getCommitsLog(rev, page, 30)
-      commitLog match {
-        case Right((logs, hasNext)) => Future(Ok(html.commitLog(logs, rev, hasNext, page)))
-        case Left(_)                => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-      }
+        val commitLog = gitRepository.getCommitsLog(rev, page, 30)
+        commitLog match {
+          case Right((logs, hasNext)) => Future(Ok(html.commitLog(logs, rev, hasNext, page)))
+          case Left(_)                => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+        }
     }
 }

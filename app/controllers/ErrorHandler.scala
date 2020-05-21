@@ -9,7 +9,11 @@ import play.api.routing.Router
 
 import scala.concurrent._
 
-@Singleton
+/**
+ * Provides an error handler that uses HTML template in error pages in Prod environment
+ *
+ * https://www.playframework.com/documentation/latest/ScalaErrorHandling
+ */
 class ErrorHandler @Inject() (
   env: Environment,
   config: Configuration,

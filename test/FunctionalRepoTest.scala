@@ -1,28 +1,19 @@
-import java.sql.Statement
-
 import akka.actor.ActorSystem
-import controllers.AuthController
-import controllers.RepositoryController
-import controllers.routes
-import git.GitRepository
+import controllers.{ routes, AccountController, RepositoryController }
 import models._
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.PrivateMethodTester
+import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.Millis
-import org.scalatest.time.Seconds
-import org.scalatest.time.Span
+import org.scalatest.time.{ Millis, Seconds, Span }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
-import play.api.db.DBApi
-import play.api.db.Database
+import play.api.db.{ DBApi, Database }
 import play.api.db.evolutions.Evolutions
-import play.api.mvc.Flash
-import play.api.mvc.Result
+import play.api.mvc.{ Flash, Result }
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
+import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
 
 import scala.concurrent.Future
 
@@ -41,10 +32,10 @@ class FunctionalRepoTest
   def getRandomString: String =
     java.util.UUID.randomUUID.toString
 
-  def databaseApi: DBApi               = app.injector.instanceOf[DBApi]
-  def config: Configuration            = app.injector.instanceOf[Configuration]
-  def controller: RepositoryController = app.injector.instanceOf[RepositoryController]
-  def authController: AuthController   = app.injector.instanceOf[AuthController]
+  def databaseApi: DBApi                = app.injector.instanceOf[DBApi]
+  def config: Configuration             = app.injector.instanceOf[Configuration]
+  def controller: RepositoryController  = app.injector.instanceOf[RepositoryController]
+  def authController: AccountController = app.injector.instanceOf[AccountController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
   def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
@@ -59,7 +50,7 @@ class FunctionalRepoTest
   override def afterAll(): Unit =
     Evolutions.cleanupEvolutions(databaseApi.database("default"))
 
-  def createUser(): Account = {
+  def createUser(): SimpleAccount = {
     val userName = getRandomString
     val request = addCSRFToken(
       FakeRequest(routes.AuthController.saveUser())
@@ -74,11 +65,11 @@ class FunctionalRepoTest
     defaultDatabase.withConnection { connection =>
       val rs = connection.prepareStatement(s"select id from account where username='${userName}'").executeQuery()
       rs.next()
-      Account(rs.getInt(1), userName, null, hasPicture = false)
+      SimpleAccount(rs.getInt(1), userName, null, hasPicture = false)
     }
   }
 
-  def createRepository(controller: RepositoryController, name: String, owner: Account): Result = {
+  def createRepository(controller: RepositoryController, name: String, owner: SimpleAccount): Result = {
     val request = addCSRFToken(
       FakeRequest(routes.RepositoryController.saveRepository())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
@@ -91,7 +82,7 @@ class FunctionalRepoTest
   def addCollaborator(
     controller: RepositoryController,
     repositoryName: String,
-    owner: Account,
+    owner: SimpleAccount,
     collaboratorName: String,
     accessLevel: String
   ): Result = {
@@ -107,7 +98,7 @@ class FunctionalRepoTest
   def removeCollaborator(
     controller: RepositoryController,
     repositoryName: String,
-    owner: Account,
+    owner: SimpleAccount,
     collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
@@ -123,7 +114,7 @@ class FunctionalRepoTest
     controller: RepositoryController,
     name: String,
     repositoryName: String,
-    creator: Account,
+    creator: SimpleAccount,
     isFolder: Boolean,
     path: String
   ): Result = {

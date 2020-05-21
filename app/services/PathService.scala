@@ -1,4 +1,4 @@
-package services.path
+package services
 
 import java.net.URLDecoder
 import java.nio.file.Paths

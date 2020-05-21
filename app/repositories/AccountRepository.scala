@@ -1,71 +1,14 @@
-package models
+package repositories
 
-import java.util.{ Calendar, Date }
+import java.util.Date
 
 import anorm.SqlParser.get
-import anorm._
+import anorm.{ ~, SQL }
 import javax.inject.{ Inject, Singleton }
+import models.{ AccountData, RichAccount, SimpleAccount }
 import play.api.db.DBApi
-import services.encryption.EncryptionService
 
-import scala.collection.immutable.HashMap
 import scala.concurrent.Future
-
-case class Account(id: Long, userName: String, email: String, hasPicture: Boolean)
-
-object Account {
-  implicit def toParameters: ToParameterList[Account] = Macro.toParameters[Account]
-}
-
-case class RichAccount(
-  id: Long,
-  userName: String,
-  fullName: String = "",
-  email: String,
-  password: String,
-  isAdmin: Boolean = false,
-  created: java.util.Date,
-  hasPicture: Boolean,
-  description: String = ""
-)
-
-object RichAccount {
-  implicit def toParameters: ToParameterList[RichAccount] = Macro.toParameters[RichAccount]
-
-  def buildNewAccount(userForm: AccountRegistrationData): RichAccount =
-    RichAccount(
-      0,
-      userForm.userName.trim.toLowerCase,
-      userForm.fullName.getOrElse(""),
-      userForm.email.trim.toLowerCase,
-      EncryptionService.getHash(userForm.password),
-      created = Calendar.getInstance().getTime,
-      hasPicture = false
-    )
-}
-
-object AccessLevel {
-  val owner   = 0
-  val canEdit = 20
-  val canView = 30
-
-  val canEditName = "edit"
-  val canViewName = "view"
-
-  val map: HashMap[String, Int] = HashMap((canEditName, canEdit), (canViewName, canView))
-
-  def fromString(accessLevel: String): Int =
-    if (AccessLevel.map.contains(accessLevel)) AccessLevel.map(accessLevel)
-    else AccessLevel.canView
-}
-
-case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
-
-case class AccountData(userName: String, fullName: Option[String], email: String, description: Option[String])
-
-case class PasswordData(oldPassword: String, newPassword: String)
-
-case class AccountLoginData(userName: String, password: String)
 
 @Singleton
 class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionContext) {
@@ -75,7 +18,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   private[models] val simple = {
     (get[Long]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
       ~ get[Boolean]("account.has_picture")).map {
-      case id ~ userName ~ email ~ hasPicture => Account(id, userName, email, hasPicture)
+      case id ~ userName ~ email ~ hasPicture => SimpleAccount(id, userName, email, hasPicture)
     }
   }
 
@@ -107,7 +50,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a user from the id.
    */
-  def findById(id: Long): Future[Option[Account]] =
+  def findById(id: Long): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
         SQL"select id, username, email, has_picture from account where id = $id".as(simple.singleOpt)
@@ -117,7 +60,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a simple account from login
    */
-  def getByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[Account]] =
+  def getByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
