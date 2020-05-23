@@ -35,7 +35,7 @@ class FunctionalRepoTest
   def databaseApi: DBApi                = app.injector.instanceOf[DBApi]
   def config: Configuration             = app.injector.instanceOf[Configuration]
   def controller: RepositoryController  = app.injector.instanceOf[RepositoryController]
-  def authController: AccountController = app.injector.instanceOf[AccountController]
+  def AccountController: AccountController = app.injector.instanceOf[AccountController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
   def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
@@ -53,7 +53,7 @@ class FunctionalRepoTest
   def createUser(): SimpleAccount = {
     val userName = getRandomString
     val request = addCSRFToken(
-      FakeRequest(routes.AuthController.saveUser())
+      FakeRequest(routes.AccountController.saveUser())
         .withFormUrlEncodedBody(
           "userName"    -> userName,
           "fullName"    -> getRandomString,
@@ -61,7 +61,7 @@ class FunctionalRepoTest
           "mailAddress" -> s"${getRandomString}@razam.dev"
         )
     )
-    await(authController.saveUser().apply(request))
+    await(AccountController.saveUser().apply(request))
     defaultDatabase.withConnection { connection =>
       val rs = connection.prepareStatement(s"select id from account where username='${userName}'").executeQuery()
       rs.next()
@@ -135,13 +135,13 @@ class FunctionalRepoTest
       .fileList(repository, path = path)
       .getOrElse(RepositoryGitData(List(), None))
 
-  "AuthController" must {
+  "AccountController" must {
     "Attempt to create user with bad name" in {
       val badUserNames =
         List("&", "!", "%", "киррилица", "with space", "^", "@", "--++", "::", "t)", "exceededlength" * 10)
       badUserNames.map { username =>
         val request = addCSRFToken(
-          FakeRequest(routes.AuthController.saveUser())
+          FakeRequest(routes.AccountController.saveUser())
             .withFormUrlEncodedBody(
               "userName"    -> username,
               "fullName"    -> getRandomString,
@@ -150,7 +150,7 @@ class FunctionalRepoTest
             )
         )
 
-        val result = await(authController.saveUser().apply(request))
+        val result = await(AccountController.saveUser().apply(request))
         result.header.status must equal(400)
       }
     }
@@ -159,7 +159,7 @@ class FunctionalRepoTest
       val goodUserNames = List(getRandomString, "with_underscore", "with-minus", "MiXeDcAse")
       goodUserNames.map { username =>
         val request = addCSRFToken(
-          FakeRequest(routes.AuthController.saveUser())
+          FakeRequest(routes.AccountController.saveUser())
             .withFormUrlEncodedBody(
               "userName"    -> username,
               "fullName"    -> getRandomString,
@@ -168,7 +168,7 @@ class FunctionalRepoTest
             )
         )
 
-        val result = await(authController.saveUser().apply(request))
+        val result = await(AccountController.saveUser().apply(request))
         result.header.status must equal(303)
 
         defaultDatabase.withConnection { connection =>

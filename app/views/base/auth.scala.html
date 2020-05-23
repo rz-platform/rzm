@@ -7,15 +7,15 @@
     </div>
     <div class="auth-user">
         @if(request.account.hasPicture) {
-            <img src="@routes.AuthController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
+            <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
         }
-        <a href="@routes.AuthController.profilePage">@request.account.userName</a>
+        <a href="@routes.AccountController.profilePage">@request.account.userName</a>
     </div>
     <div class="repositories">
         <a href="@routes.RepositoryController.list">@request.messages("common.myRepositories")</a>
     </div>
     <div class="sign-out">
-        <a href="@routes.AuthController.logout">@request.messages("common.signout")</a>
+        <a href="@routes.AccountController.logout">@request.messages("common.signout")</a>
     </div>
 </header>
 <div class="container">

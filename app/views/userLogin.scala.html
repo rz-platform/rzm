@@ -7,7 +7,7 @@
 <h1>Login</h1>
 @notificationHeader()
 
-@form(routes.AuthController.authenticate()) {
+@form(routes.AccountController.authenticate()) {
 <fieldset>
     @CSRF.formField
     @inputText(loginForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "")
@@ -15,6 +15,6 @@
 </fieldset>
 <div class="actions">
     <input type="submit" value="Sign in" class="btn primary"/></div>
-<a class="button button-outline" href="@routes.AuthController.register">Register</a>
+<a class="button button-outline" href="@routes.AccountController.register">Register</a>
 }
 }

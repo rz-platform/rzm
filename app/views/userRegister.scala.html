@@ -7,7 +7,7 @@
 <h1>@request.messages("signup.head")</h1>
 @notificationHeader()
 
-@form(routes.AuthController.saveUser()) {
+@form(routes.AccountController.saveUser()) {
 <fieldset>
     @CSRF.formField
     @inputText(registerForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"), Symbol("_help") -> "")
@@ -17,6 +17,6 @@
 </fieldset>
 <div class="actions">
     <input type="submit" value='@request.messages("signup.submit")' class="btn primary" /></div>
-<a class="button button-outline" href="@routes.AuthController.login">@request.messages("signup.submit")</a>
+<a class="button button-outline" href="@routes.AccountController.login">@request.messages("signup.submit")</a>
 }
 }
