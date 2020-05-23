@@ -126,7 +126,7 @@ class AccountController @Inject() (
   }
 
   def logout: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.AuthController.login()).withNewSession.flashing(
+    Redirect(routes.AccountController.login()).withNewSession.flashing(
       "success" -> Messages("logout")
     )
   }
@@ -186,7 +186,7 @@ class AccountController @Inject() (
               val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
               accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
                 Future(
-                  Redirect(routes.AuthController.profilePage())
+                  Redirect(routes.AccountController.profilePage())
                     .flashing("success" -> Messages("profile.flash.passupdated"))
                 )
               }
@@ -211,7 +211,7 @@ class AccountController @Inject() (
 
   def uploadProfilePicture: Action[MultipartFormData[play.api.libs.Files.TemporaryFile]] =
     userAction(parse.multipartFormData).async { implicit request =>
-      val redirect = Redirect(routes.AuthController.profilePage())
+      val redirect = Redirect(routes.AccountController.profilePage())
       request.body
         .file("picture")
         .map { picture =>
@@ -259,7 +259,8 @@ class AccountController @Inject() (
     profilePicture.delete()
     accountService.removePicture(request.account.id).flatMap { _ =>
       Future(
-        Redirect(routes.AuthController.profilePage()).flashing("success" -> Messages("profile.picture.delete.success"))
+        Redirect(routes.AccountController.profilePage())
+          .flashing("success" -> Messages("profile.picture.delete.success"))
       )
     }
   }

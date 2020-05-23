@@ -1,7 +1,7 @@
 package repositories
 
 import anorm.SqlParser.get
-import anorm.{ ~, SQL, SqlParser }
+import anorm._
 import javax.inject.{ Inject, Singleton }
 import models.{ Repository, RepositoryData, SimpleAccount }
 import play.api.db.DBApi

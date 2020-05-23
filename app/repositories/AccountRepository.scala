@@ -3,7 +3,7 @@ package repositories
 import java.util.Date
 
 import anorm.SqlParser.get
-import anorm.{ ~, SQL }
+import anorm._
 import javax.inject.{ Inject, Singleton }
 import models.{ AccountData, RichAccount, SimpleAccount }
 import play.api.db.DBApi
@@ -15,14 +15,14 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   private val db     = dbapi.database("default")
   private val logger = play.api.Logger(this.getClass)
 
-  private[models] val simple = {
+  val simple: RowParser[SimpleAccount] = {
     (get[Long]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
       ~ get[Boolean]("account.has_picture")).map {
       case id ~ userName ~ email ~ hasPicture => SimpleAccount(id, userName, email, hasPicture)
     }
   }
 
-  private[models] val rich = {
+  private val rich = {
     (get[Long]("account.id") ~
       get[String]("account.username") ~
       get[String]("account.full_name") ~
