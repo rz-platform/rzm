@@ -1,6 +1,6 @@
 package controllers
 
-import java.io.{File, IOException}
+import java.io.{ File, IOException }
 
 import actions.AuthenticatedRequest
 import javax.inject.Inject
@@ -17,7 +17,7 @@ import services.EncryptionService.md5HashString
 import services.ImageService._
 import views._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class AccountController @Inject() (
   accountService: AccountRepository,

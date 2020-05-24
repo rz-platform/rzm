@@ -4,6 +4,11 @@ language: scala
 
 jobs:
   include:
+    - stage: check editor config
+      language: node_js
+      node_js: 12
+      before_install: npm install -g eclint
+      script: eclint check "frontend/javascript/*.js" && eclint check "src/**/*.scala"
     - stage: scalatest
       language: scala
       scala:
@@ -18,8 +23,8 @@ jobs:
     - stage: frontend build
       language: node_js
       node_js: 12
-      before_install: cd $TRAVIS_BUILD_DIR/frontend && npm install && npm install -g eclint
-      script: eclint check "frontend/javascript/*.js" && cd $TRAVIS_BUILD_DIR/frontend && npm run build
+      before_install: cd $TRAVIS_BUILD_DIR/frontend && npm install
+      script: cd $TRAVIS_BUILD_DIR/frontend && npm run build
 
 
 cache:

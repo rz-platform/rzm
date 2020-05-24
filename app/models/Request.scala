@@ -20,10 +20,10 @@ trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesReq
 }
 
 class RepositoryRequest[A](
-                            request: UserRequest[A],
-                            val repository: Repository,
-                            val account: SimpleAccount,
-                            val role: Int,
-                            val messagesApi: MessagesApi
-                          ) extends WrappedRequest[A](request)
-  with RepositoryRequestHeader
+  request: UserRequest[A],
+  val repository: Repository,
+  val account: SimpleAccount,
+  val role: Int,
+  val messagesApi: MessagesApi
+) extends WrappedRequest[A](request)
+    with RepositoryRequestHeader

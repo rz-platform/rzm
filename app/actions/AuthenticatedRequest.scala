@@ -1,13 +1,13 @@
 package actions
 
-import controllers.{AccountController, routes}
-import javax.inject.{Inject, Singleton}
+import controllers.{ routes, AccountController }
+import javax.inject.{ Inject, Singleton }
 import models.UserRequest
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.AccountRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * An action that pulls everything together to show user info that is in an encrypted cookie,
