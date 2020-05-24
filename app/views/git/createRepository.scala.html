@@ -7,7 +7,7 @@
 <h1>@request.messages("repository.create.head")</h1>
 @notificationHeader()
 
-@form(routes.RepositoryController.saveRepository()) {
+@form(routes.GitEntitiesController.saveRepository()) {
 
 <fieldset>
     @CSRF.formField

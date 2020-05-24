@@ -8,7 +8,7 @@
 @if(!path.isEmpty) {
 <p>You are uploading to <strong>@path</strong></p>
 }
-@form(routes.RepositoryController.upload(request.repository.owner.userName, request.repository.name, rev), Symbol("enctype") -> "multipart/form-data") {
+@form(routes.GitEntitiesController.upload(request.repository.owner.userName, request.repository.name, rev), Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 <input type="file" id="filepicker" name="fileList" multiple  accept="image/*,text/*" />
 <ul id="listing"></ul>

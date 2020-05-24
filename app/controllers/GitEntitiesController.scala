@@ -2,6 +2,7 @@ package controllers
 import java.io.File
 import java.nio.file.{ Files, Path, Paths }
 
+import actions.AuthenticatedRequest
 import akka.stream.IOResult
 import akka.stream.scaladsl.{ FileIO, Sink, StreamConverters }
 import akka.util.ByteString
@@ -25,7 +26,7 @@ import views._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class RepositoryController @Inject() (
+class GitEntitiesController @Inject() (
   gitEntitiesRepository: GitEntitiesRepository,
   accountRepository: AccountRepository,
   authenticatedAction: AuthenticatedRequest,
@@ -110,7 +111,7 @@ class RepositoryController @Inject() (
 
       def refine[A](
         request: UserRequest[A]
-      ): Future[Either[Result, controllers.RepositoryRequest[A]]] = {
+      ): Future[Either[Result, RepositoryRequest[A]]] = {
         val items = for {
           repository <- getOrElse(new NoRepo)(
                          gitEntitiesRepository.getByAuthorAndName(username, repositoryName)
@@ -139,20 +140,20 @@ class RepositoryController @Inject() (
    */
   def list: Action[AnyContent] = authenticatedAction.async { implicit request =>
     gitEntitiesRepository.listRepositories(request.account.id).map { repositories =>
-      Ok(html.listRepositories(repositories))
+      Ok(html.git.listRepositories(repositories))
     }
   }
 
   def saveRepository: Action[AnyContent] = authenticatedAction.async { implicit request =>
     createRepositoryForm.bindFromRequest.fold(
-      formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
+      formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
       repository =>
         gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
           case None =>
-            gitEntitiesRepository.insertRepository(request.account.id, repository).map { repositoryId: Option[Long] =>
+            gitEntitiesRepository.insertRepository(request.account.id, repository).map { _ =>
               val git = new GitRepository(request.account, repository.name, gitHome)
               git.create()
-              Redirect(routes.RepositoryController.list())
+              Redirect(routes.GitEntitiesController.list())
                 .flashing("success" -> Messages("repository.create.flash.success"))
             }
           case Some(_) =>
@@ -162,13 +163,13 @@ class RepositoryController @Inject() (
                 FormError("name", Messages("repository.create.error.alreadyexists"))
               )
             )
-            Future(BadRequest(html.createRepository(newForm)))
+            Future(BadRequest(html.git.createRepository(newForm)))
         }
     )
   }
 
   def createRepository: Action[AnyContent] = authenticatedAction { implicit request =>
-    Ok(html.createRepository(createRepositoryForm))
+    Ok(html.git.createRepository(createRepositoryForm))
   }
 
   def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
@@ -177,7 +178,7 @@ class RepositoryController @Inject() (
       val gitData = git
         .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
         .getOrElse(RepositoryGitData(List(), None))
-      Ok(html.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
+      Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -187,7 +188,7 @@ class RepositoryController @Inject() (
       blobInfo match {
         case Some(blob) =>
           Future.successful {
-            Ok(html.viewBlob(blob, path, rev, buildTreeFromPath(path, isFile = true)))
+            Ok(html.git.viewBlob(blob, path, rev, buildTreeFromPath(path, isFile = true)))
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
@@ -236,7 +237,7 @@ class RepositoryController @Inject() (
           case Some(blob) =>
             Future.successful {
               Ok(
-                html.editFile(
+                html.git.editFile(
                   fillEditForm(blob, rev, decodeNameFromUrl(path)),
                   blob,
                   decodeNameFromUrl(path),
@@ -283,7 +284,7 @@ class RepositoryController @Inject() (
                 )
                 builder.finish()
             }
-          Future(Redirect(routes.RepositoryController.blob(accountName, repositoryName, "master", newPath)))
+          Future(Redirect(routes.GitEntitiesController.blob(accountName, repositoryName, "master", newPath)))
         }
 
         editorForm.bindFromRequest.fold(
@@ -295,10 +296,10 @@ class RepositoryController @Inject() (
                 val blob = gitRepository.blobFile(decodeNameFromUrl(path), rev)
                 blob match {
                   case Some(blob) =>
-                    Future(BadRequest(html.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
+                    Future(BadRequest(html.git.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
                   case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
                 }
-              case None => Future(Redirect(routes.RepositoryController.view(accountName, repositoryName, ".", rev)))
+              case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
             }
           },
           editFile
@@ -330,7 +331,7 @@ class RepositoryController @Inject() (
         addNewItemToRepForm.bindFromRequest.fold(
           formWithErrors =>
             Redirect(
-              routes.RepositoryController.view(
+              routes.GitEntitiesController.view(
                 accountName,
                 repositoryName,
                 path,
@@ -364,7 +365,7 @@ class RepositoryController @Inject() (
                   builder.finish()
               }
 
-            Redirect(routes.RepositoryController.view(accountName, repositoryName, path, newItem.rev))
+            Redirect(routes.GitEntitiesController.view(accountName, repositoryName, path, newItem.rev))
               .flashing("success" -> Messages("repository.addNewItem.success"))
           }
         )
@@ -380,7 +381,7 @@ class RepositoryController @Inject() (
         uploadFileForm.bindFromRequest.fold(
           formWithErrors =>
             BadRequest(
-              html.uploadFile(
+              html.git.uploadFile(
                 formWithErrors,
                 formWithErrors.data.getOrElse("rev", req.repository.defaultBranch),
                 formWithErrors.data.getOrElse("path", ".")
@@ -403,7 +404,7 @@ class RepositoryController @Inject() (
               data.path,
               data.message
             )
-            Redirect(routes.RepositoryController.view(accountName, repositoryName, data.path, rev))
+            Redirect(routes.GitEntitiesController.view(accountName, repositoryName, data.path, rev))
               .flashing("success" -> Messages("repository.upload.success"))
           }
         )
@@ -411,20 +412,20 @@ class RepositoryController @Inject() (
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
-      implicit request => Ok(html.uploadFile(uploadFileForm, rev, decodeNameFromUrl(path)))
+      implicit request => Ok(html.git.uploadFile(uploadFileForm, rev, decodeNameFromUrl(path)))
     }
 
   def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.owner)).async {
       implicit request =>
         gitEntitiesRepository.getCollaborators(request.repository).map { collaborators =>
-          Ok(html.addCollaborator(addCollaboratorForm, collaborators))
+          Ok(html.git.addCollaborator(addCollaboratorForm, collaborators))
         }
     }
 
   private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
     Redirect(
-      routes.RepositoryController
+      routes.GitEntitiesController
         .addCollaboratorPage(req.repository.owner.userName, req.repository.name)
     )
 
@@ -434,7 +435,7 @@ class RepositoryController @Inject() (
         addCollaboratorForm.bindFromRequest.fold(
           formWithErrors =>
             gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-              BadRequest(html.addCollaborator(formWithErrors, collaborators))
+              BadRequest(html.git.addCollaborator(formWithErrors, collaborators))
             },
           (data: NewCollaboratorData) =>
             accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
@@ -471,7 +472,7 @@ class RepositoryController @Inject() (
         removeCollaboratorForm.bindFromRequest.fold(
           _ =>
             gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-              BadRequest(html.addCollaborator(addCollaboratorForm, collaborators))
+              BadRequest(html.git.addCollaborator(addCollaboratorForm, collaborators))
             },
           data =>
             accountRepository.getByLoginOrEmail(data.email).flatMap {
@@ -517,7 +518,7 @@ class RepositoryController @Inject() (
 
         val commitLog = gitRepository.getCommitsLog(rev, page, 30)
         commitLog match {
-          case Right((logs, hasNext)) => Future(Ok(html.commitLog(logs, rev, hasNext, page)))
+          case Right((logs, hasNext)) => Future(Ok(html.git.commitLog(logs, rev, hasNext, page)))
           case Left(_)                => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
         }
     }

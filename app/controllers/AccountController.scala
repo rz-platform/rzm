@@ -1,7 +1,8 @@
 package controllers
 
-import java.io.{ File, IOException }
+import java.io.{File, IOException}
 
+import actions.AuthenticatedRequest
 import javax.inject.Inject
 import models._
 import play.api.Configuration
@@ -16,7 +17,7 @@ import services.EncryptionService.md5HashString
 import services.ImageService._
 import views._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class AccountController @Inject() (
   accountService: AccountRepository,
@@ -78,7 +79,7 @@ class AccountController @Inject() (
           case None =>
             val acc = RichAccount.buildNewAccount(user)
             accountService.insert(acc).map { accountId =>
-              Redirect(routes.RepositoryController.list())
+              Redirect(routes.GitEntitiesController.list())
                 .withSession(AccountController.SESSION_NAME -> accountId.get.toString)
             }
           case _ =>
@@ -105,7 +106,7 @@ class AccountController @Inject() (
             case Some(account) =>
               if (EncryptionService.checkHash(user.password, account.password)) {
                 Future(
-                  Redirect(routes.RepositoryController.list())
+                  Redirect(routes.GitEntitiesController.list())
                     .withSession(AccountController.SESSION_NAME -> account.id.toString)
                 )
               } else {

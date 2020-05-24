@@ -1,38 +1,13 @@
-package controllers
+package actions
 
-import javax.inject.{ Inject, Singleton }
-import models.{ Repository, SimpleAccount }
+import controllers.{AccountController, routes}
+import javax.inject.{Inject, Singleton}
+import models.UserRequest
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.AccountRepository
 
-import scala.concurrent.{ ExecutionContext, Future }
-
-trait RequestWithUser extends PreferredMessagesProvider with MessagesRequestHeader {
-  def account: SimpleAccount
-}
-
-trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
-  def account: SimpleAccount
-}
-class UserRequest[A](request: Request[A], val account: SimpleAccount, val messagesApi: MessagesApi)
-    extends WrappedRequest[A](request)
-    with UserRequestHeader
-
-trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
-  def account: SimpleAccount
-  def repository: Repository
-  def role: Int
-}
-
-class RepositoryRequest[A](
-  request: UserRequest[A],
-  val repository: Repository,
-  val account: SimpleAccount,
-  val role: Int,
-  val messagesApi: MessagesApi
-) extends WrappedRequest[A](request)
-    with RepositoryRequestHeader
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * An action that pulls everything together to show user info that is in an encrypted cookie,
