@@ -45,6 +45,13 @@ Open http://localhost:9000
 sbt test
 ```
 
+### Format code
+
+```
+sbt scalafmt
+```
+
+
 ### Production build
 
 ```
