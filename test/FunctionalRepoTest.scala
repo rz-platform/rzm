@@ -1,5 +1,5 @@
 import akka.actor.ActorSystem
-import controllers.{ routes, AccountController, RepositoryController }
+import controllers.{ routes, AccountController, GitEntitiesController }
 import models._
 import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatest.concurrent.ScalaFutures
@@ -34,7 +34,7 @@ class FunctionalRepoTest
 
   def databaseApi: DBApi                = app.injector.instanceOf[DBApi]
   def config: Configuration             = app.injector.instanceOf[Configuration]
-  def controller: RepositoryController  = app.injector.instanceOf[RepositoryController]
+  def controller: GitEntitiesController  = app.injector.instanceOf[GitEntitiesController]
   def AccountController: AccountController = app.injector.instanceOf[AccountController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
@@ -69,9 +69,9 @@ class FunctionalRepoTest
     }
   }
 
-  def createRepository(controller: RepositoryController, name: String, owner: SimpleAccount): Result = {
+  def createRepository(controller: GitEntitiesController, name: String, owner: SimpleAccount): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.RepositoryController.saveRepository())
+      FakeRequest(routes.GitEntitiesController.saveRepository())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
         .withSession(("user_id", owner.id.toString))
     )
@@ -80,14 +80,14 @@ class FunctionalRepoTest
   }
 
   def addCollaborator(
-    controller: RepositoryController,
-    repositoryName: String,
-    owner: SimpleAccount,
-    collaboratorName: String,
-    accessLevel: String
+                       controller: GitEntitiesController,
+                       repositoryName: String,
+                       owner: SimpleAccount,
+                       collaboratorName: String,
+                       accessLevel: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.RepositoryController.addCollaboratorAction(owner.userName, repositoryName))
+      FakeRequest(routes.GitEntitiesController.addCollaboratorAction(owner.userName, repositoryName))
         .withFormUrlEncodedBody("emailOrLogin" -> collaboratorName, "accessLevel" -> accessLevel)
         .withSession(("user_id", owner.id.toString))
     )
@@ -96,13 +96,13 @@ class FunctionalRepoTest
   }
 
   def removeCollaborator(
-    controller: RepositoryController,
-    repositoryName: String,
-    owner: SimpleAccount,
-    collaboratorName: String
+                          controller: GitEntitiesController,
+                          repositoryName: String,
+                          owner: SimpleAccount,
+                          collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.RepositoryController.removeCollaboratorAction(owner.userName, repositoryName))
+      FakeRequest(routes.GitEntitiesController.removeCollaboratorAction(owner.userName, repositoryName))
         .withFormUrlEncodedBody("email" -> collaboratorName)
         .withSession(("user_id", owner.id.toString))
     )
@@ -111,12 +111,12 @@ class FunctionalRepoTest
   }
 
   def createNewItem(
-    controller: RepositoryController,
-    name: String,
-    repositoryName: String,
-    creator: SimpleAccount,
-    isFolder: Boolean,
-    path: String
+                     controller: GitEntitiesController,
+                     name: String,
+                     repositoryName: String,
+                     creator: SimpleAccount,
+                     isFolder: Boolean,
+                     path: String
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
@@ -183,13 +183,13 @@ class FunctionalRepoTest
     }
   }
 
-  "RepositoryController" must {
+  "GitEntitiesController" must {
     "Create Repository" in {
       val account  = createUser()
       val repoName = getRandomString
 
       val result = createRepository(controller, repoName, account)
-      result.header.headers(LOCATION) must equal(routes.RepositoryController.list().toString)
+      result.header.headers(LOCATION) must equal(routes.GitEntitiesController.list().toString)
 
       defaultDatabase.withConnection { connection =>
         val isRepoExist = connection

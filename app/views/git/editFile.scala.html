@@ -16,7 +16,7 @@
 @repositoryHeader()
 @repositoryFileTree(tree)
 
-@form(routes.RepositoryController.edit(request.repository.owner.userName, request.repository.name)) {
+@form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name)) {
 @CSRF.formField
 
 @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")

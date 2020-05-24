@@ -8,7 +8,8 @@
 @form(routes.AccountController.editProfile()) {
 <fieldset>
     @CSRF.formField
-    @inputText(userEditForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("readonly") -> "readonly")
+    @inputText(userEditForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("readonly") ->
+    "readonly")
     @inputText(userEditForm("fullName"), Symbol("_label") -> "Ful name", Symbol("_help") -> "")
     @inputText(userEditForm("mailAddress"), Symbol("_label") -> "Mail address", Symbol("_help") -> "")
     @inputText(userEditForm("description"), Symbol("_label") -> "Your background", Symbol("_help") -> "")
@@ -22,22 +23,23 @@
     @inputPassword(passwordUpdateForm("oldPassword"), Symbol("_label") -> "Current password", Symbol("_help") -> "")
     @inputPassword(passwordUpdateForm("newPassword"), Symbol("_label") -> "New Password", Symbol("_help") -> "")
 </fieldset>
-<div class="actions"><input type="submit" value='@request.messages("profile.submit.password")' class="btn primary"/></div>
+<div class="actions"><input type="submit" value='@request.messages("profile.submit.password")' class="btn primary"/>
+</div>
 }
 
 @helper.form(action = routes.AccountController.uploadProfilePicture, Symbol("enctype") -> "multipart/form-data") {
 @CSRF.formField
 @if(request.account.hasPicture) {
-<p><img src="@routes.AccountController.profilePicture(request.account.userName)" /></p>
+<p><img src="@routes.AccountController.profilePicture(request.account.userName)"/></p>
 }
-<input type="file" name="picture" />
+<input type="file" name="picture"/>
 
 <p>
     <input type="submit" value='@request.messages("profile.submit.picture")'>
 </p>
 }
 @helper.form(action = routes.AccountController.removeProfilePicture) {
-    @CSRF.formField
-    <input type="submit" value='@request.messages("profile.delete.picture")'>
+@CSRF.formField
+<input type="submit" value='@request.messages("profile.delete.picture")'>
 }
 }

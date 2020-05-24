@@ -3,12 +3,12 @@
 @import base._
 
 @auth(request.messages("repository.list.title")) {
-<a class="button" href="@routes.RepositoryController.createRepository">@request.messages("repository.list.createNew")</a>
+<a class="button" href="@routes.GitEntitiesController.createRepository">@request.messages("repository.list.createNew")</a>
 
     @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
                 @repositories.map {
                     case (repository) => {
-<p><a href="@routes.RepositoryController.view(repository.owner.userName, repository.name, ".", repository.defaultBranch)"> @repository.owner.userName / @repository.name</a> </p>
+<p><a href='@routes.GitEntitiesController.view(repository.owner.userName, repository.name, ".", repository.defaultBranch)'> @repository.owner.userName / @repository.name</a> </p>
                     }
                 }
     }.getOrElse {
