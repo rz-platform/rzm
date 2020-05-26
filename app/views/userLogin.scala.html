@@ -3,18 +3,24 @@
 @import base._
 @import helpers._
 
-@main("Sign in") {
-<h1>Login</h1>
-@notificationHeader()
+@header = {}
 
-@form(routes.AccountController.authenticate()) {
-<fieldset>
+@html = {
+  <div class="rz-auth">
+  <h1>@request.messages("signin.head")</h1>
+  @notificationHeader()
+
+  @form(routes.AccountController.authenticate(), Symbol("class") -> "rz-form") {
+  <fieldset>
     @CSRF.formField
     @inputText(loginForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "")
     @inputPassword(loginForm("password"), Symbol("_label") -> "Password", Symbol("_help") -> "")
-</fieldset>
-<div class="actions">
-    <input type="submit" value="Sign in" class="btn primary"/></div>
-<a class="button button-outline" href="@routes.AccountController.register">Register</a>
+  </fieldset>
+  <div class="actions">
+    <input type="submit" value='@request.messages("signin.submit")' class="rz-button rz-button-primary"/> or
+    <a class="rz-button" href="@routes.AccountController.register">@request.messages("signin.signupLink")</a></div>
+  }
+  </div>
 }
-}
+
+@main(request.messages("signin.title"))(html, header)

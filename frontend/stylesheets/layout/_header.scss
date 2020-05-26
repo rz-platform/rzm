@@ -1,0 +1,27 @@
+.rz-logo {
+  font-size: 125%;
+  font-weight: 300;
+}
+
+.auth-user {
+  margin-left: auto;
+}
+
+.repositories, .sign-out {
+  margin-left: 25px;
+}
+
+img.profile-picture {
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+
+.svg-icon {
+  width: 20px;
+  margin-right: 5px;
+}

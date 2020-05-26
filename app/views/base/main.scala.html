@@ -1,11 +1,20 @@
-@(title: String)(body: Html)(implicit request: RequestHeader)
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>@title - RAZAM</title>
-        <link rel="stylesheet" media="screen" href='@routes.Assets.at("dist/stylesheets/main.css")'/>
-    </head>
-    <body>
-        @body
-    </body>
+@(title: String)(body: Html, header: Html)(implicit request: RequestHeader)
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>@title - RAZAM</title>
+    <link rel="stylesheet" href='@routes.Assets.at("dist/stylesheets/main.css")'/>
+  </head>
+  <body>
+    <header class="rz-menu rz-menu-horizontal">
+      <div class="rz-menu-heading rz-logo">
+        RAZAM
+      </div>
+      @header
+    </header>
+    <div id="layout" class="content">
+      @body
+    </div>
+  </body>
 </html>
