@@ -1,0 +1,44 @@
+/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/
+
+.rz-g {
+  /* Use flexbox when possible to avoid `letter-spacing` side-effects. */
+  display: flex;
+  flex-flow: row wrap;
+
+  /* Prevents distributing space between rows */
+  align-content: flex-start;
+}
+
+/* IE10 display: -ms-flexbox (and display: flex in IE 11)
+ does not work inside a table;
+ fall back to block and rely on font hack */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  table .rz-g {
+    display: block;
+  }
+}
+
+/* Opera as of 12 on Windows needs word-spacing.
+  The ".opera-only" selector is used to prevent actual prefocus styling
+  and is not required in markup.
+*/
+.opera-only :-o-prefocus,
+.rz-g {
+  word-spacing: -0.43em;
+}
+
+.rz-u {
+  display: inline-block;
+  letter-spacing: normal;
+  word-spacing: normal;
+  vertical-align: top;
+  text-rendering: auto;
+}
+
+/*
+Resets the font family back to the OS/browser's default sans-serif font,
+this the same font stack that Normalize.css sets for the `body`.
+*/
+.rz-g [class *= "rz-u"] {
+  font-family: sans-serif;
+}

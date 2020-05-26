@@ -11,33 +11,33 @@
 @collaborators.map {
 case (collaborator) => {
 <p>@collaborator.userName
-    @if(request.account.email != collaborator.email) {
+  @if(request.account.email != collaborator.email) {
 
-    @form(routes.GitEntitiesController.removeCollaboratorAction(request.repository.owner.userName,
-    request.repository.name)) {
-    @CSRF.formField
-    <input type="hidden" name="email" value='@collaborator.email'/>
-    <button type="submit">X</button>
-    }
-    }
+  @form(routes.GitEntitiesController.removeCollaboratorAction(request.repository.owner.userName,
+  request.repository.name)) {
+  @CSRF.formField
+  <input type="hidden" name="email" value='@collaborator.email'/>
+  <button type="submit">X</button>
+  }
+  }
 </p>
 }
 }
 @form(routes.GitEntitiesController.addCollaboratorAction(request.repository.owner.userName, request.repository.name)) {
 <fieldset>
-    @CSRF.formField
-    @inputText(addCollaboratorForm("emailOrLogin"),
-    Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"),
-    Symbol("_help") -> "")
+  @CSRF.formField
+  @inputText(addCollaboratorForm("emailOrLogin"),
+  Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"),
+  Symbol("_help") -> "")
 
-    @select(field = addCollaboratorForm("accessLevel"),
-    options = Seq(AccessLevel.canViewName -> request.messages("repository.collaborator.accessLevel.read"),
-    AccessLevel.canEditName -> request.messages("repository.collaborator.accessLevel.write")),
-    Symbol("_label") -> request.messages("repository.collaborator.accessLevel")
-    )
+  @select(field = addCollaboratorForm("accessLevel"),
+  options = Seq(AccessLevel.canViewName -> request.messages("repository.collaborator.accessLevel.read"),
+  AccessLevel.canEditName -> request.messages("repository.collaborator.accessLevel.write")),
+  Symbol("_label") -> request.messages("repository.collaborator.accessLevel")
+  )
 </fieldset>
 <div class="actions">
-    <input type="submit" value='@request.messages("repository.collaborator.button")' class="btn primary"/>
+  <input type="submit" value='@request.messages("repository.collaborator.button")' class="btn primary"/>
 </div>
 }
 }

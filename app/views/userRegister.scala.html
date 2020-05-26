@@ -3,20 +3,23 @@
 @import base._
 @import helpers._
 
-@main(request.messages("signup.title")) {
-<h1>@request.messages("signup.head")</h1>
-@notificationHeader()
+@html = {
+  <h1>@request.messages("signup.head")</h1>
+  @notificationHeader()
 
-@form(routes.AccountController.saveUser()) {
-<fieldset>
+  @form(routes.AccountController.saveUser(), Symbol("class") -> "rz-form") {
+  <fieldset>
     @CSRF.formField
     @inputText(registerForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"), Symbol("_help") -> "")
     @inputPassword(registerForm("password"), Symbol("_label") -> request.messages("signup.form.password"), Symbol("_help") -> "")
     @inputText(registerForm("mailAddress"), Symbol("_label") -> request.messages("signup.form.email"), Symbol("_help") -> "")
     @inputText(registerForm("fullName"), Symbol("_label") -> request.messages("signup.form.fullname"), Symbol("_help") -> "")
-</fieldset>
-<div class="actions">
+  </fieldset>
+  <div class="actions">
     <input type="submit" value='@request.messages("signup.submit")' class="btn primary" /></div>
-<a class="button button-outline" href="@routes.AccountController.login">@request.messages("signup.submit")</a>
+  <a class="button button-outline" href="@routes.AccountController.login">@request.messages("signup.submit")</a>
+  }
 }
-}
+@header = {}
+
+@main(request.messages("signup.title"))(html, header)

@@ -3,18 +3,18 @@
 @import base._
 
 @auth(request.messages("repository.list.title")) {
-<a class="button" href="@routes.GitEntitiesController.createRepository">@request.messages("repository.list.createNew")</a>
+<p><a class="rz-button" href="@routes.GitEntitiesController.createRepository">@request.messages("repository.list.createNew")</a></p>
 
-    @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
-                @repositories.map {
-                    case (repository) => {
+  @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
+        @repositories.map {
+          case (repository) => {
 <p><a href='@routes.GitEntitiesController.view(repository.owner.userName, repository.name, ".", repository.defaultBranch)'> @repository.owner.userName / @repository.name</a> </p>
-                    }
-                }
-    }.getOrElse {
-        <div class="well">
-            @request.messages("repository.list.empty")
-        </div>
-    }
+          }
+        }
+  }.getOrElse {
+    <p>
+      @request.messages("repository.list.empty")
+    </p>
+  }
 
 }

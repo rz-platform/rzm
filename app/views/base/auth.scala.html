@@ -1,24 +1,23 @@
 @(title: String)(body: Html)(implicit request: RequestWithUser)
 
-@main(title) {
-<header id="auth-header">
-    <div class="logo" id="logo">
-        RAZAM
-    </div>
-    <div class="auth-user">
-        @if(request.account.hasPicture) {
-            <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
-        }
-        <a href="@routes.AccountController.profilePage">@request.account.userName</a>
-    </div>
-    <div class="repositories">
-        <a href="@routes.GitEntitiesController.list">@request.messages("common.myRepositories")</a>
-    </div>
-    <div class="sign-out">
-        <a href="@routes.AccountController.logout">@request.messages("common.signout")</a>
-    </div>
-</header>
-<div class="container">
-    @body
-</div>
+@headerHtml = {
+<ul class="rz-menu-list">
+  <li class="rz-menu-item">
+  <div class="auth-user">
+    @if(request.account.hasPicture) {
+    <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName"
+       class="profile-picture"/>
+    }
+    <a href="@routes.AccountController.profilePage" class="rz-menu-link">@request.account.userName</a>
+  </div>
+  </li>
+  <li class="rz-menu-item">
+  <a href="@routes.GitEntitiesController.list" class="rz-menu-link">@request.messages("common.myRepositories")</a>
+  </li>
+  <li class="rz-menu-item">
+  <a href="@routes.AccountController.logout" class="rz-menu-link">@request.messages("common.signout")</a>
+  </li>
+</ul>
 }
+
+@main(title)(body, headerHtml)

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build stylesheets/* javascript/*  --no-source-maps --out-dir ../public/dist --no-cache",
-    "watch": "parcel watch stylesheets/* javascript/*"
+    "build": "parcel build stylesheets/main.scss javascript/*  --no-source-maps --out-dir ../public/dist --no-cache",
+    "watch": "parcel watch stylesheets/main.scss javascript/*"
   },
   "author": "Eugene Bosiakov",
   "license": "Apache 2.0",
@@ -14,8 +14,7 @@
     "sass": "^1.26.5"
   },
   "dependencies": {
-    "codemirror": "^5.50.2",
-    "milligram": "^1.3.0"
+    "codemirror": "^5.50.2"
   },
   "sass": {
     "includePaths": [

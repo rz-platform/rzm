@@ -9,83 +9,82 @@
 @repositoryFileTree(tree)
 
 <div class="repository-actions">
-    @if(request.role <= AccessLevel.canEdit) {
-    <a class="button"
-       href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
-        @request.messages("repository.tree.uploadFiles")
-    </a>
-    }
-    @if(request.role == AccessLevel.owner) {
-    <a class="button"
-       href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
-        @request.messages("repository.tree.collaborators")
-    </a>
-    }
-    <a class="button"
-       href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
-        @request.messages("repository.tree.downloads")
-    </a>
-    <a class="button"
-       href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
-        @request.messages("repository.tree.commits")
-    </a>
-    @if(request.role <= AccessLevel.canEdit) {
-    <div class="repository-actions-with-tooltip">
-        <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>
+  @if(request.role <= AccessLevel.canEdit) {
+  <a class="button"
+     href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
+    @request.messages("repository.tree.uploadFiles")
+  </a>
+  }
+  @if(request.role == AccessLevel.owner) {
+  <a class="button"
+     href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
+    @request.messages("repository.tree.collaborators")
+  </a>
+  }
+  <a class="button"
+     href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
+    @request.messages("repository.tree.downloads")
+  </a>
+  <a class="button"
+     href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
+    @request.messages("repository.tree.commits")
+  </a>
+  @if(request.role <= AccessLevel.canEdit) {
+  <div class="repository-actions-with-tooltip">
+    <button id="create-folder-tooltip">@request.messages("repository.tree.createFolder")</button>
 
-        <div id="add-folder-form" class="tooltip">
-            @form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name,
-            path, true)) {
-            <fieldset>
-                @CSRF.formField
-                <input type="hidden" name="rev" value='@request.repository.defaultBranch'/>
-                @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
-            </fieldset>
-            <div class="actions">
-                <input type="submit" value="Create folder" class="btn primary"/></div>
-        </div>
-        }
-    </div>
-
-    <div class="repository-actions-with-tooltip">
-        <button id="create-file-tooltip">Create file</button>
-
-        <div id="add-file-form" class="tooltip">
-            @form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name,
-            path, false)) {
-            <fieldset>
-                @CSRF.formField
-                <input type="hidden" name="rev" value='@request.repository.defaultBranch'/>
-                @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
-            </fieldset>
-            <div class="actions">
-                <input type="submit" value="Create file" class="btn primary"/></div>
-        </div>
-        }
+    <div id="add-folder-form" class="tooltip">
+      @form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name,
+      path, true)) {
+      <fieldset>
+        @CSRF.formField
+        <input type="hidden" name="rev" value='@request.repository.defaultBranch'/>
+        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "Folder name", Symbol("_help") -> "")
+      </fieldset>
+      <div class="actions">
+        <input type="submit" value="Create folder" class="btn primary"/></div>
     </div>
     }
+  </div>
+
+  <div class="repository-actions-with-tooltip">
+    <button id="create-file-tooltip">Create file</button>
+
+    <div id="add-file-form" class="tooltip">
+      @form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name,
+      path, false)) {
+      <fieldset>
+        @CSRF.formField
+        <input type="hidden" name="rev" value='@request.repository.defaultBranch'/>
+        @inputText(addNewItemToRepForm("name"), Symbol("_label") -> "File name", Symbol("_help") -> "")
+      </fieldset>
+      <div class="actions">
+        <input type="submit" value="Create file" class="btn primary"/></div>
+    </div>
+    }
+  </div>
+  }
 </div>
 
 <div class="file-list">
-    @gitData.files.map {
-    case (file) => {
-    <p>
-        @if(file.isDirectory) {
-        <a href="@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, file.path, request.repository.defaultBranch)">
-            <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/>
-        </a>
-        } else {
-        <a href="@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
-            <img src='@routes.Assets.at("images/document.svg")' class="svg-icon"/>
-        </a>}
-        @file.name
+  @gitData.files.map {
+  case (file) => {
+  <p>
+    @if(file.isDirectory) {
+    <a href="@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, file.path, request.repository.defaultBranch)">
+      <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/>
+    </a>
+    } else {
+    <a href="@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.path)">
+      <img src='@routes.Assets.at("images/document.svg")' class="svg-icon"/>
+    </a>}
+    @file.name
 
-        <span class="time">@file.time</span>
-    </p>
-    }
-    }
+    <span class="time">@file.time</span>
+  </p>
+  }
+  }
 </div>
 
-<link rel="stylesheet" media="screen" href='@routes.Assets.at("dist/stylesheets/repo.css")'/>
 <script src='@routes.Assets.at("dist/javascript/repo.js")' type="text/javascript"></script>
 }

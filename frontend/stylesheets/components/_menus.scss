@@ -1,0 +1,172 @@
+/*csslint adjoining-classes: false, box-model:false*/
+.rz-menu {
+  box-sizing: border-box;
+}
+
+.rz-menu-fixed {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 3;
+}
+
+.rz-menu-list,
+.rz-menu-item {
+  position: relative;
+}
+
+.rz-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rz-menu-item {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.rz-menu-link,
+.rz-menu-heading {
+  display: block;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+
+/* Submenus should still be display: block; */
+.rz-menu-item .rz-menu-item {
+  display: block;
+}
+
+.rz-menu-children {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin: 0;
+  padding: 0;
+  z-index: 3;
+}
+
+.rz-menu-horizontal .rz-menu-children {
+  left: 0;
+  top: auto;
+  width: inherit;
+}
+
+.rz-menu-allow-hover:hover > .rz-menu-children,
+.rz-menu-active > .rz-menu-children {
+  display: block;
+  position: absolute;
+}
+
+/* Vertical Menus - show the dropdown arrow */
+.rz-menu-has-children > .rz-menu-link:after {
+  padding-left: 0.5em;
+  content: "\25B8";
+  font-size: small;
+}
+
+/* Horizontal Menus - show the dropdown arrow */
+.rz-menu-horizontal .rz-menu-has-children > .rz-menu-link:after {
+  content: "\25BE";
+}
+
+/* HORIZONTAL MENU */
+.rz-menu-horizontal {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.rz-menu-horizontal .rz-menu-list {
+  display: inline-block;
+}
+
+/* Initial menus should be inline-block so that they are horizontal */
+.rz-menu-horizontal .rz-menu-item,
+.rz-menu-horizontal .rz-menu-heading,
+.rz-menu-horizontal .rz-menu-separator {
+  display: inline-block;
+  vertical-align: middle;
+}
+/* scrollable menus */
+.rz-menu-scrollable {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.rz-menu-scrollable .rz-menu-list {
+  display: block;
+}
+
+.rz-menu-horizontal.rz-menu-scrollable .rz-menu-list {
+  display: inline-block;
+}
+
+.rz-menu-horizontal.rz-menu-scrollable {
+  white-space: nowrap;
+  overflow-y: hidden;
+  overflow-x: auto;
+  /* a little extra padding for this style to allow for scrollbars */
+  padding: .5em 0;
+}
+/* misc default styling */
+
+.rz-menu-separator,
+.rz-menu-horizontal .rz-menu-children .rz-menu-separator {
+  background-color: #ccc;
+  height: 1px;
+  margin: .3em 0;
+}
+
+.rz-menu-horizontal .rz-menu-separator {
+  width: 1px;
+  height: 1.3em;
+  margin: 0 .3em ;
+}
+
+/* Need to reset the separator since submenu is vertical */
+.rz-menu-horizontal .rz-menu-children .rz-menu-separator {
+  display: block;
+  width: auto;
+}
+
+.rz-menu-heading {
+  text-transform: uppercase;
+  color: #565d64;
+}
+
+.rz-menu-link {
+  color: #777;
+}
+
+.rz-menu-children {
+  background-color: #fff;
+}
+
+.rz-menu-link,
+.rz-menu-disabled,
+.rz-menu-heading {
+  padding: .5em 1em;
+}
+
+.rz-menu-disabled {
+  opacity: .5;
+}
+
+.rz-menu-disabled .rz-menu-link:hover {
+  background-color: transparent;
+}
+
+.rz-menu-active > .rz-menu-link,
+.rz-menu-link:hover,
+.rz-menu-link:focus {
+  background-color: #eee;
+}
+
+.rz-menu-selected > .rz-menu-link,
+.rz-menu-selected > .rz-menu-link:visited {
+  color: #000;
+}

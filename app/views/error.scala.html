@@ -3,7 +3,12 @@
 @import views.html.helper._
 @import base._
 
-@main("Error") {
-    <h1>Oops</h1>
-<p>@message</p>
+@html = {
+  <h1>Oops</h1>
+  <p>@message</p>
 }
+
+@header = {}
+
+
+@main("Error")(html, header)
