@@ -1,26 +1,27 @@
 package repositories
 
-import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
+import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+import java.util
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.{ Lock, ReentrantLock }
+import java.util.concurrent.locks.{Lock, ReentrantLock}
 
 import models._
-import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
-import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
-import org.apache.commons.compress.utils.{ IOUtils => CompressIOUtils }
+import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
+import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveOutputStream}
+import org.apache.commons.compress.utils.{IOUtils => CompressIOUtils}
 import org.apache.commons.io.input.BOMInputStream
-import org.apache.commons.io.{ FileUtils, IOUtils }
+import org.apache.commons.io.{FileUtils, IOUtils}
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.attributes.Attributes
-import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder, DirCacheEntry }
+import org.eclipse.jgit.dircache.{DirCache, DirCacheBuilder, DirCacheEntry}
 import org.eclipse.jgit.errors.MissingObjectException
-import org.eclipse.jgit.lib.{ Repository => _, _ }
-import org.eclipse.jgit.revwalk.{ RevCommit, RevTag, RevTree, RevWalk }
-import org.eclipse.jgit.transport.{ ReceiveCommand, ReceivePack }
+import org.eclipse.jgit.lib.{Repository => _, _}
+import org.eclipse.jgit.revwalk.{RevCommit, RevTag, RevTree, RevWalk}
+import org.eclipse.jgit.transport.{ReceiveCommand, ReceivePack}
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
-import org.eclipse.jgit.treewalk.filter.{ AndTreeFilter, PathFilter, TreeFilter }
-import org.eclipse.jgit.treewalk.{ CanonicalTreeParser, TreeWalk, WorkingTreeOptions }
+import org.eclipse.jgit.treewalk.filter.{AndTreeFilter, PathFilter, TreeFilter}
+import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk, WorkingTreeOptions}
 import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
 
@@ -32,6 +33,8 @@ import scala.util.Using.Releasable
 // Package contains parts of code inherited from GitBucket project
 
 class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gitHome: String) {
+  private val logger = play.api.Logger(this.getClass)
+
   def repositoryDir: File = new File(s"$gitHome/${owner.userName}/$repositoryName.git")
 
   implicit val objectDatabaseReleasable: Releasable[ObjectDatabase] = new Releasable[ObjectDatabase] {
@@ -72,9 +75,6 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     locks.get(key)
   }
 
-  /**
-   * Synchronizes a given function which modifies the working copy of the wiki repository.
-   */
   def lock[T](key: String)(f: => T): T = defining(getLockObject(key)) { lock =>
     try {
       lock.lock()
@@ -83,6 +83,8 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       lock.unlock()
     }
   }
+
+
 
   def fileList(repository: Repository, revstr: String = "", path: String = "."): Option[RepositoryGitData] =
     Using.resource(Git.open(repositoryDir)) { git =>
@@ -94,17 +96,9 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
             defining(getRevCommitFromId(git, objectId)) { revCommit =>
               val lastModifiedCommit = if (path == ".") revCommit else getLastModifiedCommit(git, revCommit, path)
               // get files
-              val files      = getFileList(git, revision, path, None)
+              val files      = getFileList(git, revision, path)
               val parentPath = if (path == ".") Nil else path.split("/").toList
 
-              // process README.md or README.markdown
-              val readme = files.find(file => !file.isDirectory && readmeFiles.contains(file.name.toLowerCase)).map {
-                file =>
-                  val path = (file.name :: parentPath.reverse).reverse
-                  path -> convertFromByteArray(
-                    getContentFromId(Git.open(repositoryDir), file.id, fetchLargeFile = true).get
-                  )
-              }
               RepositoryGitData(files, Some(lastModifiedCommit))
             }
         }
@@ -249,16 +243,35 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
 
   val readmeFiles = Seq("readme.txt", "readme")
 
+  def fileTree(repository: Repository, revstr: String): Option[Unit] = {
+    Using.resource(Git.open(repositoryDir)) { git =>
+      getDefaultBranch(git, repository, revstr).map {
+        case (objectId, revision) =>
+          defining(getRevCommitFromId(git, objectId)) { revCommit =>
+            val treeWalk = new TreeWalk(git.getRepository)
+            treeWalk.addTree(revCommit.getTree);
+            treeWalk.setRecursive(false);
+            val fileTree = new FileTree(new FileNode(".", "."))
+            while (treeWalk.next()) {
+              if (treeWalk.isSubtree) {
+                treeWalk.enterSubtree();
+              } else {
+                fileTree.addElement(treeWalk.getPathString)
+              }
+            }
+          }
+      }
+    }
+  }
+
   /**
    * Returns the file list of the specified path.
    *
    * @param git      the Git object
    * @param revision the branch name or commit id
    * @param path     the directory path (optional)
-   * @param baseUrl  the base url of GitBucket instance. This parameter is used to generate links of submodules (optional)
-   * @return HTML of the file list
    */
-  def getFileList(git: Git, revision: String, path: String = ".", baseUrl: Option[String] = None): List[FileInfo] = {
+  def getFileList(git: Git, revision: String, path: String = "."): List[FileInfo] = {
     Using.resource(new RevWalk(git.getRepository)) { revWalk =>
       val objectId = git.getRepository.resolve(revision)
       if (objectId == null) return Nil
@@ -357,11 +370,12 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
             findLastCommits(nextResult, nextRest, revIterator)
           }
         }
-
+      logger.info("----")
       var fileList: List[(ObjectId, FileMode, String, String, Option[String])] = Nil
       useTreeWalk(revCommit) { treeWalk =>
         while (treeWalk.next()) {
           val linkUrl = None
+          logger.info(treeWalk.getPathString)
           fileList +:= (treeWalk.getObjectId(0), treeWalk.getFileMode(0), treeWalk.getNameString, treeWalk.getPathString, linkUrl)
         }
       }

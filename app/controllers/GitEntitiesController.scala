@@ -178,6 +178,8 @@ class GitEntitiesController @Inject() (
       val gitData = git
         .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
         .getOrElse(RepositoryGitData(List(), None))
+
+      git.fileTree(request.repository, "master")
       Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
     }
 
