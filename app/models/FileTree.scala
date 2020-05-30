@@ -12,18 +12,20 @@ class FileNode(nodeValue: String, path: String) {
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
+  def isRoot: Boolean = data == "."
+
   def addElement(currentPath: String, list: Array[String]): Unit = {
     val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
     if (list.length == 1) {
       files += currentChild
     } else {
-      val index = folders.indexOf(currentChild);
+      val index = folders.indexOf(currentChild)
       if (index == -1) {
         folders += currentChild
-        currentChild.addElement(currentChild.incrementalPath, list.slice(1, list.length));
+        currentChild.addElement(currentChild.incrementalPath, list.slice(1, list.length))
       } else {
-        val nextChild = folders(index);
-        nextChild.addElement(currentChild.incrementalPath, list.slice(1, list.length));
+        val nextChild = folders(index)
+        nextChild.addElement(currentChild.incrementalPath, list.slice(1, list.length))
       }
     }
   }
@@ -38,23 +40,23 @@ class FileNode(nodeValue: String, path: String) {
 /**
  * Represent filesystem (files/dir) from list of paths
  *
- * @param root node
+ * @param r node
  */
-class FileTree(root: FileNode) {
-  var commonRoot: FileNode = _;
+class FileTree(r: FileNode) {
+  var commonRoot: FileNode = _
+  val root: FileNode = r
 
-  def addElement(elementValue: String): Unit = root.addElement(root.incrementalPath, elementValue.split("/"));
+  def addElement(elementValue: String): Unit = root.addElement(root.incrementalPath, elementValue.split("/"))
 
   def getCommonRoot: FileNode =
     if (commonRoot != null)
       commonRoot
     else {
-      var current = root;
+      var current = root
       while (current.files.length <= 0) {
-        current = current.folders(0);
+        current = current.folders(0)
       }
       commonRoot = current
       commonRoot
     }
-
 }

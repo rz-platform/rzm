@@ -241,9 +241,9 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       case _: MissingObjectException => None
     }
 
-  val readmeFiles = Seq("readme.txt", "readme")
+  def fileTree(repository: Repository, revstr: String): FileTree = {
+    val fileTree = new FileTree(new FileNode(".", "."))
 
-  def fileTree(repository: Repository, revstr: String): Option[Unit] = {
     Using.resource(Git.open(repositoryDir)) { git =>
       getDefaultBranch(git, repository, revstr).map {
         case (objectId, revision) =>
@@ -251,7 +251,6 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
             val treeWalk = new TreeWalk(git.getRepository)
             treeWalk.addTree(revCommit.getTree);
             treeWalk.setRecursive(false);
-            val fileTree = new FileTree(new FileNode(".", "."))
             while (treeWalk.next()) {
               if (treeWalk.isSubtree) {
                 treeWalk.enterSubtree();
@@ -259,8 +258,9 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
                 fileTree.addElement(treeWalk.getPathString)
               }
             }
+            fileTree
           }
-      }
+      }.getOrElse(fileTree)
     }
   }
 
@@ -438,7 +438,7 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       Using.resource(Git.open(repositoryDir)) { git =>
         val builder  = DirCache.newInCore.builder()
         val inserter = git.getRepository.newObjectInserter()
-        val headName = s"refs/heads/${branch}"
+        val headName = s"refs/heads/$branch"
         val headTip  = git.getRepository.resolve(headName)
 
         f(git, headTip, builder, inserter)
@@ -557,7 +557,7 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     Using.resource(new RevWalk(git.getRepository)) { revWalk =>
       defining(git.getRepository.resolve(revision)) { objectId =>
         if (objectId == null) {
-          Left(s"${revision} can't be resolved.")
+          Left(s"$revision can't be resolved.")
         } else {
           revWalk.markStart(revWalk.parseCommit(objectId))
           if (path.nonEmpty) {
