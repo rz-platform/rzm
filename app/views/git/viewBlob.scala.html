@@ -4,24 +4,24 @@
 
 @auth(request.messages("repository.viewFile.title")) {
 @fileTreeView(fileTree)
-<div id="main" class="rz-u">
+<div id="main">
+  <div class="header">
+    @repositoryHeader()
+    <a class="rz-button"
+       href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
+      @request.messages("repository.viewFile.raw")
+    </a>
+    @if(blob.content.viewType == "text"){
+    @if(request.role <= AccessLevel.canEdit) {
+    <a class="rz-button"
+       href="@routes.GitEntitiesController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
+      @request.messages("repository.viewFile.edit")
+    </a>
+    }
+    }
+  </div>
 <div class="content">
-  @repositoryHeader()
-
-  @repositoryFileTree(tree)
-
-  <a class="rz-button"
-    href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
-  @request.messages("repository.viewFile.raw")
-  </a>
-
 @if(blob.content.viewType == "text"){
-@if(request.role <= AccessLevel.canEdit) {
-  <a class="rz-button"
-     href="@routes.GitEntitiesController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
-  @request.messages("repository.viewFile.edit")
-  </a>
-}
   <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
 

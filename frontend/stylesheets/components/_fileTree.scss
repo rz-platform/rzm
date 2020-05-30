@@ -1,7 +1,10 @@
-#list {
-  overflow: auto;
-  height: calc(100vh - 50px);
-  width: 350px;
-  min-height: 100%;
-  border-right: 1px solid #ddd;
+#fileTree {
+  margin-left: -$sidebar-width;
+  width: $sidebar-width;
+  position: fixed;
+  top: $header-height;
+  left: $sidebar-width;
+  bottom: 0;
+  z-index: 1000;
+  overflow-y: auto;
 }
