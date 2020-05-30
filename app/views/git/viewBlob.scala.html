@@ -1,26 +1,26 @@
-@(blob:Blob, path:String, rev: String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
+@(blob:Blob, path:String, rev: String, tree: Array[PathBreadcrumb], fileTree: FileTree)(implicit request: RepositoryRequestHeader)
 @import base._
 @import helpers._
 
 @auth(request.messages("repository.viewFile.title")) {
-@repositoryHeader()
+@fileTreeView(fileTree)
+<div id="main" class="rz-u">
+<div class="content">
+  @repositoryHeader()
 
-@repositoryFileTree(tree)
+  @repositoryFileTree(tree)
 
-<p>
-  <a class="button"
+  <a class="rz-button"
     href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
   @request.messages("repository.viewFile.raw")
-</a>
-</p>
+  </a>
 
 @if(blob.content.viewType == "text"){
 @if(request.role <= AccessLevel.canEdit) {
-<p>
-  <a class="button" href="@routes.GitEntitiesController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
+  <a class="rz-button"
+     href="@routes.GitEntitiesController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
   @request.messages("repository.viewFile.edit")
   </a>
-</p>
 }
   <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
 }
@@ -34,7 +34,8 @@
   @request.messages("repository.viewFile.cant")
 </a>
 }
+</div>
+</div>
 
 <script src='@routes.Assets.at("dist/javascript/view.js")' type="text/javascript"></script>
 }
-

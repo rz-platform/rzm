@@ -120,14 +120,16 @@ class GitEntitiesController @Inject() (
         } yield (repository, collaborator)
 
         items.map { data =>
-          val accessLevel = data._2 match {
-            case None if data._1.owner.id == request.account.id => AccessLevel.owner
-            case Some(accessLevel)                              => accessLevel
-            case None                                           => throw new NoCollaborator()
+          val (repository, collaborator) = data
+
+          val accessLevel = collaborator match {
+            case None if repository.owner.id == request.account.id => AccessLevel.owner
+            case Some(accessLevel)                                 => accessLevel
+            case None                                              => throw new NoCollaborator()
           }
 
           if (accessLevel <= minimumAccessLevel) {
-            Right(new RepositoryRequest[A](request, data._1, request.account, accessLevel, messagesApi))
+            Right(new RepositoryRequest[A](request, repository, request.account, accessLevel, messagesApi))
           } else {
             Left(NotFound("Access denied"))
           }
@@ -179,7 +181,6 @@ class GitEntitiesController @Inject() (
         .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
         .getOrElse(RepositoryGitData(List(), None))
 
-      git.fileTree(request.repository, "master")
       Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
     }
 
@@ -187,10 +188,12 @@ class GitEntitiesController @Inject() (
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
       val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+
+      val fileTree = git.fileTree(request.repository, rev)
       blobInfo match {
         case Some(blob) =>
           Future.successful {
-            Ok(html.git.viewBlob(blob, path, rev, buildTreeFromPath(path, isFile = true)))
+            Ok(html.git.viewBlob(blob, path, rev, buildTreeFromPath(path, isFile = true), fileTree))
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
