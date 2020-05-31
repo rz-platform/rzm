@@ -13,7 +13,13 @@
   }
 
   @for(file <- node.files) {
-    <li>@file.incrementalPath -> @file.data</li>
+      <li>
+        <p>
+          <a href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+        @file.data
+      </a>
+        </p>
+      </li>
   }
 
   @if(!node.isRoot) {

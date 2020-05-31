@@ -133,8 +133,6 @@ case class CommitInfo(
       rev.getCommitterIdent.getName,
       rev.getCommitterIdent.getEmailAddress
     )
-
-  def isDifferentFromAuthor: Boolean = authorName != committerName || authorEmailAddress != committerEmailAddress
 }
 
 object Collaborator {

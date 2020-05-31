@@ -9,6 +9,7 @@ class FileNode(nodeValue: String, path: String) {
 
   val data: String            = nodeValue
   val incrementalPath: String = path
+  val pathWithoutRoot: String = path.replaceFirst("./", "")
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
@@ -44,7 +45,7 @@ class FileNode(nodeValue: String, path: String) {
  */
 class FileTree(r: FileNode) {
   var commonRoot: FileNode = _
-  val root: FileNode = r
+  val root: FileNode       = r
 
   def addElement(elementValue: String): Unit = root.addElement(root.incrementalPath, elementValue.split("/"))
 
@@ -59,29 +60,4 @@ class FileTree(r: FileNode) {
       commonRoot = current
       commonRoot
     }
-}
-
-case class Breadcrumb(name: String, path: String)
-
-case class Breadcrumbs(fileName: String, breadcrumbs: Array[Breadcrumb])
-
-object Breadcrumbs {
-  private def splitPathIntoBreadcrumbs(path: String, isFile: Boolean = false): Array[Breadcrumb] =
-    path match {
-      case "." => Array()
-      case _ =>
-        val fullPath = DecodedPath(path).toString.split("/")
-        val breadcrumbs = fullPath.zipWithIndex.map {
-          case (element, index) =>
-            Breadcrumb(element, fullPath.slice(0, index + 1).mkString("/"))
-        }
-        if (isFile) {
-          breadcrumbs.dropRight(1) // we don't need a file name in path
-        } else {
-          breadcrumbs
-        }
-    }
-
-  def apply(path: String, isFile: Boolean = false): Breadcrumbs =
-    Breadcrumbs(DecodedPath(path).nameWithoutPath, splitPathIntoBreadcrumbs(path, isFile))
 }
