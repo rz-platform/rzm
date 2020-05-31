@@ -1,27 +1,27 @@
 package repositories
 
-import java.io.{File, FileInputStream, FileOutputStream, InputStream}
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 import java.util
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.{Lock, ReentrantLock}
+import java.util.concurrent.locks.{ Lock, ReentrantLock }
 
 import models._
-import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
-import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveOutputStream}
-import org.apache.commons.compress.utils.{IOUtils => CompressIOUtils}
+import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
+import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
+import org.apache.commons.compress.utils.{ IOUtils => CompressIOUtils }
 import org.apache.commons.io.input.BOMInputStream
-import org.apache.commons.io.{FileUtils, IOUtils}
+import org.apache.commons.io.{ FileUtils, IOUtils }
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.attributes.Attributes
-import org.eclipse.jgit.dircache.{DirCache, DirCacheBuilder, DirCacheEntry}
+import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder, DirCacheEntry }
 import org.eclipse.jgit.errors.MissingObjectException
-import org.eclipse.jgit.lib.{Repository => _, _}
-import org.eclipse.jgit.revwalk.{RevCommit, RevTag, RevTree, RevWalk}
-import org.eclipse.jgit.transport.{ReceiveCommand, ReceivePack}
+import org.eclipse.jgit.lib.{ Repository => _, _ }
+import org.eclipse.jgit.revwalk.{ RevCommit, RevTag, RevTree, RevWalk }
+import org.eclipse.jgit.transport.{ ReceiveCommand, ReceivePack }
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
-import org.eclipse.jgit.treewalk.filter.{AndTreeFilter, PathFilter, TreeFilter}
-import org.eclipse.jgit.treewalk.{CanonicalTreeParser, TreeWalk, WorkingTreeOptions}
+import org.eclipse.jgit.treewalk.filter.{ AndTreeFilter, PathFilter, TreeFilter }
+import org.eclipse.jgit.treewalk.{ CanonicalTreeParser, TreeWalk, WorkingTreeOptions }
 import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
 
@@ -83,8 +83,6 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       lock.unlock()
     }
   }
-
-
 
   def fileList(repository: Repository, revstr: String = "", path: String = "."): Option[RepositoryGitData] =
     Using.resource(Git.open(repositoryDir)) { git =>

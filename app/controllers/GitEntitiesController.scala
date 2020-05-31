@@ -260,12 +260,21 @@ class GitEntitiesController @Inject() (
 
         val editFile = { editedFile: EditedItem =>
           val oldPath = DecodedPath(editedFile.path).toString
-          val newPath = DecodedPath(DecodedPath(editedFile.path).pathWithoutFilename, editedFile.fileName, isFolder = false).toString
+          val newPath = DecodedPath(
+            DecodedPath(editedFile.path).pathWithoutFilename,
+            editedFile.fileName,
+            isFolder = false
+          ).toString
 
           val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
 
           gitRepository
-            .commitFiles(editedFile.rev, DecodedPath(editedFile.path).pathWithoutFilename, editedFile.message, request.account) {
+            .commitFiles(
+              editedFile.rev,
+              DecodedPath(editedFile.path).pathWithoutFilename,
+              editedFile.message,
+              request.account
+            ) {
               case (git, headTip, builder, inserter) =>
                 val permission = gitRepository
                   .processTree(git, headTip) { (path, tree) =>
