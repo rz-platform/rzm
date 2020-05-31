@@ -1,12 +1,13 @@
-@(blob:Blob, path:String, rev: String, tree: Array[PathBreadcrumb], fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+@(blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree)(implicit request: RepositoryRequestHeader)
 @import base._
 @import helpers._
 
 @auth(request.messages("repository.viewFile.title")) {
 @fileTreeView(fileTree)
 <div id="main">
-  <div class="header">
-    @repositoryHeader()
+<div class="content">
+  <div class="repo-header">
+    @repositoryBreadcrumb(breadcrumbs)
     <a class="rz-button"
        href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
       @request.messages("repository.viewFile.raw")
@@ -20,20 +21,20 @@
     }
     }
   </div>
-<div class="content">
-@if(blob.content.viewType == "text"){
-  <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
-}
 
-@if(blob.content.viewType == "image"){
-<img src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)" />
-}
+  @if(blob.content.viewType == "text"){
+    <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
+  }
 
-@if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
-<a href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
-  @request.messages("repository.viewFile.cant")
-</a>
-}
+  @if(blob.content.viewType == "image"){
+  <img src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)" />
+  }
+
+  @if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
+  <a href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
+    @request.messages("repository.viewFile.cant")
+  </a>
+  }
 </div>
 </div>
 

@@ -1,4 +1,4 @@
-package services
+package models
 
 import java.awt.Image
 import java.awt.image.BufferedImage
@@ -7,8 +7,10 @@ import java.nio.file.Paths
 
 import javax.imageio.ImageIO
 
-object ImageService {
-  val defaultExtension = "jpg"
+case class Thumbnail(name: String)
+
+object Thumbnail {
+  private val defaultExtension = "jpg"
 
   private def cropImageToSquare(src: BufferedImage): BufferedImage = {
     val (width, height) = (src.getWidth, src.getHeight)
@@ -22,15 +24,16 @@ object ImageService {
     src.getSubimage(x, y, squareSide, squareSide)
   }
 
-  def thumbImageName(name: String, size: Int): String =
-    s"${name}_$size.$defaultExtension"
+  private def thumbImageName(name: String, size: Int): String = s"${name}_$size.$defaultExtension"
 
-  def createSquaredThumbnails(
+  def apply(name: String, size: Int): Thumbnail = Thumbnail(thumbImageName(name, size))
+
+  def fromSource(
     inputImgFile: File,
     size: Int,
     destination: String,
     destinationName: String
-  ): Boolean = {
+  ): Thumbnail = {
     val src = cropImageToSquare(ImageIO.read(inputImgFile))
 
     val img = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB)
@@ -42,5 +45,6 @@ object ImageService {
     )
     val outputFile = Paths.get(destination, thumbImageName(destinationName, size)).toFile
     ImageIO.write(img, defaultExtension, outputFile)
+    Thumbnail(destinationName)
   }
 }

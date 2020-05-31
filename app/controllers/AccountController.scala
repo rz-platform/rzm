@@ -12,9 +12,6 @@ import play.api.data.validation.Constraints._
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories.AccountRepository
-import services.EncryptionService
-import services.EncryptionService.md5HashString
-import services.ImageService._
 import views._
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -74,10 +71,10 @@ class AccountController @Inject() (
   def saveUser: Action[AnyContent] = Action.async { implicit request =>
     registerForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
-      (user: AccountRegistrationData) =>
-        accountService.getByLoginOrEmail(user.userName, user.email).flatMap {
+      (userData: AccountRegistrationData) =>
+        accountService.getByLoginOrEmail(userData.userName, userData.email).flatMap {
           case None =>
-            val acc = RichAccount.buildNewAccount(user)
+            val acc = RichAccount.fromScratch(userData)
             accountService.insert(acc).map { accountId =>
               Redirect(routes.GitEntitiesController.list())
                 .withSession(AccountController.SESSION_NAME -> accountId.get.toString)
@@ -104,7 +101,7 @@ class AccountController @Inject() (
           .getRichModelByLoginOrEmail(user.userName)
           .flatMap {
             case Some(account) =>
-              if (EncryptionService.checkHash(user.password, account.password)) {
+              if (HashedString(account.password).check(user.password)) {
                 Future(
                   Redirect(routes.GitEntitiesController.list())
                     .withSession(AccountController.SESSION_NAME -> account.id.toString)
@@ -183,8 +180,8 @@ class AccountController @Inject() (
         accountService
           .getRichModelById(request.account.id)
           .flatMap { account =>
-            if (EncryptionService.checkHash(passwordData.oldPassword, account.password)) {
-              val newPasswordHash = EncryptionService.getHash(passwordData.newPassword)
+            if (HashedString(passwordData.oldPassword).check(account.password)) {
+              val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
               accountService.updatePassword(request.account.id, newPasswordHash).flatMap { _ =>
                 Future(
                   Redirect(routes.AccountController.profilePage())
@@ -224,7 +221,7 @@ class AccountController @Inject() (
             if (picture.fileSize > maxStaticSize) {
               throw new ExceededMaxSize
             }
-            createSquaredThumbnails(picture.ref, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
+            Thumbnail.fromSource(picture.ref, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
             accountService.hasPicture(request.account.id).flatMap { _ =>
               Future(redirect.flashing("success" -> Messages("profile.picture.success")))
             }
@@ -240,9 +237,9 @@ class AccountController @Inject() (
     }
 
   def profilePicture(account: String): Action[AnyContent] = Action { implicit request =>
-    val profilePicture = new java.io.File(picturesDir.toString + "/" + thumbImageName(account, thumbSize))
+    val profilePicture = new java.io.File(picturesDir.toString + "/" + Thumbnail(account, thumbSize))
     if (profilePicture.exists()) {
-      val etag = md5HashString(profilePicture.lastModified().toString)
+      val etag = MD5.fromString(profilePicture.lastModified().toString)
 
       if (request.headers.get(IF_NONE_MATCH).getOrElse("") == etag) {
         NotModified
@@ -256,7 +253,7 @@ class AccountController @Inject() (
 
   def removeProfilePicture(): Action[AnyContent] = userAction.async { implicit request =>
     val profilePicture =
-      new java.io.File(picturesDir.toString + "/" + thumbImageName(request.account.userName, thumbSize))
+      new java.io.File(picturesDir.toString + "/" + Thumbnail(request.account.userName, thumbSize))
     profilePicture.delete()
     accountService.removePicture(request.account.id).flatMap { _ =>
       Future(
