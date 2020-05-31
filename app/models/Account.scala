@@ -3,7 +3,6 @@ package models
 import java.util.Calendar
 
 import anorm._
-import services.EncryptionService
 
 import scala.collection.immutable.HashMap
 
@@ -30,13 +29,13 @@ case class RichAccount(
 object RichAccount {
   implicit def toParameters: ToParameterList[RichAccount] = Macro.toParameters[RichAccount]
 
-  def buildNewAccount(userForm: AccountRegistrationData): RichAccount =
+  def fromScratch(userForm: AccountRegistrationData): RichAccount =
     RichAccount(
       0,
       userForm.userName.trim.toLowerCase,
       userForm.fullName.getOrElse(""),
       userForm.email.trim.toLowerCase,
-      EncryptionService.getHash(userForm.password),
+      HashedString.fromString(userForm.password).toString,
       created = Calendar.getInstance().getTime,
       hasPicture = false
     )

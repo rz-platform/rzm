@@ -21,7 +21,6 @@ import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
 import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
-import services.PathService._
 import views._
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -178,22 +177,22 @@ class GitEntitiesController @Inject() (
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val gitData = git
-        .fileList(request.repository, path = decodeNameFromUrl(path), revstr = rev)
+        .fileList(request.repository, path = DecodedPath(path).toString, revstr = rev)
         .getOrElse(RepositoryGitData(List(), None))
 
-      Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, buildTreeFromPath(path)))
+      Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, Breadcrumbs(path)))
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
       val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+      val blobInfo = git.blobFile(DecodedPath(path).toString, rev)
 
       val fileTree = git.fileTree(request.repository, rev)
       blobInfo match {
         case Some(blob) =>
           Future.successful {
-            Ok(html.git.viewBlob(blob, path, rev, buildTreeFromPath(path, isFile = true), fileTree))
+            Ok(html.git.viewBlob(blob, path, rev, Breadcrumbs(path, isFile = true), fileTree))
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
@@ -202,7 +201,7 @@ class GitEntitiesController @Inject() (
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val raw = git.getRawFile("master", decodeNameFromUrl(path))
+      val raw = git.getRawFile("master", DecodedPath(path).toString)
 
       raw match {
         case Some(rawFile) =>
@@ -228,7 +227,7 @@ class GitEntitiesController @Inject() (
         blob.content.content.getOrElse(""),
         Messages("repository.edit.commitmessage"),
         rev,
-        decodeNameFromUrl(path),
+        DecodedPath(path).toString,
         getFileName(path)
       )
     )
@@ -237,16 +236,16 @@ class GitEntitiesController @Inject() (
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async {
       implicit request =>
         val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
-        val blobInfo = git.blobFile(decodeNameFromUrl(path), rev)
+        val blobInfo = git.blobFile(DecodedPath(path).toString, rev)
         blobInfo match {
           case Some(blob) =>
             Future.successful {
               Ok(
                 html.git.editFile(
-                  fillEditForm(blob, rev, decodeNameFromUrl(path)),
+                  fillEditForm(blob, rev, DecodedPath(path).toString),
                   blob,
-                  decodeNameFromUrl(path),
-                  buildTreeFromPath(path, isFile = true)
+                  DecodedPath(path).toString,
+                  Breadcrumbs(path, isFile = true)
                 )
               )
             }
@@ -260,13 +259,13 @@ class GitEntitiesController @Inject() (
         val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
         val editFile = { editedFile: EditedItem =>
-          val oldPath = decodeNameFromUrl(editedFile.path)
-          val newPath = buildFilePath(getPathWithoutFilename(editedFile.path), editedFile.fileName, isFolder = false)
+          val oldPath = DecodedPath(editedFile.path).toString
+          val newPath = DecodedPath(DecodedPath(editedFile.path).pathWithoutFilename, editedFile.fileName, isFolder = false).toString
 
           val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
 
           gitRepository
-            .commitFiles(editedFile.rev, getPathWithoutFilename(oldPath), editedFile.message, request.account) {
+            .commitFiles(editedFile.rev, DecodedPath(editedFile.path).pathWithoutFilename, editedFile.message, request.account) {
               case (git, headTip, builder, inserter) =>
                 val permission = gitRepository
                   .processTree(git, headTip) { (path, tree) =>
@@ -298,10 +297,10 @@ class GitEntitiesController @Inject() (
             val path = formWithErrors.data.get("path")
             path match {
               case Some(path) =>
-                val blob = gitRepository.blobFile(decodeNameFromUrl(path), rev)
+                val blob = gitRepository.blobFile(DecodedPath(path).toString, rev)
                 blob match {
                   case Some(blob) =>
-                    Future(BadRequest(html.git.editFile(formWithErrors, blob, path, buildTreeFromPath(path))))
+                    Future(BadRequest(html.git.editFile(formWithErrors, blob, path, Breadcrumbs(path))))
                   case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
                 }
               case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
@@ -347,7 +346,7 @@ class GitEntitiesController @Inject() (
             val gitRepository =
               new GitRepository(request.repository.owner, repositoryName, gitHome)
 
-            val fName = buildFilePath(path, newItem.name, isFolder)
+            val fName = DecodedPath(path, newItem.name, isFolder).toString
             // TODO: replace with rev
             gitRepository
               .commitFiles("master", path, "Added file", request.account) {
@@ -399,7 +398,7 @@ class GitEntitiesController @Inject() (
               // only get the last part of the filename
               // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
               val filename = Paths.get(filePart.filename).getFileName.toString
-              val filePath = buildFilePath(data.path, filename, isFolder = false)
+              val filePath = DecodedPath(data.path, filename, isFolder = false).toString
               CommitFile(filename, name = filePath, filePart.ref)
             }
             gitRepository.commitUploadedFiles(
@@ -417,7 +416,7 @@ class GitEntitiesController @Inject() (
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)) {
-      implicit request => Ok(html.git.uploadFile(uploadFileForm, rev, decodeNameFromUrl(path)))
+      implicit request => Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString))
     }
 
   def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =

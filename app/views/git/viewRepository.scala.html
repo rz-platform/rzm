@@ -1,4 +1,4 @@
-@(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
+@(addNewItemToRepForm: Form[NewItem], gitData:RepositoryGitData, path: String, breadcrumbs: Breadcrumbs)(implicit request: RepositoryRequestHeader)
 @import views.html.helper._
 @import base._
 @import helpers._
@@ -6,7 +6,6 @@
 @auth(request.repository.name) {
 @repositoryHeader()
 @notificationHeader()
-@repositoryFileTree(tree)
 
 <div class="repository-actions">
   @if(request.role <= AccessLevel.canEdit) {

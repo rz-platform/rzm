@@ -1,0 +1,30 @@
+@(fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+
+
+@printNode(node: FileNode) = {
+
+  @if(!node.isRoot) {
+    <p>@node.data</p>
+    <ul>
+  }
+
+  @for(folder <- node.folders) {
+    @printNode(folder)
+  }
+
+  @for(file <- node.files) {
+    <li>@file.incrementalPath -> @file.data</li>
+  }
+
+  @if(!node.isRoot) {
+    </ul>
+  }
+
+}
+<div id="fileTree">
+  <div class="rz-menu">
+    <div class="rz-menu-list">
+      @printNode(fileTree.root)
+    </div>
+  </div>
+</div>

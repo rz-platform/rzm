@@ -1,4 +1,4 @@
-@(editorForm: Form[EditedItem], blob:Blob, path: String, tree: Array[PathBreadcrumb])(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path: String, breadcrumbs: Breadcrumbs)(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
@@ -14,7 +14,6 @@
 }
 
 @repositoryHeader()
-@repositoryFileTree(tree)
 
 @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name)) {
 @CSRF.formField

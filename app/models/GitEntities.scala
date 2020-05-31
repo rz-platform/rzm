@@ -91,8 +91,6 @@ case class Blob(
   isLfsFile: Boolean
 )
 
-case class PathBreadcrumb(name: String, path: String)
-
 case class RawFile(inputStream: InputStream, contentLength: Integer, contentType: String)
 
 /**
