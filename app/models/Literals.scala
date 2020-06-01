@@ -18,3 +18,9 @@ case class ForbiddenSymbols() extends Literal {
 
   def toList: Array[String] = value.split("")
 }
+
+object ExcludedFileNames {
+  val excluded: Array[String] = Array(GitKeep().toString, FileRoot().toString)
+
+  def contains(name: String): Boolean = excluded.contains(name)
+}

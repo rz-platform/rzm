@@ -1,4 +1,4 @@
-#fileTree {
+.file-tree {
   margin-left: -$sidebar-width;
   width: $sidebar-width;
   position: fixed;
@@ -7,4 +7,10 @@
   bottom: 0;
   z-index: 1000;
   overflow-y: auto;
+  padding: 20px;
+  border-right: 1px solid #ebebeb;
+}
+
+.file-tree-folder {
+  padding-left: 36px;
 }
