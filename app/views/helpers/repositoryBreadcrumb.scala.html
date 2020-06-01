@@ -1,11 +1,15 @@
 @(breadcrumbs: Breadcrumbs)(implicit request: RepositoryRequestHeader)
 
 <div class="breadcrumbs">
-<a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)'>@request.repository.name</a> /
+  <span class="breadcrumbs-repo-name">@request.repository.name</span> <span class="breadcrumbs-divider">/</span>
 
 @for(breadcrumb <- breadcrumbs.breadcrumbs){
-  <a href="@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, breadcrumb.path, request.repository.defaultBranch)">@breadcrumb.name</a> /
+  @breadcrumb.name <span class="breadcrumbs-divider">/</span>
 }
 
 @breadcrumbs.fileName
+  <a class="rz-button"
+     href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
+  @request.messages("repository.viewFile.raw")
+</a>
 </div>

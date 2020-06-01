@@ -1,36 +1,33 @@
-@(fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+@(fileTree: FileTree, currentPath: String)(implicit request: RepositoryRequestHeader)
 
 
-@printNode(node: FileNode) = {
+@printNode(node: FileNode, path: String) = {
 
-  @if(!node.isRoot) {
-    <p>@node.data</p>
-    <ul>
+@if(!node.isRoot) {
+<p>@node.data</p>
+<div class="file-tree-folder">
   }
 
   @for(folder <- node.folders) {
-    @printNode(folder)
+  @printNode(folder, path)
   }
 
   @for(file <- node.files) {
-      <li>
-        <p>
-          <a href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
-        @file.data
-      </a>
-        </p>
-      </li>
+  @if(!(ExcludedFileNames contains file.data)) {
+  <p>
+    <a
+      href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+      @file.data @if(file.pathWithoutRoot == path) { * }
+    </a>
+  </p>
+  }
   }
 
   @if(!node.isRoot) {
-    </ul>
-  }
+</div>
+}
 
 }
-<div id="fileTree">
-  <div class="rz-menu">
-    <div class="rz-menu-list">
-      @printNode(fileTree.root)
-    </div>
-  </div>
+<div class="file-tree">
+  @printNode(fileTree.root, currentPath)
 </div>

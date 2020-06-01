@@ -3,7 +3,7 @@
 @import helpers._
 
 @auth(request.messages("repository.viewFile.title")) {
-@fileTreeView(fileTree)
+@fileTreeView(fileTree, path)
 <div id="main">
 <div class="content">
   <div class="repo-header">
