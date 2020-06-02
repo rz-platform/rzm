@@ -1,29 +1,82 @@
-@(blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+
+@import views.html.helper._
 @import base._
 @import helpers._
 
+@uploadButton(path: String) = {
+<a class="button"
+   href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
+  <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
+</a>
+}
+
+
+@printNode(node: FileNode) = {
+@if(!node.isRoot) {
+<p><img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/> @node.data @uploadButton(node.pathWithoutRoot)</p>
+<div class="file-tree-folder">
+  }
+
+  @for(folder <- node.folders) {
+  @printNode(folder)
+  }
+
+  @for(file <- node.files) {
+  @if(!(ExcludedFileNames contains file.data)) {
+  <a class="file-tree-node @if(file.pathWithoutRoot == path) { file-tree-node-chosen }"
+     href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+    <img src='@routes.Assets.at("images/document.svg")' class="svg-icon"/> @file.data
+  </a>
+  }
+  }
+
+  @if(!node.isRoot) {
+</div>
+}
+}
+
 @auth(request.messages("repository.viewFile.title")) {
-@fileTreeView(fileTree, path)
+<div class="file-tree">
+  <div class="file-tree-repo-name">
+    @request.repository.name @uploadButton(".")
+
+    <a class="rz-button"
+       href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
+      @request.messages("repository.tree.collaborators")
+    </a>
+
+    <a class="rz-button"
+       href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
+      @request.messages("repository.tree.downloads")
+    </a>
+
+    <a class="rz-button"
+       href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
+      @request.messages("repository.tree.commits")
+    </a>
+
+  </div>
+  @printNode(fileTree.root)
+</div>
 <div id="main">
 <div class="content">
   <div class="repo-header">
-    @repositoryBreadcrumb(breadcrumbs)
-    <a class="rz-button"
-       href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
-      @request.messages("repository.viewFile.raw")
-    </a>
-    @if(blob.content.viewType == "text"){
-    @if(request.role <= AccessLevel.canEdit) {
-    <a class="rz-button"
-       href="@routes.GitEntitiesController.editFilePage(request.repository.owner.userName, request.repository.name, rev, path)">
-      @request.messages("repository.viewFile.edit")
-    </a>
-    }
-    }
+    @repositoryBreadcrumb(breadcrumbs, path, rev)
+  </div>
+  @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name)) {
+  @CSRF.formField
+  @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
+  @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
+  @inputText(editorForm("fileName"), Symbol("_label") -> request.messages("repository.edit.form.filename"), Symbol("_help") -> "")
+
+  <div class="actions">
+    <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
   </div>
 
   @if(blob.content.viewType == "text"){
-    <textarea id="code" name="content" class="editor">@blob.content.content</textarea>
+    @textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code",  Symbol("_label") -> "", Symbol("_help") -> "")
+  }
   }
 
   @if(blob.content.viewType == "image"){

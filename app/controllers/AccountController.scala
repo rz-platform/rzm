@@ -237,7 +237,7 @@ class AccountController @Inject() (
     }
 
   def profilePicture(account: String): Action[AnyContent] = Action { implicit request =>
-    val profilePicture = new java.io.File(picturesDir.toString + "/" + Thumbnail(account, thumbSize))
+    val profilePicture = new java.io.File(picturesDir.toString + "/" + Thumbnail(account, thumbSize).name)
     if (profilePicture.exists()) {
       val etag = MD5.fromString(profilePicture.lastModified().toString)
 

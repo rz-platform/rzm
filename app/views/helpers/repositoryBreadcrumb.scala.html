@@ -1,4 +1,4 @@
-@(breadcrumbs: Breadcrumbs)(implicit request: RepositoryRequestHeader)
+@(breadcrumbs: Breadcrumbs, path: String, rev: String)(implicit request: RepositoryRequestHeader)
 
 <div class="breadcrumbs">
   <span class="breadcrumbs-repo-name">@request.repository.name</span> <span class="breadcrumbs-divider">/</span>
@@ -8,8 +8,8 @@
 }
 
 @breadcrumbs.fileName
-  <a class="rz-button"
+  <a class="rz-button repo-header-download-button"
      href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
-  @request.messages("repository.viewFile.raw")
+    <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/> @request.messages("repository.viewFile.raw")
 </a>
 </div>

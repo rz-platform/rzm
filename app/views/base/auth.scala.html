@@ -4,11 +4,13 @@
 <ul class="rz-menu-list">
   <li class="rz-menu-item">
   <div class="auth-user">
-    @if(request.account.hasPicture) {
-    <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName"
-       class="profile-picture"/>
-    }
-    <a href="@routes.AccountController.profilePage" class="rz-menu-link">@request.account.userName</a>
+    <a href="@routes.AccountController.profilePage" class="rz-menu-link">
+      @if(request.account.hasPicture) {
+      <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName"
+           class="profile-picture"/>
+      }
+      @request.account.userName
+    </a>
   </div>
   </li>
   <li class="rz-menu-item">

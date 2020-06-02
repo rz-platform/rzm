@@ -57,7 +57,6 @@ POST /repositories/:account/:repository/collaborators/remove controllers.GitEnti
 
 # Creation / Editing
 
-GET /repositories/:account/:repository/edit/:rev/*path controllers.GitEntitiesController.editFilePage(account:String, repository:String, rev:String, path: String)
 POST /repositories/:account/:repository/edit controllers.GitEntitiesController.edit(account:String, repository:String)
 POST /repositories/:account/:repository/createItem controllers.GitEntitiesController.addNewItem(account: String, repository: String, path: String, isFolder: Boolean)
 

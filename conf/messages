@@ -81,7 +81,7 @@ repository.upload.submit=Commit changes
 repository.upload.success = Successfully uploaded
 
 repository.viewFile.title=View file
-repository.viewFile.raw=Download raw file
+repository.viewFile.raw=Download
 repository.viewFile.edit=Edit
 repository.viewFile.cant=We can't dispay file. Download by direct link
 

@@ -65,3 +65,5 @@ target/universal/stage/bin/razam  -Dplay.evolutions.db.default.autoApply=true  -
 Copyright 2020 Eugene Bosiakov (@bosiakov).
 
 Project contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
+
+Icons made by <a href="https://www.flaticon.com/authors/becris" title="Becris">Becris</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
