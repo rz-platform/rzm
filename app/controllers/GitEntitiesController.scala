@@ -86,7 +86,6 @@ class GitEntitiesController @Inject() (
   val editorForm: Form[EditedItem] = Form(
     mapping(
       "content"  -> nonEmptyText,
-      "message"  -> nonEmptyText,
       "rev"      -> nonEmptyText,
       "path"     -> nonEmptyText,
       "fileName" -> nonEmptyText.verifying(checkForExcludedSymbols)
@@ -192,7 +191,16 @@ class GitEntitiesController @Inject() (
       blobInfo match {
         case Some(blob) =>
           Future.successful {
-            Ok(html.git.viewBlob(blob, path, rev, Breadcrumbs(path, isFile = true), fileTree))
+            Ok(
+              html.git.viewBlob(
+                fillEditForm(blob, rev, DecodedPath(path).toString),
+                blob,
+                path,
+                rev,
+                Breadcrumbs(path, isFile = true),
+                fileTree
+              )
+            )
           }
         case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
       }
@@ -225,33 +233,11 @@ class GitEntitiesController @Inject() (
     editorForm.fill(
       EditedItem(
         blob.content.content.getOrElse(""),
-        Messages("repository.edit.commitmessage"),
         rev,
         DecodedPath(path).toString,
         getFileName(path)
       )
     )
-
-  def editFilePage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async {
-      implicit request =>
-        val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
-        val blobInfo = git.blobFile(DecodedPath(path).toString, rev)
-        blobInfo match {
-          case Some(blob) =>
-            Future.successful {
-              Ok(
-                html.git.editFile(
-                  fillEditForm(blob, rev, DecodedPath(path).toString),
-                  blob,
-                  DecodedPath(path).toString,
-                  Breadcrumbs(path, isFile = true)
-                )
-              )
-            }
-          case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
-        }
-    }
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, AccessLevel.canEdit)).async {
@@ -272,7 +258,7 @@ class GitEntitiesController @Inject() (
             .commitFiles(
               editedFile.rev,
               DecodedPath(editedFile.path).pathWithoutFilename,
-              editedFile.message,
+              "editedFile.message",
               request.account
             ) {
               case (git, headTip, builder, inserter) =>
@@ -306,10 +292,11 @@ class GitEntitiesController @Inject() (
             val path = formWithErrors.data.get("path")
             path match {
               case Some(path) =>
-                val blob = gitRepository.blobFile(DecodedPath(path).toString, rev)
+                val fileTree = gitRepository.fileTree(request.repository, rev)
+                val blob     = gitRepository.blobFile(DecodedPath(path).toString, rev)
                 blob match {
                   case Some(blob) =>
-                    Future(BadRequest(html.git.editFile(formWithErrors, blob, path, Breadcrumbs(path))))
+                    Future(BadRequest(html.git.viewBlob(formWithErrors, blob, path, rev, Breadcrumbs(path), fileTree)))
                   case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
                 }
               case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))

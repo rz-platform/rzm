@@ -43,10 +43,8 @@
 
 @if(request.account.hasPicture) {
   @helper.form(action = routes.AccountController.removeProfilePicture) {
-<fieldset>
   @CSRF.formField
   <input type="submit" value='@request.messages("profile.delete.picture")'  class="rz-button rz-button-primary">
   }
-</fieldset>
 }
 }

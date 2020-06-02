@@ -4,7 +4,7 @@
 @printNode(node: FileNode, path: String) = {
 
 @if(!node.isRoot) {
-<p>@node.data</p>
+<p><img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/> @node.data</p>
 <div class="file-tree-folder">
   }
 
@@ -14,12 +14,10 @@
 
   @for(file <- node.files) {
   @if(!(ExcludedFileNames contains file.data)) {
-  <p>
-    <a
+    <a class="file-tree-node @if(file.pathWithoutRoot == path) { file-tree-node-chosen }"
       href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
-      @file.data @if(file.pathWithoutRoot == path) { * }
+      <img src='@routes.Assets.at("images/document.svg")' class="svg-icon"/> @file.data
     </a>
-  </p>
   }
   }
 
