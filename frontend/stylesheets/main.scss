@@ -4,7 +4,9 @@
 
 // Configuration and helpers
 @import
-  'abstracts/variables';
+  'abstracts/variables',
+  '~codemirror/lib/codemirror'
+  ;
 
 // Vendors
 @import
@@ -33,6 +35,7 @@
 // Page-specific styles
 @import
   'pages/auth',
-  'pages/edit',
   'pages/repo',
+  'pages/collaborators',
+  'pages/view',
   'pages/upload';

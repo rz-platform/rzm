@@ -1,4 +1,4 @@
-@(addCollaboratorForm: Form[NewCollaboratorData], collaborators: List[SimpleAccount])(implicit request: RepositoryRequestHeader)
+@(addCollaboratorForm: Form[NewCollaboratorData], collaborators: Seq[Collaborator])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
@@ -8,21 +8,27 @@
 @notificationHeader()
 @repositoryHeader()
 
+@if(collaborators.length > 0) {
+<h2>@request.messages("repository.collaborator.list")</h2>
+}
+
 @collaborators.map {
 case (collaborator) => {
-<p>@collaborator.userName
-  @if(request.account.email != collaborator.email) {
-
-  @form(routes.GitEntitiesController.removeCollaboratorAction(request.repository.owner.userName,
-  request.repository.name)) {
+  @form(routes.GitEntitiesController.removeCollaboratorAction(request.repository.owner.userName, request.repository.name)) {
   @CSRF.formField
-  <input type="hidden" name="email" value='@collaborator.email'/>
-  <button type="submit">X</button>
+  <input type="hidden" name="email" value='@collaborator.account.email'/>
+  <div class="collaborator-row">@collaborator.account.userName /
+    @{collaborator.accessLevel match {
+      case Some(Edit) => { request.messages("repository.collaborator.accessLevel.write") }
+      case Some(View) => { request.messages("repository.collaborator.accessLevel") }
+      case _ => ()
+    }}
+
+    <button class="rz-button" type="submit">@request.messages("repository.collaborator.remove")</button></div>
   }
   }
-</p>
 }
-}
+<h2>Add member</h2>
 @form(routes.GitEntitiesController.addCollaboratorAction(request.repository.owner.userName, request.repository.name), Symbol("class") -> "rz-form") {
   @CSRF.formField
   @inputText(addCollaboratorForm("emailOrLogin"),
@@ -30,8 +36,8 @@ case (collaborator) => {
   Symbol("_help") -> "")
 
   @select(field = addCollaboratorForm("accessLevel"),
-  options = Seq(AccessLevel.canViewName -> request.messages("repository.collaborator.accessLevel.read"),
-  AccessLevel.canEditName -> request.messages("repository.collaborator.accessLevel.write")),
+  options = Seq(View.toString -> request.messages("repository.collaborator.accessLevel.read"),
+  Edit.toString -> request.messages("repository.collaborator.accessLevel.write")),
   Symbol("_label") -> request.messages("repository.collaborator.accessLevel")
   )
 <div class="actions">

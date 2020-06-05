@@ -21,17 +21,6 @@ object Repository {
 
 case class RepositoryData(name: String, description: Option[String])
 
-case class Collaborator(
-  id: Long,
-  userId: Long,
-  repositoryId: Long,
-  role: Long
-)
-
-case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
-
-case class RemoveCollaboratorData(email: String)
-
 case class CommitFile(id: String, name: String, file: File)
 
 case class EditedItem(content: String, rev: String, path: String, fileName: String)
@@ -133,9 +122,4 @@ case class CommitInfo(
       rev.getCommitterIdent.getName,
       rev.getCommitterIdent.getEmailAddress
     )
-}
-
-object Collaborator {
-  implicit def toParameters: ToParameterList[Collaborator] =
-    Macro.toParameters[Collaborator]
 }

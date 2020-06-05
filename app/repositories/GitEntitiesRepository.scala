@@ -3,7 +3,7 @@ package repositories
 import anorm.SqlParser.get
 import anorm._
 import javax.inject.{ Inject, Singleton }
-import models.{ Repository, RepositoryData, SimpleAccount }
+import models.{ Collaborator, Repository, RepositoryData, SimpleAccount }
 import play.api.db.DBApi
 
 import scala.concurrent.Future
@@ -22,8 +22,16 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       accountRepository.simple ~
       get[String]("repository.name") ~
       get[String]("repository.default_branch")).map {
-      case id ~ owner ~ name ~ defaultBranch =>
-        Repository(id, owner, name, defaultBranch)
+      case id ~ owner ~ name ~ defaultBranch => Repository(id, owner, name, defaultBranch)
+    }
+  }
+
+  /**
+   * Parse a Collaborator from a ResultSet
+   */
+  private val simpleCollaborator = {
+    (accountRepository.simple ~ get[Int]("collaborator.role")).map {
+      case account ~ role => Collaborator(account, role)
     }
   }
 
@@ -105,7 +113,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def getCollaborators(repository: Repository): Future[List[SimpleAccount]] =
+  def getCollaborators(repository: Repository): Future[List[Collaborator]] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
@@ -115,7 +123,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         where repository_id = {repositoryId}
         """)
           .on("repositoryId" -> repository.id)
-          .as(accountRepository.simple.*)
+          .as(simpleCollaborator.*)
       }
     }(ec)
 

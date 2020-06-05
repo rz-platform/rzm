@@ -6,7 +6,11 @@ import anorm._
 
 import scala.collection.immutable.HashMap
 
-sealed trait Account
+sealed trait Account {
+  def id: Long
+  def userName: String
+  def email: String
+}
 
 case class SimpleAccount(id: Long, userName: String, email: String, hasPicture: Boolean) extends Account
 
@@ -39,21 +43,6 @@ object RichAccount {
       created = Calendar.getInstance().getTime,
       hasPicture = false
     )
-}
-
-object AccessLevel {
-  val owner   = 0
-  val canEdit = 20
-  val canView = 30
-
-  val canEditName = "edit"
-  val canViewName = "view"
-
-  val map: HashMap[String, Int] = HashMap((canEditName, canEdit), (canViewName, canView))
-
-  def fromString(accessLevel: String): Int =
-    if (AccessLevel.map.contains(accessLevel)) AccessLevel.map(accessLevel)
-    else AccessLevel.canView
 }
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
