@@ -4,20 +4,20 @@
 @import helpers._
 
 @html = {
+  <div class="rz-auth">
   <h1>@request.messages("signup.head")</h1>
   @notificationHeader()
 
   @form(routes.AccountController.saveUser(), Symbol("class") -> "rz-form") {
-  <fieldset>
     @CSRF.formField
     @inputText(registerForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"), Symbol("_help") -> "")
     @inputPassword(registerForm("password"), Symbol("_label") -> request.messages("signup.form.password"), Symbol("_help") -> "")
     @inputText(registerForm("mailAddress"), Symbol("_label") -> request.messages("signup.form.email"), Symbol("_help") -> "")
     @inputText(registerForm("fullName"), Symbol("_label") -> request.messages("signup.form.fullname"), Symbol("_help") -> "")
-  </fieldset>
-  <div class="actions">
-    <input type="submit" value='@request.messages("signup.submit")' class="btn primary" /></div>
-  <a class="button button-outline" href="@routes.AccountController.login">@request.messages("signup.submit")</a>
+
+    <input type="submit" value='@request.messages("signup.submit")' class="rz-button rz-button-primary" />
+    or <a class="rz-button" href="@routes.AccountController.login">@request.messages("signup.signInLink")</a>
+  </div>
   }
 }
 @header = {}
