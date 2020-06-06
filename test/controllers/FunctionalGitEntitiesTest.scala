@@ -1,23 +1,24 @@
+package controllers
+
 import akka.actor.ActorSystem
-import controllers.{ routes, AccountController, GitEntitiesController }
 import models._
-import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Millis, Seconds, Span }
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
-import play.api.db.{ DBApi, Database }
 import play.api.db.evolutions.Evolutions
-import play.api.mvc.{ Flash, Result }
+import play.api.db.{DBApi, Database}
+import play.api.mvc.{Flash, Result}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
+import repositories.{AccountRepository, GitEntitiesRepository, GitRepository}
 
 import scala.concurrent.Future
 
-class FunctionalRepoTest
+class FunctionalGitEntitiesTest
     extends PlaySpec
     with BeforeAndAfterAll
     with GuiceOneAppPerSuite
@@ -58,12 +59,12 @@ class FunctionalRepoTest
           "userName"    -> userName,
           "fullName"    -> getRandomString,
           "password"    -> getRandomString,
-          "mailAddress" -> s"${getRandomString}@razam.dev"
+          "mailAddress" -> s"$getRandomString@razam.dev"
         )
     )
     await(AccountController.saveUser().apply(request))
     defaultDatabase.withConnection { connection =>
-      val rs = connection.prepareStatement(s"select id from account where username='${userName}'").executeQuery()
+      val rs = connection.prepareStatement(s"select id from account where username='$userName'").executeQuery()
       rs.next()
       SimpleAccount(rs.getInt(1), userName, null, hasPicture = false)
     }
@@ -146,7 +147,7 @@ class FunctionalRepoTest
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
-              "mailAddress" -> s"${getRandomString}@razam.dev"
+              "mailAddress" -> s"$getRandomString@razam.dev"
             )
         )
 
@@ -164,7 +165,7 @@ class FunctionalRepoTest
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
-              "mailAddress" -> s"${getRandomString}@razam.dev"
+              "mailAddress" -> s"$getRandomString@razam.dev"
             )
         )
 
@@ -336,7 +337,7 @@ class FunctionalRepoTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
 
       result.header.status must equal(303)
       defaultDatabase.withConnection { connection =>
@@ -344,7 +345,7 @@ class FunctionalRepoTest
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${AccessLevel.canEdit}"
+              s"and role=${Edit.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
@@ -356,7 +357,7 @@ class FunctionalRepoTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      addCollaborator(controller, repoName, owner, "nonexistentusername", AccessLevel.canEditName)
+      addCollaborator(controller, repoName, owner, "nonexistentusername", Edit.toString)
 
       defaultDatabase.withConnection { connection =>
         val isCollaboratorExist = connection
@@ -374,7 +375,7 @@ class FunctionalRepoTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
 
       result.header.status must equal(303)
       defaultDatabase.withConnection { connection =>
@@ -382,13 +383,13 @@ class FunctionalRepoTest
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${AccessLevel.canEdit}"
+              s"and role=${Edit.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
       }
 
-      addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+      addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
       result.header.status must equal(303)
     }
 
@@ -398,13 +399,13 @@ class FunctionalRepoTest
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
 
-      addCollaborator(controller, repoName, owner, collaborator.userName, AccessLevel.canEditName)
+      addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${AccessLevel.canEdit}"
+              s"and role=${Edit.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
