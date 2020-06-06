@@ -368,12 +368,10 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
             findLastCommits(nextResult, nextRest, revIterator)
           }
         }
-      logger.info("----")
       var fileList: List[(ObjectId, FileMode, String, String, Option[String])] = Nil
       useTreeWalk(revCommit) { treeWalk =>
         while (treeWalk.next()) {
           val linkUrl = None
-          logger.info(treeWalk.getPathString)
           fileList +:= (treeWalk.getObjectId(0), treeWalk.getFileMode(0), treeWalk.getNameString, treeWalk.getPathString, linkUrl)
         }
       }
