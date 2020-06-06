@@ -1,3 +1,35 @@
 .CodeMirror {
     height: 600px;
 }
+
+.repo-header {
+  margin-bottom: 20px;
+
+  .breadcrumbs {
+    display: flex;
+    margin-top: 20px;
+    font-size: 18px;
+
+    .breadcrumbs-repo-name {
+
+    }
+
+    .repo-header-download-button {
+      margin-left: auto;
+    }
+
+    .breadcrumbs-divider {
+      color: #ccc;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+
+    dl {
+      margin: 0px;
+    }
+  }
+
+  .repo-header-last-modified {
+    color: #6a737d;
+  }
+}

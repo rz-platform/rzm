@@ -5,26 +5,33 @@
 
 @auth(request.messages("repository.upload.title")) {
 @repositoryHeader()
-@if(!path.isEmpty) {
-<p>You are uploading to <strong>@path</strong></p>
-}
-@form(routes.GitEntitiesController.upload(request.repository.owner.userName, request.repository.name, rev), Symbol("enctype") -> "multipart/form-data") {
-@CSRF.formField
-<input type="file" id="filepicker" name="fileList" multiple  accept="image/*,text/*" />
-<ul id="listing"></ul>
+<div class="upload-page">
+  <h1>@request.messages("repository.upload.title")</h1>
+  @if(!path.isEmpty) {
+    <p>@request.messages("repository.upload.messagePath", path)</p>
+  } else {
+    <p>@request.messages("repository.upload.messageRoot")</p>
+  }
+  @form(routes.GitEntitiesController.upload(request.repository.owner.userName, request.repository.name, rev),
+  Symbol("enctype") -> "multipart/form-data", Symbol("class") -> "rz-form") {
+  @CSRF.formField
+  <input type="file" id="filepicker" name="fileList" multiple accept="image/*,text/*"/>
+  <ul id="listing"></ul>
 
-<input type="text" id="message" name="message" value='@request.messages("repository.edit.commitmessage")' />
+  <input type="hidden" name="path" value='@path'/>
 
-<input type="hidden" name="path" value='@path' />
+  <label for="single" class="rz-radio">
+    <input type="radio" id="single" name="input-type" value="single" checked>
+    @request.messages("repository.upload.singleFile")
+  </label>
 
-<input type="radio" id="single" name="input-type" value="single" checked>
-<label for="single">@request.messages("repository.upload.singleFile")</label>
+  <label for="directory" class="rz-radio">
+    <input type="radio" id="directory" name="input-type" value="directory">
+    @request.messages("repository.upload.completeDirectory")
+  </label>
 
-<input type="radio" id="directory" name="input-type" value="directory">
-<label for="directory">@request.messages("repository.upload.completeDirectory")</label><br>
-
-<input type="submit" value='@request.messages("repository.upload.submit")'/>
-}
-
+  <input type="submit" class="rz-button" value='@request.messages("repository.upload.submit")'/>
+  }
+</div>
 <script src='@routes.Assets.at("dist/javascript/upload.js")' type="text/javascript"></script>
 }

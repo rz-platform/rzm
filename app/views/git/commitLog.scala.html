@@ -9,7 +9,7 @@
 <h2>@request.messages("repository.commitLog.header") @rev</h2>
 
 @commitLog.map { commitInfo =>
-<p>@commitInfo.authorName - @commitInfo.fullMessage <span class="time">@commitInfo.commitTime</span></p>
+<p>@commitInfo.fullMessage <span class="info">by</span> @commitInfo.authorName <span class="info">on</span> <span class="info">@commitInfo.commitTime</span></p>
 }
 
 @if(hasNext) {

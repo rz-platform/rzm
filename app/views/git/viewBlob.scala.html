@@ -37,7 +37,7 @@
 }
 }
 
-@auth(request.messages("repository.viewFile.title")) {
+@auth(breadcrumbs.fileName) {
 <div class="file-tree">
   <div class="file-tree-repo-name">
     @request.repository.name @uploadButton(".")
@@ -82,12 +82,17 @@
           @request.messages("repository.viewFile.raw")
         </a>
       </div>
+      <div class="repo-header-last-modified">
+        @request.messages("repository.viewFile.lastModified", blob.latestCommit.commitTime, blob.latestCommit.committerName)
+      </div>
     </div>
     @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
     @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
 
     <div class="actions">
-      <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
+      @if(blob.content.viewType == "text"){
+        <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
+      }
     </div>
 
     @if(blob.content.viewType == "text"){
