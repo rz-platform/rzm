@@ -1,3 +1,5 @@
 @()(implicit request: RepositoryRequestHeader)
 
-<h1><a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)'>@request.repository.name</a></h1>
+<div class="repo-name">
+  @request.repository.owner.userName / <a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)'>@request.repository.name</a>
+</div>

@@ -1,0 +1,17 @@
+.repo-list-header {
+  margin-bottom: 20px;
+  margin-top: 20px;
+}
+
+.repo-list {
+  .repo-list-row {
+    a {
+      color: #0366d6;
+      text-decoration: none;
+      margin-bottom: 15px;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+}

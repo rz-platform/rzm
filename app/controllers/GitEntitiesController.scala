@@ -174,12 +174,12 @@ class GitEntitiesController @Inject() (
 
   def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
-      val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val gitData = git
-        .fileList(request.repository, path = DecodedPath(path).toString, revstr = rev)
-        .getOrElse(RepositoryGitData(List(), None))
-
-      Ok(html.git.viewRepository(addNewItemToRepForm, gitData, path, Breadcrumbs(path)))
+      val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
+      val fileTree = git.fileTree(request.repository, rev)
+      Redirect(
+        routes.GitEntitiesController
+          .blob(accountName, repositoryName, rev, fileTree.getCommonRoot.files.head.pathWithoutRoot)
+      )
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -257,7 +257,7 @@ class GitEntitiesController @Inject() (
           .commitFiles(
             editedFile.rev,
             DecodedPath(editedFile.path).pathWithoutFilename,
-            "editedFile.message",
+            Messages("repository.viewFile.commitMessage", DecodedPath(editedFile.path).nameWithoutPath),
             request.account
           ) {
             case (git, headTip, builder, inserter) =>

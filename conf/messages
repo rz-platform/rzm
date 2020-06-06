@@ -81,18 +81,23 @@ repository.edit.commitmessage=Uploaded via web
 repository.edit.path=You are uploading to
 repository.upload.submit=Commit changes
 repository.upload.success = Successfully uploaded
+repository.upload.title=File upload
+repository.upload.messagePath=Uploading files to {0}
+repository.upload.messageRoot=Uploading files to the project root
 
 repository.viewFile.title=View file
 repository.viewFile.raw=Download
 repository.viewFile.edit=Edit
 repository.viewFile.cant=We can't dispay file. Download by direct link
+repository.viewFile.lastModified=Last modified on {0} by {1}
+repository.viewFile.commitMessage=Modified {0}
 
 repository.tree.uploadFiles=Upload files
 repository.tree.collaborators=Collaborators
 repository.tree.downloads=Download ZIP
 repository.tree.createFolder=Create new folder
 repository.tree.createFolder.formName=Folder name
-repository.tree.commits=Changes
+repository.tree.commits=Project history
 
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name

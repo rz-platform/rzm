@@ -25,12 +25,11 @@
 // Components
 @import
   'components/buttons',
+  'components/repoHeader',
   'components/forms',
   'components/menus',
   'components/icons',
-  'components/breadcrumbs',
-  'components/fileTree',
-  'components/time';
+  'components/fileTree';
 
 // Page-specific styles
 @import
@@ -38,4 +37,6 @@
   'pages/repo',
   'pages/collaborators',
   'pages/view',
-  'pages/upload';
+  'pages/repoList',
+  'pages/upload',
+  'pages/commitLog';
