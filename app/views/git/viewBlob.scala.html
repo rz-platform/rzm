@@ -5,7 +5,7 @@
 @import helpers._
 
 @uploadButton(path: String) = {
-<a class="button"
+<a class="upload-button"
    href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
   <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
 </a>
@@ -14,8 +14,9 @@
 
 @printNode(node: FileNode) = {
 @if(!node.isRoot) {
-<p><img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/> @node.data @uploadButton(node.pathWithoutRoot)
-</p>
+<div class="file-tree-node">
+  <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/> @node.data @uploadButton(node.pathWithoutRoot)
+</div>
 <div class="file-tree-folder">
   }
 
@@ -39,27 +40,29 @@
 
 @auth(breadcrumbs.fileName) {
 <div class="file-tree">
-  <div class="file-tree-repo-name">
-    @request.repository.name @uploadButton(".")
-
-    <div class="repo-action">
-      <a class="rz-button"
+    <div class="rz-menu-item">
+      <a class="rz-menu-link"
          href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
+        <img src='@routes.Assets.at("images/users.svg")' class="svg-icon"/>
         @request.messages("repository.tree.collaborators")
       </a>
-
-      <a class="rz-button"
+    </div>
+    <div class="rz-menu-item">
+      <a class="rz-menu-link"
          href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
         <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
         @request.messages("repository.tree.downloads")
       </a>
-
-      <a class="rz-button"
+    </div>
+    <div class="rz-menu-item">
+      <a class="rz-menu-link"
          href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
+        <img src='@routes.Assets.at("images/list.svg")' class="svg-icon"/>
         @request.messages("repository.tree.commits")
       </a>
     </div>
-  </div>
+
+    <div class="file-tree-node">@request.repository.name @uploadButton(".")</div>
   @printNode(fileTree.root)
 </div>
 <div id="main">

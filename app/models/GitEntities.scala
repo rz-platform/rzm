@@ -25,7 +25,7 @@ case class CommitFile(id: String, name: String, file: File)
 
 case class EditedItem(content: String, rev: String, path: String, fileName: String)
 
-case class UploadFileForm(path: String, message: String)
+case class UploadFileForm(path: String)
 
 /**
  * The file data for the file list of the repository viewer.

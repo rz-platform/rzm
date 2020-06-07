@@ -9,12 +9,18 @@
   overflow-y: auto;
   border-right: 1px solid #ebebeb;
 
-  a.file-tree-node {
+  .file-tree-node {
     color: black;
     text-decoration: none;
     width: 100%;
     display: block;
     padding: 5px;
+    display: flex;
+
+    .upload-button {
+      margin-left: auto;
+      padding-right: 5px;
+    }
   }
 
   .file-tree-node-chosen {
@@ -22,7 +28,7 @@
   }
 
   .file-tree-folder {
-    padding-left: 36px;
+    padding-left: 20px;
   }
 }
 
