@@ -84,6 +84,7 @@ repository.upload.success = Successfully uploaded
 repository.upload.title=File upload
 repository.upload.messagePath=Uploading files to {0}
 repository.upload.messageRoot=Uploading files to the project root
+repository.upload.message=Uploaded {0} files
 
 repository.viewFile.title=View file
 repository.viewFile.raw=Download

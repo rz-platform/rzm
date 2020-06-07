@@ -23,7 +23,6 @@ create table repository (
  description         varchar not null default '',
  default_branch      varchar not null,
  created_at          timestamp with time zone not null default now(),
- updated_at          timestamp with time zone not null default now(),
  unique (owner_id, name),
  check (name <> ''),
  check (default_branch <> '')
@@ -41,6 +40,7 @@ CREATE UNIQUE INDEX account_usernamex ON account (username);
 CREATE UNIQUE INDEX account_mailx ON account (email);
 
 CREATE INDEX repository_idx ON repository (name);
+CREATE INDEX repository_owner_idx ON repository (owner_id);
 
 # --- !Downs
 
@@ -48,4 +48,6 @@ drop table if exists collaborator, account, repository;
 
 drop index if exists account_usernamex;
 drop index if exists account_mailx;
+
 drop index if exists repository_idx;
+drop index if exists repository_owner_idx;

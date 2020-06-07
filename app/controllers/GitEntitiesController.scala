@@ -61,7 +61,7 @@ class GitEntitiesController @Inject() (
   )
 
   val uploadFileForm: Form[UploadFileForm] = Form(
-    mapping("path" -> text, "message" -> nonEmptyText)(UploadFileForm.apply)(UploadFileForm.unapply)
+    mapping("path" -> text)(UploadFileForm.apply)(UploadFileForm.unapply)
   )
 
   val excludedSymbolsForFileName: List[Char] = List('/', ':', '#')
@@ -389,9 +389,7 @@ class GitEntitiesController @Inject() (
             val gitRepository = new GitRepository(req.repository.owner, repositoryName, gitHome)
 
             val files: Seq[CommitFile] = req.body.files.map { filePart =>
-              // only get the last part of the filename
-              // otherwise someone can send a path like ../../home/foo/bar.txt to write to other files on the system
-              val filename = Paths.get(filePart.filename).getFileName.toString
+              val filename = filePart.filename
               val filePath = DecodedPath(data.path, filename, isFolder = false).toString
               CommitFile(filename, name = filePath, filePart.ref)
             }
@@ -400,7 +398,7 @@ class GitEntitiesController @Inject() (
               req.account,
               if (!rev.isEmpty) rev else req.repository.defaultBranch,
               data.path,
-              data.message
+              Messages("repository.upload.message", files.length)
             )
             Redirect(routes.GitEntitiesController.view(accountName, repositoryName, data.path, rev))
               .flashing("success" -> Messages("repository.upload.success"))
