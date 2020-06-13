@@ -13,7 +13,7 @@ class FileNode(nodeValue: String, path: String) {
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
-  def isRoot: Boolean = data == "."
+  def isRoot: Boolean = data == FileRoot.toString
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
     val currentChild = new FileNode(list.head, currentPath + "/" + list(0))

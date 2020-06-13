@@ -77,7 +77,7 @@ class AccountController @Inject() (
             val acc = RichAccount.fromScratch(userData)
             accountService.insert(acc).map { accountId =>
               Redirect(routes.GitEntitiesController.list())
-                .withSession(AccountController.SESSION_NAME -> accountId.get.toString)
+                .withSession(SessionName.toString -> accountId.get.toString)
             }
           case _ =>
             val formBuiltFromRequest = registerForm.bindFromRequest
@@ -104,7 +104,7 @@ class AccountController @Inject() (
               if (HashedString(account.password).check(user.password)) {
                 Future(
                   Redirect(routes.GitEntitiesController.list())
-                    .withSession(AccountController.SESSION_NAME -> account.id.toString)
+                    .withSession(SessionName.toString -> account.id.toString)
                 )
               } else {
                 throw new WrongPassword
@@ -262,8 +262,4 @@ class AccountController @Inject() (
       )
     }
   }
-}
-
-object AccountController {
-  val SESSION_NAME = "user_id"
 }

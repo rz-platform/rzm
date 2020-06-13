@@ -10,11 +10,6 @@
   border-right: 1px solid #ebebeb;
 
   .file-tree-node {
-    color: black;
-    text-decoration: none;
-    width: 100%;
-    display: block;
-    padding: 5px;
     display: flex;
 
     .upload-button {
@@ -29,6 +24,10 @@
 
   .file-tree-folder {
     padding-left: 20px;
+    border-left: 1px solid #ebebeb;
   }
 }
 
+.file-item {
+  padding-left: 20px;
+}
