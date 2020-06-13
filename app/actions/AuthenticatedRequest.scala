@@ -1,13 +1,13 @@
 package actions
 
-import controllers.{ routes, AccountController }
-import javax.inject.{ Inject, Singleton }
-import models.UserRequest
+import controllers.{AccountController, routes}
+import javax.inject.{Inject, Singleton}
+import models.{SessionName, UserRequest}
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.AccountRepository
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * An action that pulls everything together to show user info that is in an encrypted cookie,
@@ -30,7 +30,7 @@ class AuthenticatedRequest @Inject() (
   ): Future[Result] = {
     // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {
-      sessionId <- request.session.get(AccountController.SESSION_NAME)
+      sessionId <- request.session.get(SessionName.toString)
     } yield {
       accountService.findById(sessionId.toLong).flatMap {
         case Some(account) =>

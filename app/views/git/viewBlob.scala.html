@@ -5,8 +5,7 @@
 @import helpers._
 
 @uploadButton(path: String) = {
-<a class="upload-button"
-   href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
+<a class="upload-button" href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
   <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
 </a>
 }
@@ -14,26 +13,42 @@
 
 @printNode(node: FileNode) = {
 @if(!node.isRoot) {
-<div class="file-tree-node">
-  <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon"/> @node.data @uploadButton(node.pathWithoutRoot)
-</div>
 <div class="file-tree-folder">
-  }
+}
+  <div class="rz-menu-item">
+  <div class="rz-menu-link">
+    @if(!node.isRoot) {
+    @if(node.files.length > 0) {
+      <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon"/>
+      } else {
+      <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon"/>
+      }
+    }
+    @if(node.isRoot) {
+      @request.repository.name
+    } else {
+      @node.data
+    }
+    @uploadButton(node.pathWithoutRoot)
+  </div>
+</div>
 
+<div class="rz-menu-item">
   @for(folder <- node.folders) {
   @printNode(folder)
   }
 
   @for(file <- node.files) {
   @if(!(ExcludedFileNames contains file.data)) {
-  <a class="file-tree-node @if(file.pathWithoutRoot == path) { file-tree-node-chosen }"
-     href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
-    <img src='@routes.Assets.at("images/document.svg")' class="svg-icon"/> @file.data
+  <a class="rz-menu-link @if(file.pathWithoutRoot == path) { file-tree-node-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+    <div class="file-item">
+      <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
+    </div>
   </a>
   }
   }
-
-  @if(!node.isRoot) {
+</div>
+@if(!node.isRoot) {
 </div>
 }
 }
@@ -62,7 +77,6 @@
       </a>
     </div>
 
-    <div class="file-tree-node">@request.repository.name @uploadButton(".")</div>
   @printNode(fileTree.root)
 </div>
 <div id="main">
