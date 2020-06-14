@@ -92,10 +92,6 @@ class GitEntitiesController @Inject() (
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
-  trait RepositoryAccessException
-  class NoRepo         extends Exception("Repository does not exist") with RepositoryAccessException
-  class NoCollaborator extends Exception("Access denied") with RepositoryAccessException
-
   def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]): Future[T] =
     what.map(_.getOrElse(throw ifNot))
 
@@ -111,7 +107,7 @@ class GitEntitiesController @Inject() (
         request: UserRequest[A]
       ): Future[Either[Result, RepositoryRequest[A]]] = {
         val items = for {
-          repository <- getOrElse(new NoRepo)(
+          repository <- getOrElse(new RepositoryAccessException.AccessDenied)(
                          gitEntitiesRepository.getByAuthorAndName(username, repositoryName)
                        )
           collaborator <- gitEntitiesRepository.isUserCollaborator(repository, request.account.id)
@@ -123,7 +119,7 @@ class GitEntitiesController @Inject() (
           val accessLevel: Int = collaborator match {
             case None if repository.owner.id == request.account.id => Owner.role
             case Some(accessLevel)                                 => accessLevel
-            case None                                              => throw new NoCollaborator()
+            case None                                              => throw new RepositoryAccessException.AccessDenied()
           }
 
           if (accessLevel <= minimumAccessLevel.role) {
