@@ -40,7 +40,7 @@
 @for(file <- node.files) {
 @if(!(ExcludedFileNames contains file.data)) {
 <div class="rz-menu-item">
-  <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+  <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRootEncoded)'>
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
     </div>
@@ -78,7 +78,7 @@
 </div>
 <div id="main">
   <div class="content">
-    @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name)) {
+    @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name), Symbol("enctype") -> "application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8") {
     @CSRF.formField
     <div class="repo-header">
       <div class="breadcrumbs">

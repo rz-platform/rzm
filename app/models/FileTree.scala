@@ -14,6 +14,7 @@ class FileNode(nodeValue: String, path: String) {
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
+  val pathWithoutRootEncoded: String = EncodedPath.fromString(pathWithoutRoot)
   def depth: Int = pathWithoutRoot.count(_ == '/') match {
     case x if !isRoot                      => x
     case _ if isRoot                       => 0

@@ -121,6 +121,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         join account
         on account.id = collaborator.user_id
         where repository_id = {repositoryId}
+        order by collaborator.id asc
         """)
           .on("repositoryId" -> repository.id)
           .as(simpleCollaborator.*)
@@ -138,6 +139,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
           left join collaborator on repository.id = collaborator.repository_id
           where repository.owner_id = $accountId
           or (collaborator.user_id = $accountId)
+          order by repository.id desc
       """.as(simple.*)
       }
     }(ec)
