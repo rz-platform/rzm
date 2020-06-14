@@ -89,10 +89,6 @@ class AccountController @Inject() (
     )
   }
 
-  trait AuthException
-  class UserDoesNotExist extends Exception with AuthException
-  class WrongPassword    extends Exception with AuthException
-
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
@@ -107,10 +103,10 @@ class AccountController @Inject() (
                     .withSession(SessionName.toString -> account.id.toString)
                 )
               } else {
-                throw new WrongPassword
+                throw new AuthException.WrongPassword
               }
             case _ =>
-              throw new UserDoesNotExist
+              throw new AuthException.UserDoesNotExist
           }
           .recover {
             case _: AuthException =>
@@ -124,9 +120,7 @@ class AccountController @Inject() (
   }
 
   def logout: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.AccountController.login()).withNewSession.flashing(
-      "success" -> Messages("logout")
-    )
+    Redirect(routes.AccountController.login()).withNewSession.flashing("success" -> Messages("logout"))
   }
 
   private def filledProfileForm(account: RichAccount): Form[AccountData] =

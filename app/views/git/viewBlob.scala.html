@@ -12,70 +12,67 @@
 
 
 @printNode(node: FileNode) = {
-@if(!node.isRoot) {
-<div class="file-tree-folder">
-}
-  <div class="rz-menu-item">
+<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }">
   <div class="rz-menu-link">
-    @if(!node.isRoot) {
-    @if(node.files.length > 0) {
-      <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon"/>
+    <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
+      @if(!node.isRoot) {
+        @if(node.files.length > 0) {
+          <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon"/>
+        } else {
+          <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon"/> }
+        }
+
+      @if(node.isRoot) {
+        @request.repository.name
       } else {
-      <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon"/>
+        @node.data
       }
-    }
-    @if(node.isRoot) {
-      @request.repository.name
-    } else {
-      @node.data
-    }
-    @uploadButton(node.pathWithoutRoot)
+
+      @uploadButton(node.pathWithoutRoot)
+    </div>
   </div>
 </div>
 
-<div class="rz-menu-item">
-  @for(folder <- node.folders) {
+@for(folder <- node.folders) {
   @printNode(folder)
-  }
+}
 
-  @for(file <- node.files) {
-  @if(!(ExcludedFileNames contains file.data)) {
-  <a class="rz-menu-link @if(file.pathWithoutRoot == path) { file-tree-node-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
-    <div class="file-item">
+@for(file <- node.files) {
+@if(!(ExcludedFileNames contains file.data)) {
+<div class="rz-menu-item">
+  <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRoot)'>
+    <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
     </div>
   </a>
-  }
-  }
 </div>
-@if(!node.isRoot) {
-</div>
+}
 }
 }
 
 @auth(breadcrumbs.fileName) {
-<div class="file-tree">
-    <div class="rz-menu-item">
-      <a class="rz-menu-link"
-         href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
-        <img src='@routes.Assets.at("images/users.svg")' class="svg-icon"/>
-        @request.messages("repository.tree.collaborators")
-      </a>
-    </div>
-    <div class="rz-menu-item">
-      <a class="rz-menu-link"
-         href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
-        <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
-        @request.messages("repository.tree.downloads")
-      </a>
-    </div>
-    <div class="rz-menu-item">
-      <a class="rz-menu-link"
-         href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
-        <img src='@routes.Assets.at("images/list.svg")' class="svg-icon"/>
-        @request.messages("repository.tree.commits")
-      </a>
-    </div>
+<div class="rz-menu rz-menu-file-tree">
+  <div class="rz-menu-item">
+    <a class="rz-menu-link"
+       href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
+      <img src='@routes.Assets.at("images/users.svg")' class="svg-icon"/>
+      @request.messages("repository.tree.collaborators")
+    </a>
+  </div>
+  <div class="rz-menu-item">
+    <a class="rz-menu-link"
+       href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
+      <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
+      @request.messages("repository.tree.downloads")
+    </a>
+  </div>
+  <div class="rz-menu-item">
+    <a class="rz-menu-link"
+       href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
+      <img src='@routes.Assets.at("images/list.svg")' class="svg-icon"/>
+      @request.messages("repository.tree.commits")
+    </a>
+  </div>
 
   @printNode(fileTree.root)
 </div>
@@ -100,7 +97,8 @@
         </a>
       </div>
       <div class="repo-header-last-modified">
-        @request.messages("repository.viewFile.lastModified", blob.latestCommit.commitTime, blob.latestCommit.committerName)
+        @request.messages("repository.viewFile.lastModified", blob.latestCommit.commitTime,
+        blob.latestCommit.committerName)
       </div>
     </div>
     @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
@@ -108,7 +106,7 @@
 
     <div class="actions">
       @if(blob.content.viewType == "text"){
-        <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
+      <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
       }
     </div>
 

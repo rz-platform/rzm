@@ -1,4 +1,4 @@
-.file-tree {
+.rz-menu-file-tree {
   margin-left: -$sidebar-width;
   width: $sidebar-width;
   position: fixed;
@@ -9,25 +9,20 @@
   overflow-y: auto;
   border-right: 1px solid #ebebeb;
 
-  .file-tree-node {
-    display: flex;
 
-    .upload-button {
-      margin-left: auto;
-      padding-right: 5px;
-    }
+  .upload-button {
+    margin-left: auto;
+    padding-right: 5px;
   }
 
-  .file-tree-node-chosen {
+  .rz-menu-file-tree-chosen {
     background-color: #ebebeb;
-  }
-
-  .file-tree-folder {
-    padding-left: 20px;
-    border-left: 1px solid #ebebeb;
   }
 }
 
-.file-item {
-  padding-left: 20px;
+@for $i from 0 through 4 {
+  .rz-menu-file-tree-depth-#{$i} {
+    width: 100%;
+    padding-left: $base-file-tree-padding * $i;
+  }
 }

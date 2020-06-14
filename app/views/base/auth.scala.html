@@ -6,8 +6,7 @@
   <div class="auth-user">
     <a href="@routes.AccountController.profilePage" class="rz-menu-link">
       @if(request.account.hasPicture) {
-      <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName"
-           class="profile-picture"/>
+      <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
       }
       @request.account.userName
     </a>
