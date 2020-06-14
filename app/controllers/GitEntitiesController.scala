@@ -1,6 +1,6 @@
 package controllers
 import java.io.File
-import java.nio.file.{ Files, Path, Paths }
+import java.nio.file.{ Files, Path }
 
 import actions.AuthenticatedRequest
 import akka.stream.IOResult
@@ -278,7 +278,11 @@ class GitEntitiesController @Inject() (
               )
               builder.finish()
           }
-        Future(Redirect(routes.GitEntitiesController.blob(accountName, repositoryName, "master", newPath)))
+        Future(
+          Redirect(
+            routes.GitEntitiesController.blob(accountName, repositoryName, "master", EncodedPath.fromString(newPath))
+          )
+        )
       }
 
       editorForm.bindFromRequest.fold(
@@ -291,7 +295,12 @@ class GitEntitiesController @Inject() (
               val blob     = gitRepository.blobFile(DecodedPath(path).toString, rev)
               blob match {
                 case Some(blob) =>
-                  Future(BadRequest(html.git.viewBlob(formWithErrors, blob, path, rev, Breadcrumbs(path), fileTree)))
+                  Future(
+                    BadRequest(
+                      html.git
+                        .viewBlob(formWithErrors, blob, EncodedPath.fromString(path), rev, Breadcrumbs(path), fileTree)
+                    )
+                  )
                 case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
               }
             case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
@@ -396,8 +405,9 @@ class GitEntitiesController @Inject() (
               data.path,
               Messages("repository.upload.message", files.length)
             )
-            Redirect(routes.GitEntitiesController.view(accountName, repositoryName, data.path, rev))
-              .flashing("success" -> Messages("repository.upload.success"))
+            Redirect(
+              routes.GitEntitiesController.view(accountName, repositoryName, EncodedPath.fromString(data.path), rev)
+            ).flashing("success" -> Messages("repository.upload.success"))
           }
         )
       }
