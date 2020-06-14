@@ -3,7 +3,6 @@ package models
 import scala.collection.mutable.ArrayBuffer
 
 class FileNode(nodeValue: String, path: String) {
-  private val logger = play.api.Logger(this.getClass)
   val folders = new ArrayBuffer[FileNode]()
   val files   = new ArrayBuffer[FileNode]()
 
@@ -16,10 +15,10 @@ class FileNode(nodeValue: String, path: String) {
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
   def depth: Int = pathWithoutRoot.count(_ == '/') match {
-      case x if !isRoot => x
-      case _ if isRoot => 0
-      case x if x > MaxDepthInFileTree.toInt => MaxDepthInFileTree.toInt
-    }
+    case x if !isRoot                      => x
+    case _ if isRoot                       => 0
+    case x if x > MaxDepthInFileTree.toInt => MaxDepthInFileTree.toInt
+  }
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
     val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
