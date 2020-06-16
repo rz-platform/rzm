@@ -28,6 +28,14 @@ create table repository (
  check (default_branch <> '')
 );
 
+create table ssh_keys (
+  id                        serial primary key,
+  account_id                bigint not null REFERENCES account(id),
+  public_key                varchar not null,
+  title                     varchar,
+  check (publicKey <> '')
+);
+
 create table collaborator (
  id               bigserial primary key,
  user_id          bigint not null REFERENCES account(id),
@@ -38,6 +46,8 @@ create table collaborator (
 
 CREATE UNIQUE INDEX account_usernamex ON account (username);
 CREATE UNIQUE INDEX account_mailx ON account (email);
+
+CREATE UNIQUE INDEX ssh_keys_accountx ON ssh_keys (account_id);
 
 CREATE INDEX repository_idx ON repository (name);
 CREATE INDEX repository_owner_idx ON repository (owner_id);

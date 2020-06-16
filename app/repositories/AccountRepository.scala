@@ -5,7 +5,7 @@ import java.util.Date
 import anorm.SqlParser.get
 import anorm._
 import javax.inject.{ Inject, Singleton }
-import models.{ AccountData, RichAccount, SimpleAccount }
+import models.{ AccountData, RichAccount, SimpleAccount, SshKey }
 import play.api.db.DBApi
 
 import scala.concurrent.Future
@@ -44,6 +44,12 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
           hasPicture,
           description
         )
+    }
+  }
+
+  val sshKeysSimple: RowParser[SshKey] = {
+    (get[Int]("ssh_keys.id") ~ get[String]("ssh_keys.public_key") ~ get[Option[String]]("ssh_keys.title")).map {
+      case id ~ publicKey ~ title => SshKey(id, publicKey, title)
     }
   }
 
@@ -140,6 +146,31 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
             "description" -> accountData.description.getOrElse(""),
             "id"          -> id
           )
+          .executeUpdate()
+      }
+    }(ec)
+
+  def insertSshKey(key: SshKey): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""insert into ssh_keys (account_id, publicKey, title) values (account_id, publicKey, title)""")
+          .bind(key)
+          .executeUpdate()
+      }
+    }(ec)
+
+  def userSshKeys(accountId: Long): Future[List[SshKey]] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""select * from ssh_keys where account_id = ${accountId}""")
+          .as(sshKeysSimple.*)
+      }
+    }(ec)
+
+  def deleteSshKeys(keyId: Long): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""delete from ssh_keys where id = ${keyId}""")
           .executeUpdate()
       }
     }(ec)
