@@ -73,6 +73,11 @@ POST /profile controllers.AccountController.editProfile
 POST /profilePassword controllers.AccountController.updatePassword
 POST  /uploadProfilePage controllers.AccountController.uploadProfilePicture()
 
+# SSH Keys
+GET /profile/keys controllers.AccountController.keysPage
+POST /profile/keys/add controllers.AccountController.addSshKey
+POST /profile/keys/delete controllers.AccountController.deleteSshKey
+
 # Commit log
 GET /repositories/:account/:repository/commits/:rev controllers.GitEntitiesController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
 GET /repositories/:account/:repository/commits/:rev/:page controllers.GitEntitiesController.commitLog(account:String, repository:String, rev: String, page: Int)

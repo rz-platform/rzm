@@ -1,0 +1,26 @@
+@(sshKeys: List[SshKey], sshKeyAdd: Form[SshKeyData], sshKeyDelete: Form[SshRemoveData])(implicit request: UserRequestHeader)
+@import views.html.helper._
+@import base._
+@import helpers._
+
+@auth("SSH keys") {
+  <h1>SSH keys</h1>
+  @notificationHeader()
+  @sshKeys.map { key =>
+    <p>@key.publicKey</p>
+@form(routes.AccountController.deleteSshKey()) {
+@CSRF.formField
+<input type="hidden" name="id" value='@key.id'/>
+<button class="rz-button" type="submit">Remove</button>
+}
+}
+
+
+  @form(routes.AccountController.addSshKey(), Symbol("class") -> "rz-form") {
+  @CSRF.formField
+  @textarea(sshKeyAdd("publicKey"), Symbol("_label") -> "Public Key", Symbol("_help") -> "")
+  <div class="actions"><input type="submit" value='Add SSH Key' class="rz-button rz-button-primary"/>
+  </div>
+  }
+
+}
