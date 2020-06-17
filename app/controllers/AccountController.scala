@@ -48,6 +48,21 @@ class AccountController @Inject() (
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
   )
 
+  val addSshKeyForm: Form[SshKeyData] = Form(
+    mapping(
+      "publicKey" -> nonEmptyText.verifying(
+        pattern(
+          "^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+/]+[=]{0,3}( [^@]+@[^@]+)?$".r
+        )
+      )
+    )(SshKeyData.apply)(SshKeyData.unapply)
+  )
+  val deleteSshKeyForm: Form[SshRemoveData] = Form(
+    mapping(
+      "id" -> number // TODO: check if positive
+    )(SshRemoveData.apply)(SshRemoveData.unapply)
+  )
+
   val userEditForm: Form[AccountData] = Form(
     mapping(
       "userName"    -> nonEmptyText,
@@ -243,6 +258,32 @@ class AccountController @Inject() (
     } else {
       NotFound
     }
+  }
+
+  def keysPage(): Action[AnyContent] = userAction.async { implicit request =>
+    accountService.userSshKeys(request.account.id).flatMap(keys => Future(Ok(html.sshKeys(keys, addSshKeyForm, deleteSshKeyForm))))
+  }
+
+  def addSshKey(): Action[AnyContent] = userAction.async { implicit request =>
+    addSshKeyForm.bindFromRequest.fold(
+      formWithErrors =>
+        accountService.userSshKeys(request.account.id).flatMap(keys => Future(Ok(html.sshKeys(keys, formWithErrors, deleteSshKeyForm)))),
+      sshKeyData =>
+        accountService.insertSshKey(request.account.id, sshKeyData.publicKey).flatMap { _ =>
+          Future(Redirect(routes.AccountController.keysPage()).flashing("success" -> "Ssh Key Added"))
+        }
+    )
+  }
+
+  def deleteSshKey(): Action[AnyContent] = userAction.async { implicit request =>
+    deleteSshKeyForm.bindFromRequest.fold(
+      formWithErrors =>
+        accountService.userSshKeys(request.account.id).flatMap(keys => Future(Ok(html.sshKeys(keys, addSshKeyForm, formWithErrors)))),
+      sshKeyIdData =>
+        accountService.deleteSshKeys(request.account.id, sshKeyIdData.id).flatMap { _ =>
+          Future(Redirect(routes.AccountController.keysPage()).flashing("success" -> "Ssh Key Removed"))
+        }
+    )
   }
 
   def removeProfilePicture(): Action[AnyContent] = userAction.async { implicit request =>

@@ -32,8 +32,7 @@ create table ssh_keys (
   id                        serial primary key,
   account_id                bigint not null REFERENCES account(id),
   public_key                varchar not null,
-  title                     varchar,
-  check (publicKey <> '')
+  check (public_key <> '')
 );
 
 create table collaborator (
