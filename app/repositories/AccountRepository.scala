@@ -156,9 +156,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
         SQL(s"""
              insert into ssh_keys (account_id, public_key) values ({account_id}, {publicKey})
              """)
-          .on("account_id" -> accountId,
-          "publicKey" -> publicKey
-          )
+          .on("account_id" -> accountId, "publicKey" -> publicKey)
           .executeUpdate()
       }
     }(ec)
