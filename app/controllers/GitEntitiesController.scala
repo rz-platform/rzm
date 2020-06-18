@@ -45,7 +45,7 @@ class GitEntitiesController @Inject() (
   val createRepositoryForm: Form[RepositoryData] = Form(
     mapping(
       "name" -> nonEmptyText(minLength = 1, maxLength = 36)
-        .verifying(pattern("^[A-Za-z\\d_\\-]+$".r)),
+        .verifying(pattern(RepositoryNameRegex.toRegex)),
       "description" -> optional(text(maxLength = 255))
     )(RepositoryData.apply)(RepositoryData.unapply)
   )
