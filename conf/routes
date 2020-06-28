@@ -51,9 +51,9 @@ POST /repositories/:account/:repository/upload/:rev controllers.GitEntitiesContr
 
 # Collaborators
 
-GET /repositories/:account/:repository/collaborators controllers.GitEntitiesController.addCollaboratorPage(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators controllers.GitEntitiesController.addCollaboratorAction(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators/remove controllers.GitEntitiesController.removeCollaboratorAction(account:String, repository:String)
+GET /repositories/:account/:repository/collaborators controllers.GitEntitiesController.collaboratorsPage(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators controllers.GitEntitiesController.addCollaborator(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators/remove controllers.GitEntitiesController.removeCollaborator(account:String, repository:String)
 
 # Creation / Editing
 

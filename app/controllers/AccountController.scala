@@ -77,9 +77,7 @@ class AccountController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def index(): Action[AnyContent] = userAction { implicit request =>
-    Redirect(routes.GitEntitiesController.list())
-  }
+  def index(): Action[AnyContent] = userAction(implicit request => Redirect(routes.GitEntitiesController.list()))
 
   def login: Action[AnyContent] = Action(implicit request => Ok(html.userLogin(loginForm)))
 

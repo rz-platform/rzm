@@ -7,7 +7,6 @@ lazy val root = (project in file("."))
     version := "2.8.x",
     maintainer := "eugenebosyakov@gmail.com",
     scalaVersion := "2.13.1",
-    excludeFilter := "node_modules" || ".cache", // FE deps and Parcel cache
     libraryDependencies ++= Seq(
       guice,
       jdbc,

@@ -98,7 +98,7 @@ class GitEntitiesController @Inject() (
   def repositoryActionOn(
     username: String,
     repositoryName: String,
-    minimumAccessLevel: AccessLevel = View
+    minimumAccessLevel: AccessLevel = ViewAccess
   ): ActionRefiner[UserRequest, RepositoryRequest] =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
@@ -117,7 +117,7 @@ class GitEntitiesController @Inject() (
           val (repository, collaborator) = data
 
           val accessLevel: Int = collaborator match {
-            case None if repository.owner.id == request.account.id => Owner.role
+            case None if repository.owner.id == request.account.id => OwnerAccess.role
             case Some(accessLevel)                                 => accessLevel
             case None                                              => throw new RepositoryAccessException.AccessDenied()
           }
@@ -236,7 +236,7 @@ class GitEntitiesController @Inject() (
     )
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Edit)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
       val editFile = { editedFile: EditedItem =>
@@ -330,7 +330,7 @@ class GitEntitiesController @Inject() (
   }
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Edit)) { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit request =>
       addNewItemToRepForm.bindFromRequest.fold(
         formWithErrors =>
           Redirect(
@@ -380,7 +380,7 @@ class GitEntitiesController @Inject() (
    */
   def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
     authenticatedAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryActionOn(accountName, repositoryName, Edit)) { implicit req =>
+      .andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit req =>
         uploadFileForm.bindFromRequest.fold(
           formWithErrors =>
             BadRequest(
@@ -413,29 +413,27 @@ class GitEntitiesController @Inject() (
       }
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Edit)) { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit request =>
       Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString))
     }
 
-  def addCollaboratorPage(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Owner)).async { implicit request =>
-      gitEntitiesRepository.getCollaborators(request.repository).map { collaborators: Seq[Collaborator] =>
-        Ok(html.git.addCollaborator(addCollaboratorForm, collaborators))
-      }
+  def collaboratorsPage(accountName: String, repositoryName: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async {
+      implicit request =>
+        gitEntitiesRepository.getCollaborators(request.repository).map { collaborators: Seq[Collaborator] =>
+          Ok(html.git.collaborators(addCollaboratorForm, collaborators))
+        }
     }
 
-  private def getCollaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
-    Redirect(
-      routes.GitEntitiesController
-        .addCollaboratorPage(req.repository.owner.userName, req.repository.name)
-    )
+  private def collaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
+    Redirect(routes.GitEntitiesController.collaboratorsPage(req.repository.owner.userName, req.repository.name))
 
-  def addCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Owner)).async { implicit req =>
+  def addCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async { implicit req =>
       addCollaboratorForm.bindFromRequest.fold(
         formWithErrors =>
           gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.git.addCollaborator(formWithErrors, collaborators))
+            BadRequest(html.git.collaborators(formWithErrors, collaborators))
           },
         (data: NewCollaboratorData) =>
           accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
@@ -448,30 +446,30 @@ class GitEntitiesController @Inject() (
                       .createCollaborator(
                         req.repository.id,
                         futureCollaborator.id,
-                        AccessLevel.fromString(data.accessLevel).getOrElse(View).role
+                        AccessLevel.fromString(data.accessLevel).getOrElse(ViewAccess).role
                       )
-                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
+                      .flatMap(_ => Future(collaboratorPageRedirect(req)))
                   case Some(_) =>
                     Future(
-                      getCollaboratorPageRedirect(req)
+                      collaboratorPageRedirect(req)
                         .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
                     )
                 }
             case None =>
               Future(
-                getCollaboratorPageRedirect(req)
+                collaboratorPageRedirect(req)
                   .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
               )
           }
       )
     }
 
-  def removeCollaboratorAction(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, Owner)).async { implicit req =>
+  def removeCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async { implicit req =>
       removeCollaboratorForm.bindFromRequest.fold(
         _ =>
           gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.git.addCollaborator(addCollaboratorForm, collaborators))
+            BadRequest(html.git.collaborators(addCollaboratorForm, collaborators))
           },
         data =>
           accountRepository.getByLoginOrEmail(data.email).flatMap {
@@ -482,12 +480,12 @@ class GitEntitiesController @Inject() (
                   case Some(_) =>
                     gitEntitiesRepository
                       .removeCollaborator(req.repository.id, collaborator.id)
-                      .flatMap(_ => Future(getCollaboratorPageRedirect(req)))
-                  case None => Future(getCollaboratorPageRedirect(req))
+                      .flatMap(_ => Future(collaboratorPageRedirect(req)))
+                  case None => Future(collaboratorPageRedirect(req))
                 }
             case None =>
               Future(
-                getCollaboratorPageRedirect(req)
+                collaboratorPageRedirect(req)
                   .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
               )
           }
@@ -499,7 +497,7 @@ class GitEntitiesController @Inject() (
     repositoryName: String,
     revision: String = "master"
   ): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, View)) { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)) { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
       Ok.sendFile(
@@ -510,7 +508,7 @@ class GitEntitiesController @Inject() (
     }
 
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, View)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)).async { implicit request =>
       val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
 
       val commitLog = gitRepository.getCommitsLog(rev, page, 30)
