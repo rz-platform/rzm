@@ -37,14 +37,14 @@ class AuthenticatedRequest @Inject() (
           block(new UserRequest[A](request, account, messagesApi))
         case None =>
           Future.successful {
-            Redirect(routes.AccountController.login()).withNewSession.flashing("error" -> "unauthorized")
+            Redirect(routes.AccountController.login()).withNewSession
           }
       }
     }
 
     maybeFutureResult.getOrElse {
       Future.successful {
-        Redirect(routes.AccountController.login()).withNewSession.flashing("error" -> "unauthorized")
+        Redirect(routes.AccountController.login()).withNewSession
       }
     }
   }
