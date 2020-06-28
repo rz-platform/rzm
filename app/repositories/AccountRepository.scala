@@ -48,7 +48,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   }
 
   val sshKeysSimple: RowParser[SshKey] = {
-    (get[Int]("ssh_keys.id") ~ get[String]("ssh_keys.public_key")).map {
+    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key")).map {
       case id ~ publicKey => SshKey(id, publicKey)
     }
   }
@@ -154,9 +154,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
-             insert into ssh_keys (account_id, public_key) values ({account_id}, {publicKey})
+             insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})
              """)
-          .on("account_id" -> accountId, "publicKey" -> publicKey)
+          .on("accountId" -> accountId, "publicKey" -> publicKey)
           .executeUpdate()
       }
     }(ec)
@@ -164,7 +164,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def userSshKeys(accountId: Long): Future[List[SshKey]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select * from ssh_keys where account_id = ${accountId}""")
+        SQL(s"""select * from ssh_key where account_id = ${accountId}""")
           .as(sshKeysSimple.*)
       }
     }(ec)
@@ -172,7 +172,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def deleteSshKeys(accountId: Long, keyId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""delete from ssh_keys where id = ${keyId} and account_id=${accountId}""")
+        SQL(s"""delete from ssh_key where id = {keyId} and account_id={accountId}""")
+          .on("accountId" -> accountId, "keyId" -> keyId)
           .executeUpdate()
       }
     }(ec)

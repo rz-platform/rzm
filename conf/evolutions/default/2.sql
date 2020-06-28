@@ -7,4 +7,4 @@ insert into account(username, full_name, email, password, created_at) values
 
 # --- !Downs
 
-TRUNCATE TABLE collaborator, account, repository RESTART IDENTITY;
+TRUNCATE TABLE collaborator, account, repository, ssh_key RESTART IDENTITY;

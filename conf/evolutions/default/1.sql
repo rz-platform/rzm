@@ -28,7 +28,7 @@ create table repository (
  check (default_branch <> '')
 );
 
-create table ssh_keys (
+create table ssh_key (
   id                        serial primary key,
   account_id                bigint not null REFERENCES account(id),
   public_key                varchar not null,
@@ -46,17 +46,22 @@ create table collaborator (
 CREATE UNIQUE INDEX account_usernamex ON account (username);
 CREATE UNIQUE INDEX account_mailx ON account (email);
 
-CREATE UNIQUE INDEX ssh_keys_accountx ON ssh_keys (account_id);
+CREATE INDEX ssh_key_accountx ON ssh_key (account_id);
 
-CREATE INDEX repository_idx ON repository (name);
+CREATE INDEX collaborator_user_idx ON collaborator (user_id);
+
+CREATE INDEX repository_namex ON repository (name);
 CREATE INDEX repository_owner_idx ON repository (owner_id);
 
 # --- !Downs
 
-drop table if exists collaborator, account, repository;
+drop table if exists collaborator, account, repository, ssh_key;
 
 drop index if exists account_usernamex;
 drop index if exists account_mailx;
 
-drop index if exists repository_idx;
+drop index if exists collaborator_user_idx;
+drop index if exists ssh_key_accountx;
+
+drop index if exists repository_namex;
 drop index if exists repository_owner_idx;
