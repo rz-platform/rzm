@@ -54,7 +54,7 @@
 <div class="rz-menu rz-menu-file-tree">
   <div class="rz-menu-item">
     <a class="rz-menu-link"
-       href="@routes.GitEntitiesController.addCollaboratorPage(request.repository.owner.userName, request.repository.name)">
+       href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)">
       <img src='@routes.Assets.at("images/users.svg")' class="svg-icon"/>
       @request.messages("repository.tree.collaborators")
     </a>

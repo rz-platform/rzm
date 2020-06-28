@@ -3,18 +3,18 @@ package controllers
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
+import org.scalatest.time.{ Millis, Seconds, Span }
+import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
 import play.api.db.evolutions.Evolutions
-import play.api.db.{DBApi, Database}
-import play.api.mvc.{Flash, Result}
+import play.api.db.{ DBApi, Database }
+import play.api.mvc.{ Flash, Result }
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import repositories.{AccountRepository, GitEntitiesRepository, GitRepository}
+import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
 
 import scala.concurrent.Future
 
@@ -33,9 +33,9 @@ class FunctionalGitEntitiesTest
   def getRandomString: String =
     java.util.UUID.randomUUID.toString
 
-  def databaseApi: DBApi                = app.injector.instanceOf[DBApi]
-  def config: Configuration             = app.injector.instanceOf[Configuration]
-  def controller: GitEntitiesController  = app.injector.instanceOf[GitEntitiesController]
+  def databaseApi: DBApi                   = app.injector.instanceOf[DBApi]
+  def config: Configuration                = app.injector.instanceOf[Configuration]
+  def controller: GitEntitiesController    = app.injector.instanceOf[GitEntitiesController]
   def AccountController: AccountController = app.injector.instanceOf[AccountController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
@@ -81,43 +81,43 @@ class FunctionalGitEntitiesTest
   }
 
   def addCollaborator(
-                       controller: GitEntitiesController,
-                       repositoryName: String,
-                       owner: SimpleAccount,
-                       collaboratorName: String,
-                       accessLevel: String
+    controller: GitEntitiesController,
+    repositoryName: String,
+    owner: SimpleAccount,
+    collaboratorName: String,
+    accessLevel: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.GitEntitiesController.addCollaboratorAction(owner.userName, repositoryName))
+      FakeRequest(routes.GitEntitiesController.addCollaborator(owner.userName, repositoryName))
         .withFormUrlEncodedBody("emailOrLogin" -> collaboratorName, "accessLevel" -> accessLevel)
         .withSession(("user_id", owner.id.toString))
     )
 
-    await(controller.addCollaboratorAction(owner.userName, repositoryName).apply(request))
+    await(controller.addCollaborator(owner.userName, repositoryName).apply(request))
   }
 
   def removeCollaborator(
-                          controller: GitEntitiesController,
-                          repositoryName: String,
-                          owner: SimpleAccount,
-                          collaboratorName: String
+    controller: GitEntitiesController,
+    repositoryName: String,
+    owner: SimpleAccount,
+    collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.GitEntitiesController.removeCollaboratorAction(owner.userName, repositoryName))
+      FakeRequest(routes.GitEntitiesController.removeCollaborator(owner.userName, repositoryName))
         .withFormUrlEncodedBody("email" -> collaboratorName)
         .withSession(("user_id", owner.id.toString))
     )
 
-    await(controller.removeCollaboratorAction(owner.userName, repositoryName).apply(request))
+    await(controller.removeCollaborator(owner.userName, repositoryName).apply(request))
   }
 
   def createNewItem(
-                     controller: GitEntitiesController,
-                     name: String,
-                     repositoryName: String,
-                     creator: SimpleAccount,
-                     isFolder: Boolean,
-                     path: String
+    controller: GitEntitiesController,
+    name: String,
+    repositoryName: String,
+    creator: SimpleAccount,
+    isFolder: Boolean,
+    path: String
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
@@ -337,7 +337,7 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
+      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
 
       result.header.status must equal(303)
       defaultDatabase.withConnection { connection =>
@@ -345,7 +345,7 @@ class FunctionalGitEntitiesTest
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${Edit.role}"
+              s"and role=${EditAccess.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
@@ -357,7 +357,7 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      addCollaborator(controller, repoName, owner, "nonexistentusername", Edit.toString)
+      addCollaborator(controller, repoName, owner, "nonexistentusername", EditAccess.toString)
 
       defaultDatabase.withConnection { connection =>
         val isCollaboratorExist = connection
@@ -375,7 +375,7 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
-      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
+      val result       = addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
 
       result.header.status must equal(303)
       defaultDatabase.withConnection { connection =>
@@ -383,13 +383,13 @@ class FunctionalGitEntitiesTest
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${Edit.role}"
+              s"and role=${EditAccess.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
       }
 
-      addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
+      addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
       result.header.status must equal(303)
     }
 
@@ -399,13 +399,13 @@ class FunctionalGitEntitiesTest
       createRepository(controller, repoName, owner)
       val collaborator = createUser()
 
-      addCollaborator(controller, repoName, owner, collaborator.userName, Edit.toString)
+      addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
       defaultDatabase.withConnection { connection =>
         val collaboratorStatement = connection
           .prepareStatement(
             s"select 1 FROM collaborator WHERE user_id=${collaborator.id}" +
               s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${Edit.role}"
+              s"and role=${EditAccess.role}"
           )
           .executeQuery()
         collaboratorStatement.next() must equal(true)
