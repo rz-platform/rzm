@@ -1,5 +1,16 @@
 @()(implicit request: RepositoryRequestHeader)
 
-<div class="repo-name">
-  @request.repository.owner.userName / <a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)'>@request.repository.name</a>
+<div class="rz-menu rz-menu-horizontal">
+  <span class="repository-name">@request.repository.owner.userName / <a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)'>@request.repository.name</a> → </span>
+  <ul class="rz-menu-list">
+    <li class="rz-menu-item">
+      <a href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)" class="rz-menu-link">@request.messages("repository.tree.collaborators")</a>
+    </li>
+    <li class="rz-menu-item">
+      <a href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)" class="rz-menu-link">@request.messages("repository.tree.downloads")</a>
+    </li>
+    <li class="rz-menu-item">
+      <a href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)" class="rz-menu-link">@request.messages("repository.tree.commits")</a>
+    </li>
+  </ul>
 </div>

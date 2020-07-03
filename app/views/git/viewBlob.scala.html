@@ -5,7 +5,7 @@
 @import helpers._
 
 @uploadButton(path: String) = {
-<a class="upload-button" href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
+<a class="rz-file-tree-upload-button" href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
   <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
 </a>
 }
@@ -50,37 +50,19 @@
 }
 }
 
-@auth(breadcrumbs.fileName) {
-<div class="rz-menu rz-menu-file-tree">
-  <div class="rz-menu-item">
-    <a class="rz-menu-link"
-       href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)">
-      <img src='@routes.Assets.at("images/users.svg")' class="svg-icon"/>
-      @request.messages("repository.tree.collaborators")
-    </a>
-  </div>
-  <div class="rz-menu-item">
-    <a class="rz-menu-link"
-       href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name)">
-      <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
-      @request.messages("repository.tree.downloads")
-    </a>
-  </div>
-  <div class="rz-menu-item">
-    <a class="rz-menu-link"
-       href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)">
-      <img src='@routes.Assets.at("images/list.svg")' class="svg-icon"/>
-      @request.messages("repository.tree.commits")
-    </a>
-  </div>
+@auth(breadcrumbs.fileName, true) {
+<div class="rz-sidebar">
+    <div class="rz-sidebar-filetree">
+      <div class="rz-menu-file-tree">
+        @printNode(fileTree.root)
+      </div>
+    </div>
 
-  @printNode(fileTree.root)
-</div>
-<div id="main">
-  <div class="content">
-    @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name), Symbol("enctype") -> "application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8") {
+    <div class="rz-editor-content">
+      @repositoryHeader()
+    @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name), Symbol("enctype") -> "application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
     @CSRF.formField
-    <div class="repo-header">
+    <div class="rz-editor-content-header">
       <div class="breadcrumbs">
         <span class="breadcrumbs-repo-name">@request.repository.name</span> <span class="breadcrumbs-divider">/</span>
 
@@ -89,8 +71,12 @@
         }
 
         @inputText(editorForm("fileName"), Symbol("_label") -> "", Symbol("_help") -> "")
-
-        <a class="rz-button repo-header-download-button"
+      </div>
+      <div class="actions">
+        @if(blob.content.viewType == "text"){
+        <input type="submit" class="rz-button button-small" value='@request.messages("repository.edit.submit")'/>
+        }
+        <a class="rz-button button-small"
            href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
           <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
           @request.messages("repository.viewFile.raw")
@@ -101,20 +87,11 @@
         blob.latestCommit.committerName)
       </div>
     </div>
-    @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
-    @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "")
-
-    <div class="actions">
-      @if(blob.content.viewType == "text"){
-      <input type="submit" class="rz-button" value='@request.messages("repository.edit.submit")'/>
-      }
-    </div>
-
+    @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
+    @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
     @if(blob.content.viewType == "text"){
-    @textarea(editorForm("content"), Symbol("class") -> "editor", Symbol("id") -> "code", Symbol("_label") -> "",
-    Symbol("_help") -> "")
+      <div class="code-wrap"><textarea class="editor" id="code">@blob.content.content.getOrElse("")</textarea></div>
     }
-
     @if(blob.content.viewType == "image"){
     <img
       src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"/>
@@ -129,6 +106,5 @@
     }
   </div>
 </div>
-
 <script src='@routes.Assets.at("dist/javascript/view.js")' type="text/javascript"></script>
 }

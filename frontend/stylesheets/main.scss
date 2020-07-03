@@ -4,23 +4,22 @@
 
 // Configuration and helpers
 @import
-  'abstracts/variables',
-  '~codemirror/lib/codemirror'
-  ;
+  'abstracts/variables';
 
 // Vendors
 @import
-  'vendors/normalize';
+  '~codemirror/lib/codemirror',
+  '~codemirror/theme/idea';
 
 // Base stuff
 @import
-  'base/grid',
   'base/typography';
 
 // Layout-related sections
 @import
   'layout/header',
-  'layout/content';
+  'layout/container',
+  'layout/layout';
 
 // Components
 @import
@@ -28,8 +27,7 @@
   'components/repoHeader',
   'components/forms',
   'components/menus',
-  'components/icons',
-  'components/fileTree';
+  'components/icons';
 
 // Page-specific styles
 @import

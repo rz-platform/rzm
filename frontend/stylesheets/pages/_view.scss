@@ -1,35 +1,98 @@
-.CodeMirror {
-    height: 600px;
+.rz-menu-file-tree-chosen {
+  background-color: #ebebeb;
 }
 
-.repo-header {
-  margin-bottom: 20px;
+@for $i from 0 through 4 {
+  .rz-menu-file-tree-depth-#{$i} {
+    width: 100%;
+    padding-left: $base-file-tree-padding * $i;
+  }
+}
 
-  .breadcrumbs {
-    display: flex;
-    margin-top: 20px;
-    font-size: 18px;
+.rz-file-tree-upload-button {
+  margin-left: auto; // TODO
+}
 
-    .breadcrumbs-repo-name {
+.breadcrumbs {
+  display: flex;
+  font-size: 18px;
+  flex-direction: row;
+  padding-left: 10px;
 
-    }
-
-    .repo-header-download-button {
-      margin-left: auto;
-    }
-
-    .breadcrumbs-divider {
-      color: #ccc;
-      padding-left: 5px;
-      padding-right: 5px;
-    }
-
-    dl {
-      margin: 0px;
-    }
+  .breadcrumbs-divider {
+    color: #ccc;
+    padding-left: 5px;
+    padding-right: 5px;
   }
 
-  .repo-header-last-modified {
-    color: #6a737d;
+  dl {
+    margin: 0px;
   }
+}
+
+.repo-header-last-modified {
+  color: #6a737d;
+}
+@media (min-width: 992px) {
+.rz-sidebar {
+  display: flex;
+  flex-direction: row;
+  min-height: calc(100%-52px);
+}
+
+.rz-sidebar > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.rz-sidebar-filetree {
+  max-width: 300px;
+  border-right: 1px solid #ebebeb;
+  overflow-x: hidden;
+  flex:1 1 auto;
+  position: relative;
+}
+
+.rz-editor-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+}
+
+.code-wrap {
+  flex:1 1 auto;
+  margin-top:0;
+  height:100%;
+  position:relative;
+}
+.CodeMirror {
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  height:100%;
+}
+.rz-menu-file-tree {
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  right:0;
+  height:100%;
+}
+
+}
+.rz-editor-content-header {
+  display: flex;
+  flex-direction: row;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.rz-editor-content-header > div {
+  margin-right: 15px;
 }
