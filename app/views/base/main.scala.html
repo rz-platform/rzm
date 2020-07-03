@@ -1,4 +1,4 @@
-@(title: String)(body: Html, header: Html)(implicit request: RequestHeader)
+@(title: String)(body: Html, header: Html, fluid: Boolean = false)(implicit request: RequestHeader)
 <!doctype html>
 <html lang="en">
   <head>
@@ -13,8 +13,12 @@
       </div>
       @header
     </header>
-    <div id="layout">
-      @body
-    </div>
+      @if(!fluid) {
+        <div class="container">
+        }
+        @body
+        @if(!fluid) {
+          </div>
+        }
   </body>
 </html>

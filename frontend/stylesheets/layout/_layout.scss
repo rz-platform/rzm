@@ -1,0 +1,13 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#layout, main {
+  min-height: 100%;
+}
+
+.hidden {
+  display: none;
+}

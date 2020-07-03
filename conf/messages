@@ -87,7 +87,7 @@ repository.upload.messageRoot=Uploading files to the project root
 repository.upload.message=Uploaded {0} files
 
 repository.viewFile.title=View file
-repository.viewFile.raw=Download
+repository.viewFile.raw=Download file
 repository.viewFile.edit=Edit
 repository.viewFile.cant=We can't dispay file. Download by direct link
 repository.viewFile.lastModified=Last modified on {0} by {1}

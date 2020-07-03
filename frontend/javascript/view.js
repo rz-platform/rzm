@@ -11,5 +11,6 @@ var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     matchBrackets: true,
     mode: "text/x-stex",
     autofocus: true,
-    lineWrapping: true
+    lineWrapping: true,
+    theme: 'idea'
 });
