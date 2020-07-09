@@ -48,8 +48,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   }
 
   val sshKeysSimple: RowParser[SshKey] = {
-    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key")).map {
-      case id ~ publicKey => SshKey(id, publicKey)
+    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key") ~ get[Date]("ssh_key.created_at")).map {
+      case id ~ publicKey ~ createdAt => SshKey(id, publicKey, createdAt)
     }
   }
 
@@ -150,21 +150,31 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def insertSshKey(accountId: Long, publicKey: String): Future[Int] =
+  def insertSshKey(accountId: Long, key: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
              insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})
              """)
-          .on("accountId" -> accountId, "publicKey" -> publicKey)
+          .on("accountId" -> accountId, "publicKey" -> key)
           .executeUpdate()
+      }
+    }(ec)
+
+  def numberOfUserSshKeys(accountId: Long): Future[Int] =
+    Future {
+      db.withConnection { implicit connection =>
+        SQL(s"""select count(id) as c from ssh_key where account_id = {accountId}""")
+          .on("accountId" -> accountId)
+          .as(SqlParser.int("c").single)
       }
     }(ec)
 
   def userSshKeys(accountId: Long): Future[List[SshKey]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select * from ssh_key where account_id = ${accountId}""")
+        SQL(s"""select * from ssh_key where account_id = {accountId}""")
+          .on("accountId" -> accountId)
           .as(sshKeysSimple.*)
       }
     }(ec)
@@ -178,25 +188,26 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def hasPicture(id: Long): Future[Int] =
+  def hasPicture(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
           UPDATE account
           SET has_picture = true
-          WHERE id = ${id}
-      """).executeUpdate()
+          WHERE id = {accountId}
+      """).on("accountId" -> accountId)
+          .executeUpdate()
       }
     }(ec)
 
-  def removePicture(id: Long): Future[Int] =
+  def removePicture(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
           UPDATE account
           SET has_picture = false
-          WHERE id = ${id}
-      """).executeUpdate()
+          WHERE id = {accountId}
+      """).on("accountId" -> accountId).executeUpdate()
       }
     }(ec)
 

@@ -41,6 +41,16 @@ profile.error.missingpicture = File not attached
 profile.picture.delete.success = Profile picture has been deleted
 profile.delete.picture = Delete picture
 
+profile.ssh.title=SSH keys
+profile.ssh.header=SSH keys
+profile.ssh.createdAt=Added at {0}
+profile.ssh.remove=Remove
+profile.ssh.addkeytitle=New public Key
+profile.ssh.addplaceholder=Begins with 'ssh-rsa', 'ssh-ed25519', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', or 'ecdsa-sha2-nistp521'
+profile.ssh.notification.added=Ssh Key Added
+profile.ssh.notification.removed=Ssh Key Removed
+profile.ssh.notification.toomuch=Too many keys
+
 repository.collaborator.title=Repository collaborators
 repository.collaborator.emailOrLogin=User login or email
 repository.collaborator.accessLevel=Access Level

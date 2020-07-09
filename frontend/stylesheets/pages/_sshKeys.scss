@@ -1,0 +1,32 @@
+.ssh-key-block {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  padding-left: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 4px;
+
+  span:first-child {
+    font-weight: bold;
+  }
+
+  div:last-child {
+    padding-left: 15px;
+  }
+
+  span {
+    padding-top: 5px;
+    display: block;
+  }
+}
+
+.ssh-key-textarea {
+  width: 100%;
+  height: 100px;
+}
+
+.ssh-key-actions {
+  margin-top: 60px;
+}

@@ -32,7 +32,8 @@ create table ssh_key (
   id                        serial primary key,
   account_id                bigint not null REFERENCES account(id),
   public_key                varchar not null,
-  check (public_key <> '')
+  created_at                timestamp with time zone not null default now(),
+  check (public_key  <> '')
 );
 
 create table collaborator (
