@@ -27,9 +27,10 @@ class AccountController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val picturesDir: File  = new File(config.get[String]("play.server.media.pictures_path"))
-  private val maxStaticSize: Int = config.get[String]("play.server.media.max_size_bytes").toInt
-  private val thumbSize: Int     = config.get[String]("play.server.media.thumbnail_size").toInt
+  private val picturesDir: File         = new File(config.get[String]("play.server.media.pictures_path"))
+  private val maxStaticSize: Int        = config.get[String]("play.server.media.max_size_bytes").toInt
+  private val thumbSize: Int            = config.get[String]("play.server.media.thumbnail_size").toInt
+  private val maximumNumberPerUser: Int = config.get[String]("play.server.ssh.maximumNumberPerUser").toInt
 
   if (!picturesDir.exists) {
     picturesDir.mkdirs()
@@ -273,8 +274,19 @@ class AccountController @Inject() (
           .userSshKeys(request.account.id)
           .flatMap(keys => Future(Ok(html.sshKeys(keys, formWithErrors, deleteSshKeyForm)))),
       sshKeyData =>
-        accountService.insertSshKey(request.account.id, sshKeyData.publicKey).flatMap { _ =>
-          Future(Redirect(routes.AccountController.keysPage()).flashing("success" -> "Ssh Key Added"))
+        accountService.numberOfUserSshKeys(request.account.id).flatMap {
+          case n if n < maximumNumberPerUser =>
+            accountService.insertSshKey(request.account.id, sshKeyData.publicKey).flatMap { _ =>
+              Future(
+                Redirect(routes.AccountController.keysPage())
+                  .flashing("success" -> Messages("profile.ssh.notification.added"))
+              )
+            }
+          case n if n >= maximumNumberPerUser =>
+            Future(
+              Redirect(routes.AccountController.keysPage())
+                .flashing("error" -> Messages("profile.ssh.notification.toomuch"))
+            )
         }
     )
   }
@@ -287,7 +299,10 @@ class AccountController @Inject() (
           .flatMap(keys => Future(Ok(html.sshKeys(keys, addSshKeyForm, formWithErrors)))),
       sshKeyIdData =>
         accountService.deleteSshKeys(request.account.id, sshKeyIdData.id).flatMap { _ =>
-          Future(Redirect(routes.AccountController.keysPage()).flashing("success" -> "Ssh Key Removed"))
+          Future(
+            Redirect(routes.AccountController.keysPage())
+              .flashing("success" -> Messages("profile.ssh.notification.removed"))
+          )
         }
     )
   }
