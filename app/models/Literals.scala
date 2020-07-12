@@ -19,10 +19,9 @@ case object SessionName extends Literal {
   val value = "user_id"
 }
 
-case object ForbiddenSymbols extends Literal {
-  override def value: String = "?:#/&"
-
-  def toList: Array[String] = value.split("")
+case object ForbiddenSymbols {
+  private val blockList: List[String]        = List("?", ":", "#", "/", "&", "..", "$", "%")
+  def isNameValid(itemName: String): Boolean = blockList.exists(itemName contains _)
 }
 
 object ExcludedFileNames {

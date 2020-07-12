@@ -79,6 +79,7 @@ repository.edit.form.filename = File name
 repository.edit.form.content = Content
 repository.edit.form.message = Commit message
 repository.edit.submit=Save
+repository.edit.invalid.name=File name contains invalid symbols
 
 repository.list.title=Repositories
 repository.list.createNew=Create a New Repository

@@ -87,6 +87,7 @@
         blob.latestCommit.committerName)
       </div>
     </div>
+    @notificationHeader()
     @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
     @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
     @if(blob.content.viewType == "text"){

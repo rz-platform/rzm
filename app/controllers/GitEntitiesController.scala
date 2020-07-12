@@ -13,7 +13,7 @@ import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
 import play.api.data.validation.Constraints._
-import play.api.data.validation.{ Constraint, Invalid, Valid }
+import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
 import play.api.http.HttpEntity
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.streams.Accumulator
@@ -67,10 +67,8 @@ class GitEntitiesController @Inject() (
   val excludedSymbolsForFileName: List[Char] = List('/', ':', '#')
 
   val checkForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
-    if (!excludedSymbolsForFileName.exists(itemName contains _))
-      Valid
-    else
-      Invalid("")
+    if (!ForbiddenSymbols.isNameValid(itemName)) Valid
+    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
   }
 
   val addNewItemToRepForm: Form[NewItem] = Form(
@@ -138,36 +136,38 @@ class GitEntitiesController @Inject() (
   private def clearRepositoryData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
     form.map {
-      case (key, values) if key == "name" => (key, values.map(_.trim.toLowerCase()))
+      case (key, values) if key == "name"        => (key, values.map(_.trim.toLowerCase()))
       case (key, values) if key == "description" => (key, values.map(_.trim))
-      case (key, values) => (key, values)
+      case (key, values)                         => (key, values)
     }
   }
 
   def saveRepository: Action[AnyContent] = authenticatedAction.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
-    val cleanData = clearRepositoryData(incomingData)
-    createRepositoryForm.bindFromRequest(cleanData).fold(
-      formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
-      repository =>
-        gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
-          case None =>
-            gitEntitiesRepository.insertRepository(request.account.id, repository).map { _ =>
-              val git = new GitRepository(request.account, repository.name, gitHome)
-              git.create()
-              Redirect(routes.GitEntitiesController.list())
-                .flashing("success" -> Messages("repository.create.flash.success"))
-            }
-          case Some(_) =>
-            val formBuiltFromRequest = createRepositoryForm.bindFromRequest
-            val newForm = createRepositoryForm.bindFromRequest.copy(
-              errors = formBuiltFromRequest.errors ++ Seq(
-                FormError("name", Messages("repository.create.error.alreadyexists"))
+    val cleanData    = clearRepositoryData(incomingData)
+    createRepositoryForm
+      .bindFromRequest(cleanData)
+      .fold(
+        formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
+        repository =>
+          gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
+            case None =>
+              gitEntitiesRepository.insertRepository(request.account.id, repository).map { _ =>
+                val git = new GitRepository(request.account, repository.name, gitHome)
+                git.create()
+                Redirect(routes.GitEntitiesController.list())
+                  .flashing("success" -> Messages("repository.create.flash.success"))
+              }
+            case Some(_) =>
+              val formBuiltFromRequest = createRepositoryForm.bindFromRequest
+              val newForm = createRepositoryForm.bindFromRequest.copy(
+                errors = formBuiltFromRequest.errors ++ Seq(
+                  FormError("name", Messages("repository.create.error.alreadyexists"))
+                )
               )
-            )
-            Future(BadRequest(html.git.createRepository(newForm)))
-        }
-    )
+              Future(BadRequest(html.git.createRepository(newForm)))
+          }
+      )
   }
 
   /**
@@ -248,79 +248,92 @@ class GitEntitiesController @Inject() (
       }
     }
 
-  def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async { implicit request =>
-      val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+  private def editFile(
+    editedFile: EditedItem,
+    gitRepository: GitRepository,
+    accountName: String,
+    repositoryName: String
+  )(request: RepositoryRequest[AnyContent]): Future[Result] = {
+    val oldPath = DecodedPath(editedFile.path).toString
+    val newPath = DecodedPath(
+      DecodedPath(editedFile.path).pathWithoutFilename,
+      editedFile.fileName,
+      isFolder = false
+    ).toString
 
-      val editFile = { editedFile: EditedItem =>
-        val oldPath = DecodedPath(editedFile.path).toString
-        val newPath = DecodedPath(
-          DecodedPath(editedFile.path).pathWithoutFilename,
-          editedFile.fileName,
-          isFolder = false
-        ).toString
+    val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
 
-        val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
-
-        gitRepository
-          .commitFiles(
-            editedFile.rev,
-            DecodedPath(editedFile.path).pathWithoutFilename,
-            Messages("repository.viewFile.commitMessage", DecodedPath(editedFile.path).nameWithoutPath),
-            request.account
-          ) {
-            case (git, headTip, builder, inserter) =>
-              val permission = gitRepository
-                .processTree(git, headTip) { (path, tree) =>
-                  // Add all entries except the editing file
-                  if (!newPath.contains(path) && !oldPath.contains(path)) {
-                    builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
-                  }
-                  // Retrieve permission if file exists to keep it
-                  oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
-                }
-                .flatten
-                .headOption
-
-              builder.add(
-                gitRepository.createDirCacheEntry(
-                  newPath,
-                  permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
-                  inserter.insert(Constants.OBJ_BLOB, content)
-                )
-              )
-              builder.finish()
-          }
-        Future(
-          Redirect(
-            routes.GitEntitiesController.blob(accountName, repositoryName, editedFile.rev, EncodedPath.fromString(newPath))
-          )
-        )
-      }
-
-      editorForm.bindFromRequest.fold(
-        formWithErrors => {
-          val rev  = formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
-          val path = formWithErrors.data.get("path")
-          path match {
-            case Some(path) =>
-              val fileTree = gitRepository.fileTree(request.repository, rev)
-              val blob     = gitRepository.blobFile(DecodedPath(path).toString, rev)
-              blob match {
-                case Some(blob) =>
-                  Future(
-                    BadRequest(
-                      html.git
-                        .viewBlob(formWithErrors, blob, EncodedPath.fromString(path), rev, Breadcrumbs(path), fileTree)
-                    )
-                  )
-                case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+    gitRepository
+      .commitFiles(
+        editedFile.rev,
+        DecodedPath(editedFile.path).pathWithoutFilename,
+        request.messages("repository.viewFile.commitMessage", DecodedPath(editedFile.path).nameWithoutPath),
+        request.account
+      ) {
+        case (git, headTip, builder, inserter) =>
+          val permission = gitRepository
+            .processTree(git, headTip) { (path, tree) =>
+              // Add all entries except the editing file
+              if (!newPath.contains(path) && !oldPath.contains(path)) {
+                builder.add(gitRepository.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
               }
-            case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
-          }
-        },
-        editFile
+              // Retrieve permission if file exists to keep it
+              oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
+            }
+            .flatten
+            .headOption
+
+          builder.add(
+            gitRepository.createDirCacheEntry(
+              newPath,
+              permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
+              inserter.insert(Constants.OBJ_BLOB, content)
+            )
+          )
+          builder.finish()
+      }
+    Future(
+      Redirect(
+        routes.GitEntitiesController.blob(accountName, repositoryName, editedFile.rev, EncodedPath.fromString(newPath))
       )
+    )
+  }
+
+  def edit(accountName: String, repositoryName: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async {
+      implicit request: RepositoryRequest[AnyContent] =>
+        val gitRepository = new GitRepository(request.repository.owner, repositoryName, gitHome)
+
+        editorForm.bindFromRequest.fold(
+          formWithErrors => {
+            val rev  = formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
+            val path = formWithErrors.data.get("path")
+            path match {
+              case Some(path) =>
+                val fileTree = gitRepository.fileTree(request.repository, rev)
+                val blob     = gitRepository.blobFile(DecodedPath(path).toString, rev)
+                blob match {
+                  case Some(blob) =>
+                    Future(
+                      BadRequest(
+                        html.git
+                          .viewBlob(
+                            formWithErrors,
+                            blob,
+                            EncodedPath.fromString(path),
+                            rev,
+                            Breadcrumbs(path),
+                            fileTree
+                          )
+                      )
+                    )
+                  case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+                }
+              case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
+            }
+          },
+          (edited: EditedItem) => editFile(edited, gitRepository, accountName, repositoryName)(request)
+        )
     }
 
   def addNewItem(accountName: String, repositoryName: String, path: String, isFolder: Boolean): Action[AnyContent] =
