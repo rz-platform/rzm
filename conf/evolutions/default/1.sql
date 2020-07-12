@@ -16,16 +16,16 @@ create table account (
 );
 
 create table repository (
- id                  bigserial primary key,
- owner_id            bigint not null REFERENCES account(id),
- name                varchar not null,
- is_private          boolean not null default true,
- description         varchar not null default '',
- default_branch      varchar not null,
- created_at          timestamp with time zone not null default now(),
- unique (owner_id, name),
- check (name <> ''),
- check (default_branch <> '')
+  id                  bigserial primary key,
+  owner_id            bigint not null REFERENCES account(id),
+  name                varchar not null,
+  is_private          boolean not null default true,
+  description         varchar not null default '',
+  default_branch      varchar not null,
+  created_at          timestamp with time zone not null default now(),
+  unique (owner_id, name),
+  check (name <> ''),
+  check (default_branch <> '')
 );
 
 create table ssh_key (
@@ -37,11 +37,12 @@ create table ssh_key (
 );
 
 create table collaborator (
- id               bigserial primary key,
- user_id          bigint not null REFERENCES account(id),
- repository_id    bigint not null REFERENCES repository(id),
- role             smallint not null,
- unique (user_id, repository_id)
+  id               bigserial primary key,
+  user_id          bigint not null REFERENCES account(id),
+  repository_id    bigint not null REFERENCES repository(id),
+  role             smallint not null,
+  created_at       timestamp with time zone not null default now(),
+  unique (user_id, repository_id)
 );
 
 CREATE UNIQUE INDEX account_usernamex ON account (username);

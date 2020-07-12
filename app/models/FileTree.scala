@@ -10,6 +10,8 @@ class FileNode(nodeValue: String, path: String) {
   val incrementalPath: String = path
   val pathWithoutRoot: String = path.replaceFirst("./", "")
 
+  val pathWithoutRootUrlEncoded: String = EncodedPath.fromString(pathWithoutRoot)
+
   val isRoot: Boolean = data == FileRoot.toString
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty

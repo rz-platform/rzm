@@ -62,7 +62,7 @@ POST /repositories/:account/:repository/createItem controllers.GitEntitiesContro
 
 # Repository archive
 
-GET /repositories/:account/:repository/archive controllers.GitEntitiesController.downloadRepositoryArchive(account:String, repository:String, revision: String = "master")
+GET /repositories/:account/:repository/:rev/archive controllers.GitEntitiesController.downloadRepositoryArchive(account:String, repository:String, rev: String)
 
 # Profile editing page
 
