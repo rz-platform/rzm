@@ -84,8 +84,20 @@ class AccountController @Inject() (
 
   def register: Action[AnyContent] = Action(implicit request => Ok(html.userRegister(registerForm)))
 
+  private def clearUserData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
+    val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
+    form.map {
+      case (key, values) if key == "mailAddress" => (key, values.map(_.trim.toLowerCase()))
+      case (key, values) if key == "userName" => (key, values.map(_.trim.toLowerCase()))
+      case (key, values) if key == "fullName" => (key, values.map(_.trim.capitalize))
+      case (key, values) => (key, values)
+    }
+  }
+
   def saveUser: Action[AnyContent] = Action.async { implicit request =>
-    registerForm.bindFromRequest.fold(
+    val incomingData = request.body.asFormUrlEncoded
+    val cleanData = clearUserData(incomingData)
+    registerForm.bindFromRequest(cleanData).fold(
       formWithErrors => Future(BadRequest(html.userRegister(formWithErrors))),
       (userData: AccountRegistrationData) =>
         accountService.getByLoginOrEmail(userData.userName, userData.email).flatMap {
@@ -106,31 +118,25 @@ class AccountController @Inject() (
   }
 
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
-    loginForm.bindFromRequest.fold(
+    val incomingData = request.body.asFormUrlEncoded
+    val cleanData = clearUserData(incomingData)
+    loginForm.bindFromRequest(cleanData).fold(
       formWithErrors => Future(BadRequest(html.userLogin(formWithErrors))),
       user =>
         accountService
           .getRichModelByLoginOrEmail(user.userName)
           .flatMap {
-            case Some(account) =>
-              if (HashedString(account.password).check(user.password)) {
-                Future(
-                  Redirect(routes.GitEntitiesController.list())
-                    .withSession(SessionName.toString -> account.id.toString)
-                )
-              } else {
-                throw new AuthException.WrongPassword
-              }
+            case Some(account) if HashedString(account.password).check(user.password) =>
+              Future(
+                Redirect(routes.GitEntitiesController.list())
+                  .withSession(SessionName.toString -> account.id.toString)
+              )
             case _ =>
-              throw new AuthException.UserDoesNotExist
-          }
-          .recover {
-            case _: AuthException =>
               val formBuiltFromRequest = loginForm.bindFromRequest
               val newForm = loginForm.bindFromRequest.copy(
                 errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
               )
-              BadRequest(html.userLogin(newForm))
+              Future(BadRequest(html.userLogin(newForm)))
           }
     )
   }

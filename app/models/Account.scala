@@ -4,8 +4,6 @@ import java.util.Calendar
 
 import anorm._
 
-import scala.collection.immutable.HashMap
-
 sealed trait Account {
   def id: Long
   def userName: String
@@ -36,9 +34,9 @@ object RichAccount {
   def fromScratch(userForm: AccountRegistrationData): RichAccount =
     RichAccount(
       0,
-      userForm.userName.trim.toLowerCase,
+      userForm.userName,
       userForm.fullName.getOrElse(""),
-      userForm.email.trim.toLowerCase,
+      userForm.email,
       HashedString.fromString(userForm.password).toString,
       created = Calendar.getInstance().getTime,
       hasPicture = false
