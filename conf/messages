@@ -5,13 +5,15 @@ common.error=Error
 common.myRepositories=My repositories
 common.signout=Sign out
 
-error.notfound = Not Found
+error.notfound=Not Found
+error.accessdenied=Access Denied
+
 
 signin.title=Sign in
 signin.head=Sign in
 signin.submit=Sign in
 signin.signupLink=Create an account
-signin.error.wrongcred = Check username or password
+signin.error.wrongcred=Check username or password
 
 logout = You are now logged out.
 

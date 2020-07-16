@@ -101,18 +101,20 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def isUserCollaborator(repository: Repository, userId: Long): Future[Option[Int]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL(s"""
+  def isUserCollaborator(repository: Option[Repository], userId: Long): Future[Option[Int]] =
+    repository match {
+      case Some(repo) =>
+        Future {
+          db.withConnection { implicit connection =>
+            SQL(s"""
         select role from collaborator
         where collaborator.user_id = {collaboratorId} and repository_id = {repositoryId}
-          """)
-          .on("collaboratorId" -> userId, "repositoryId" -> repository.id)
-          .as(SqlParser.int("role").singleOpt)
-      }
-    }(ec)
-
+          """).on("collaboratorId" -> userId, "repositoryId" -> repo.id)
+              .as(SqlParser.int("role").singleOpt)
+          }
+        }(ec)
+      case None => Future(None)
+    }
   def getCollaborators(repository: Repository): Future[List[Collaborator]] =
     Future {
       db.withConnection { implicit connection =>

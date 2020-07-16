@@ -78,11 +78,12 @@ class AccountController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def index(): Action[AnyContent] = userAction(implicit request => Redirect(routes.GitEntitiesController.list()))
+  def index(): Action[AnyContent] =
+    userAction.async(implicit request => Future(Redirect(routes.GitEntitiesController.list())))
 
-  def login: Action[AnyContent] = Action(implicit request => Ok(html.userLogin(loginForm)))
+  def login: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.userLogin(loginForm))))
 
-  def register: Action[AnyContent] = Action(implicit request => Ok(html.userRegister(registerForm)))
+  def register: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.userRegister(registerForm))))
 
   private def clearUserData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
@@ -146,8 +147,8 @@ class AccountController @Inject() (
       )
   }
 
-  def logout: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.AccountController.login()).withNewSession.flashing("success" -> Messages("logout"))
+  def logout: Action[AnyContent] = Action.async { implicit request =>
+    Future(Redirect(routes.AccountController.login()).withNewSession.flashing("success" -> Messages("logout")))
   }
 
   private def filledProfileForm(account: RichAccount): Form[AccountData] =

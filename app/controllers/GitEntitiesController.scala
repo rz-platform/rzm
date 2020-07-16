@@ -77,10 +77,6 @@ class GitEntitiesController @Inject() (
     )
   )
 
-  protected def createBadResult(msg: String, statusCode: Int = BAD_REQUEST): RequestHeader => Future[Result] = {
-    request => errorHandler.onClientError(request, statusCode, msg)
-  }
-
   val editorForm: Form[EditedItem] = Form(
     mapping(
       "content"  -> nonEmptyText,
@@ -90,13 +86,10 @@ class GitEntitiesController @Inject() (
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
-  def getOrElse[T](ifNot: Exception with RepositoryAccessException)(what: => Future[Option[T]]): Future[T] =
-    what.map(_.getOrElse(throw ifNot))
-
   def repositoryActionOn(
     username: String,
-    repositoryName: String,
-    minimumAccessLevel: AccessLevel = ViewAccess
+    repoName: String,
+    minAccess: AccessLevel
   ): ActionRefiner[UserRequest, RepositoryRequest] =
     new ActionRefiner[UserRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
@@ -105,32 +98,26 @@ class GitEntitiesController @Inject() (
         request: UserRequest[A]
       ): Future[Either[Result, RepositoryRequest[A]]] = {
         val items = for {
-          repository <- getOrElse(new RepositoryAccessException.AccessDenied)(
-                         gitEntitiesRepository.getByAuthorAndName(username, repositoryName)
-                       )
-          collaborator <- gitEntitiesRepository.isUserCollaborator(repository, request.account.id)
+          repository: Option[Repository] <- gitEntitiesRepository.getByAuthorAndName(username, repoName)
+          collaborator: Option[Int]      <- gitEntitiesRepository.isUserCollaborator(repository, request.account.id)
         } yield (repository, collaborator)
-
         items.map { data =>
           val (repository, collaborator) = data
-
-          val accessLevel: Int = collaborator match {
-            case None if repository.owner.id == request.account.id => OwnerAccess.role
-            case Some(accessLevel)                                 => accessLevel
-            case None                                              => throw new RepositoryAccessException.AccessDenied()
+          repository match {
+            case Some(repo) =>
+              AccessLevel.userAccess(collaborator, repo.owner.id, request.account.id) match {
+                case Some(access) if access.role <= minAccess.role =>
+                  Right(new RepositoryRequest[A](request, repo, request.account, access, messagesApi))
+                case _ => Left(errorHandler.clientError(request, msg = request.messages("error.accessdenied")))
+              }
+            case _ => Left(errorHandler.clientError(request, msg = request.messages("error.notfound")))
           }
-
-          if (accessLevel <= minimumAccessLevel.role) {
-            Right(new RepositoryRequest[A](request, repository, request.account, accessLevel, messagesApi))
-          } else {
-            Left(NotFound("Access denied"))
-          }
-        }.recover { case ex: Exception with RepositoryAccessException => Left(BadRequest(ex.getMessage)) }
+        }
       }
     }
 
-  def createRepository: Action[AnyContent] = authenticatedAction { implicit request =>
-    Ok(html.git.createRepository(createRepositoryForm))
+  def createRepository: Action[AnyContent] = authenticatedAction.async { implicit request =>
+    Future(Ok(html.git.createRepository(createRepositoryForm)))
   }
 
   private def clearRepositoryData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
@@ -180,7 +167,7 @@ class GitEntitiesController @Inject() (
   }
 
   def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)) { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)) { implicit request =>
       val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val fileTree = git.fileTree(request.repository, rev)
       Redirect(
@@ -195,7 +182,7 @@ class GitEntitiesController @Inject() (
     }
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)).async { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val raw = git.getRawFile(rev, DecodedPath(path).toString)
 
@@ -208,7 +195,7 @@ class GitEntitiesController @Inject() (
               body = HttpEntity.Streamed(stream, Some(rawFile.contentLength.toLong), Some(rawFile.contentType))
             )
           }
-        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+        case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
       }
     }
 
@@ -225,7 +212,7 @@ class GitEntitiesController @Inject() (
     )
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName)).async { implicit request =>
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)).async { implicit request =>
       val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
       val blobInfo = git.blobFile(DecodedPath(path).toString, rev)
 
@@ -244,7 +231,7 @@ class GitEntitiesController @Inject() (
               )
             )
           }
-        case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+        case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
       }
     }
 
@@ -327,7 +314,7 @@ class GitEntitiesController @Inject() (
                           )
                       )
                     )
-                  case None => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+                  case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
                 }
               case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
             }
@@ -381,8 +368,8 @@ class GitEntitiesController @Inject() (
     }
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit request =>
-      Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString))
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async { implicit request =>
+      Future(Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString)))
     }
 
   /**
@@ -399,7 +386,7 @@ class GitEntitiesController @Inject() (
       val fileSink: Sink[ByteString, Future[IOResult]]   = FileIO.toPath(path)
       val accumulator: Accumulator[ByteString, IOResult] = Accumulator(fileSink)
       accumulator.map {
-        case IOResult(count, status) =>
+        case IOResult(_, _) =>
           FilePart(partName, filename, contentType, path.toFile)
       }
   }
@@ -464,7 +451,7 @@ class GitEntitiesController @Inject() (
           accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
             case Some(futureCollaborator) =>
               gitEntitiesRepository
-                .isUserCollaborator(req.repository, futureCollaborator.id)
+                .isUserCollaborator(Some(req.repository), futureCollaborator.id)
                 .flatMap {
                   case None =>
                     gitEntitiesRepository
@@ -500,7 +487,7 @@ class GitEntitiesController @Inject() (
           accountRepository.getByLoginOrEmail(data.email).flatMap {
             case Some(collaborator) =>
               gitEntitiesRepository
-                .isUserCollaborator(req.repository, collaborator.id)
+                .isUserCollaborator(Some(req.repository), collaborator.id)
                 .flatMap {
                   case Some(_) =>
                     gitEntitiesRepository
@@ -539,7 +526,7 @@ class GitEntitiesController @Inject() (
       val commitLog = gitRepository.getCommitsLog(rev, page, 30)
       commitLog match {
         case Right((logs, hasNext)) => Future(Ok(html.git.commitLog(logs, rev, hasNext, page)))
-        case Left(_)                => errorHandler.onClientError(request, NOT_FOUND, Messages("error.notfound"))
+        case Left(_)                => errorHandler.onClientError(request, msg = Messages("error.notfound"))
       }
     }
 }
