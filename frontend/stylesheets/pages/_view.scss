@@ -7,10 +7,22 @@
     width: 100%;
     padding-left: $base-file-tree-padding * $i;
   }
+
+  .rz-menu-file-tree-depth-#{$i}-content {
+    width: $filetree-width - ($base-file-tree-padding*$i)- 36px - 60px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align:top
+  }
 }
 
-.rz-file-tree-upload-button {
-  margin-left: auto; // TODO
+.action-buttons {
+  display: inline-block;
+  vertical-align:top;
+
+  a {
+    text-decoration: none;
+  }
 }
 
 .breadcrumbs {
@@ -48,7 +60,7 @@
 }
 
 .rz-sidebar-filetree {
-  max-width: 300px;
+  max-width: $filetree-width;
   border-right: 1px solid #ebebeb;
   overflow-x: hidden;
   flex:1 1 auto;

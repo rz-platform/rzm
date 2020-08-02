@@ -15,6 +15,7 @@
 <div class="rz-menu-item @if(node.isRoot) { menu-item-divided }">
   <div class="rz-menu-link">
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
+      <div class="rz-menu-file-tree-depth-@node.depth-content">
       @if(!node.isRoot) {
         @if(node.files.length > 0) {
           <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon"/>
@@ -27,8 +28,21 @@
       } else {
         @node.data
       }
+      </div>
+      <div class="action-buttons">
+        <a href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
+          <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
+        </a>
 
-      @uploadButton(node.pathWithoutRoot)
+        <a href="#">
+          <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon">
+        </a>
+
+        <a href="#">
+          <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon">
+        </a>
+
+      </div>
     </div>
   </div>
 </div>
