@@ -500,7 +500,7 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
         headId,
         builder.getDirCache.writeTree(inserter),
         Constants.HEAD,
-        account.userName, // TODO: fullName
+        account.userName,
         account.email,
         commitName
       )

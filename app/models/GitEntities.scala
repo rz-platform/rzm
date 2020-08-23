@@ -56,7 +56,7 @@ case class FileInfo(
 
 case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
 
-case class NewItem(name: String, rev: String)
+case class NewItem(name: String, rev: String, path: String, isFolder: Boolean)
 
 /**
  * The file content data for the file content view of the repository viewer.
@@ -71,7 +71,7 @@ case class ContentInfo(viewType: String, size: Option[Long], content: Option[Str
   /**
    * the line separator of this content ("LF" or "CRLF")
    */
-  val lineSeparator: String = if (content.exists(_.indexOf("\r\n") >= 0)) "CRLF" else "LF"
+  lazy val lineSeparator: String = if (content.exists(_.indexOf("\r\n") >= 0)) "CRLF" else "LF"
 }
 
 case class Blob(

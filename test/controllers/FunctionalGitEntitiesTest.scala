@@ -121,12 +121,12 @@ class FunctionalGitEntitiesTest
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
-        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch)
+        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch, "isFolder" -> "0", "path" -> ".")
         .withSession(("user_id", creator.id.toString))
     )
 
     val result: Future[Result] =
-      call(controller.addNewItem(creator.userName, repositoryName, path, isFolder = isFolder), newFileRequest)
+      call(controller.addNewItem(creator.userName, repositoryName), newFileRequest)
 
     await(result)
   }
@@ -238,7 +238,7 @@ class FunctionalGitEntitiesTest
       val account = createUser()
 
       val repoName = getRandomString
-      val fileName = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
+      val fileName = getRandomString + ForbiddenSymbols.toString
 
       createRepository(controller, repoName, account)
 
@@ -251,7 +251,7 @@ class FunctionalGitEntitiesTest
       val account = createUser()
 
       val repoName   = getRandomString
-      val folderName = getRandomString + controller.excludedSymbolsForFileName.mkString("-")
+      val folderName = getRandomString + ForbiddenSymbols.toString
 
       createRepository(controller, repoName, account)
 

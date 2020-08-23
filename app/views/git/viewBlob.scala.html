@@ -1,18 +1,11 @@
-@(editorForm: Form[EditedItem], blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree)(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree, newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
 @import helpers._
 
-@uploadButton(path: String) = {
-<a class="rz-file-tree-upload-button" href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
-  <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
-</a>
-}
-
-
 @printNode(node: FileNode) = {
-<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth">
+<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth" path="@node.pathWithoutRootUrlEncoded">
   <div class="rz-menu-link">
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
       <div class="rz-menu-file-tree-depth-@node.depth-content">
@@ -58,6 +51,14 @@
 }
 
 @auth(breadcrumbs.fileName, true) {
+@form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name), Symbol("id") -> "new-item-form") {
+@CSRF.formField
+@inputText(newItemForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-path")
+@inputText(newItemForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
+@checkbox(newItemForm("isFolder"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-is-folder")
+@inputText(newItemForm("name"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-name")
+}
+
 <div class="rz-sidebar">
     <div class="rz-sidebar-filetree">
       <div class="rz-menu-file-tree">
