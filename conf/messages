@@ -112,6 +112,7 @@ repository.tree.downloads=Download ZIP
 repository.tree.createFolder=Create new folder
 repository.tree.createFolder.formName=Folder name
 repository.tree.commits=Project history
+repository.tree.fileview=File view
 
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name
