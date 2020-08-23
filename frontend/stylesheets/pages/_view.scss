@@ -14,6 +14,14 @@
     display: inline-block;
     vertical-align:top
   }
+
+  .rz-menu-file-tree-depth-#{$i}-content input {
+    width: $filetree-width - ($base-file-tree-padding*$i)- 36px - 100px;
+  }
+}
+
+.file-tree-icon {
+  cursor: pointer;
 }
 
 .action-buttons {

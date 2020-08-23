@@ -12,7 +12,7 @@
 
 
 @printNode(node: FileNode) = {
-<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }">
+<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth">
   <div class="rz-menu-link">
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
       <div class="rz-menu-file-tree-depth-@node.depth-content">
@@ -33,15 +33,8 @@
         <a href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
           <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
         </a>
-
-        <a href="#">
-          <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon">
-        </a>
-
-        <a href="#">
-          <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon">
-        </a>
-
+        <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon add-file-button file-tree-icon" />
+        <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon add-folder-button file-tree-icon" />
       </div>
     </div>
   </div>
@@ -53,7 +46,7 @@
 
 @for(file <- node.files) {
 @if(!(ExcludedFileNames contains file.data)) {
-<div class="rz-menu-item">
+<div class="rz-menu-item" depth="@file.depth">
   <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRootEncoded)'>
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
