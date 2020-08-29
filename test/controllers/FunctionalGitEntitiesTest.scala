@@ -28,6 +28,8 @@ class FunctionalGitEntitiesTest
   implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
+  private val logger = play.api.Logger(this.getClass)
+
   implicit val sys: ActorSystem = ActorSystem("RepositoryTest")
 
   def getRandomString: String =
@@ -121,7 +123,7 @@ class FunctionalGitEntitiesTest
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
-        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch, "isFolder" -> "0", "path" -> ".")
+        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch, "path" -> path, "isFolder" -> (if (isFolder) "true" else "false"))
         .withSession(("user_id", creator.id.toString))
     )
 
@@ -270,7 +272,7 @@ class FunctionalGitEntitiesTest
       createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-      createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = true, folderName)
+      createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
       val repo           = Repository(0, account, repoName, "master")
@@ -324,7 +326,7 @@ class FunctionalGitEntitiesTest
       createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-      createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = true, folderName)
+      createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
       val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
       val repo           = Repository(0, account, repoName, "master")
