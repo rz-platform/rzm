@@ -240,7 +240,7 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     }
 
   def fileTree(repository: Repository, revstr: String): FileTree = {
-    val fileTree = new FileTree(new FileNode(".", "."))
+    val fileTree = new FileTree(new FileNode(".", ".", ""))
 
     Using.resource(Git.open(repositoryDir)) { git =>
       getDefaultBranch(git, repository, revstr).map {

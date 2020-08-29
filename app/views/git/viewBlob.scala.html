@@ -5,7 +5,7 @@
 @import helpers._
 
 @printNode(node: FileNode) = {
-<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth" path="@node.pathWithoutRootUrlEncoded">
+<div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth" path="@node.pathWithoutRootUrlEncoded" hash="@node.hash" parent="@node.parentHash">
   <div class="rz-menu-link">
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
       <div class="rz-menu-file-tree-depth-@node.depth-content">
@@ -51,12 +51,14 @@
 }
 
 @auth(breadcrumbs.fileName, true) {
-@form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name), Symbol("id") -> "new-item-form") {
+@form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName, request.repository.name), Symbol("id") -> "new-item-form", Symbol("class")->"hidden") {
 @CSRF.formField
-@inputText(newItemForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-path")
-@inputText(newItemForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
-@checkbox(newItemForm("isFolder"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-is-folder")
-@inputText(newItemForm("name"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden", Symbol("id") -> "new-item-form-name")
+<img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon">
+<img src='@routes.Assets.at("images/document.svg")' class="svg-icon" id="file-icon">
+@inputText(newItemForm("path"), Symbol("id") -> "new-item-form-path")
+@inputText(newItemForm("rev"))
+@checkbox(newItemForm("isFolder"), Symbol("id") -> "new-item-form-is-folder")
+@inputText(newItemForm("name"), Symbol("id") -> "new-item-form-name")
 }
 
 <div class="rz-sidebar">

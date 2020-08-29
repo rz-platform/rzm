@@ -3,6 +3,25 @@ import 'codemirror/mode/stex/stex.js'
 import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/edit/matchbrackets'
 
+// Constants
+
+const maxDepthInFileTree = 4;
+
+const mainForm = document.getElementById('new-item-form');
+const mainFormPathInput = document.getElementById('new-item-form-path');
+const mainFormNameInput = document.getElementById('new-item-form-name');
+const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
+
+const documentIconSrc = document.getElementById('file-icon').getAttribute("src");
+const folderIconSrc = document.getElementById('folder-icon').getAttribute("src");
+
+const creationElId = 'rz-creation';
+const creationFormId = 'rz-creation-form';
+const creationInputId = 'rz-creation-form-input';
+
+const addFilesButtonList = document.getElementsByClassName('add-file-button')
+const addFoldersButtonList = document.getElementsByClassName('add-folder-button')
+
 const codeArea = document.getElementById("code");
 if (codeArea) {
     CodeMirror.fromTextArea(codeArea, {
@@ -25,31 +44,17 @@ function insertAfter(newNode, referenceNode) {
 }
 
 function parentByLevel(el, level) {
-    let parent = el;
     for (let i = 0; i < level; i++) {
         el = el.parentElement;
     }
     return el;
 }
 
-const mainForm = document.getElementById('new-item-form');
-const mainFormPathInput = document.getElementById('new-item-form-path');
-const mainFormNameInput = document.getElementById('new-item-form-name');
-const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
-
-const creationElId = 'rz-creation';
-const creationFormId = 'rz-creation-form';
-const creationInputId = 'rz-creation-form-input';
-
-const addFilesButtonList = document.getElementsByClassName('add-file-button')
-const addFoldersButtonList = document.getElementsByClassName('add-folder-button')
-
-function buildInputField(depth) {
+function buildInputField(iconSrc, depth) {
     const creationElement = document.getElementById(creationElId);
     if (creationElement) {
         creationElement.remove(); // remove if exists
     }
-
     let el = document.createElement("div");
     el.className = 'rz-menu-item';
     el.setAttribute("id", creationElId);
@@ -58,7 +63,8 @@ function buildInputField(depth) {
         '<div class="rz-menu-file-tree-depth-' + depth + '">' +
         '<div class="rz-menu-file-tree-depth-' + depth + '-content">' +
         '<form id="' + creationFormId + '">' +
-        '<input type="text" placeholder="New file name" id="' + creationInputId +'" />' +
+        '<img class="svg-icon" src="' + iconSrc + '" />' +
+        '<input type="text" id="' + creationInputId +'" />' +
         '</form></div></div>';
     return el
 }
@@ -75,18 +81,23 @@ function submitFileCreation(e) {
     return false;
 }
 
-function addInput(e) {
+function nextDepth(depth) {
+    return depth >= maxDepthInFileTree ? maxDepthInFileTree : depth + 1;
+}
+
+function addInput(e, isFolder) {
+    const iconSrc = isFolder ? folderIconSrc : documentIconSrc;
     const parent = parentByLevel(e.currentTarget, 4);
     const depth = parseInt(parent.getAttribute("depth"));
     mainFormPathInput.value = parent.getAttribute("path");
-    insertAfter(buildInputField(depth+1), parent);
+    insertAfter(buildInputField(iconSrc, nextDepth(depth)), parent);
     document.getElementById(creationInputId).focus();
     const form = document.getElementById(creationFormId);
     if (form.attachEvent) {
         form.attachEvent("submit", submitFileCreation);
-   } else {
-      form.addEventListener("submit", submitFileCreation);
-   }
+    } else {
+        form.addEventListener("submit", submitFileCreation);
+    }
 }
 
 function toggleIsFolder(value) {
@@ -95,14 +106,14 @@ function toggleIsFolder(value) {
 
 for (let item of addFilesButtonList) {
     item.addEventListener('click', function (e) {
-        addInput(e);
+        addInput(e, false);
         toggleIsFolder(false);
     })
 }
 
 for (let item of addFoldersButtonList) {
     item.addEventListener('click', function (e) {
-        addInput(e);
+        addInput(e, true);
         toggleIsFolder(true);
     })
 }

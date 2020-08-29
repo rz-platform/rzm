@@ -1,5 +1,3 @@
-"use strict";
-
 function showTooltip(tooltipId, tooltipsToHide) {
     const tooltip = document.getElementById(tooltipId);
 
