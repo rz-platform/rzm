@@ -3,36 +3,20 @@ import 'codemirror/mode/stex/stex.js'
 import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/edit/matchbrackets'
 
-// Constants
+/*
+ *  JS helpers
+*/
 
-const maxDepthInFileTree = 4;
-
-const mainForm = document.getElementById('new-item-form');
-const mainFormPathInput = document.getElementById('new-item-form-path');
-const mainFormNameInput = document.getElementById('new-item-form-name');
-const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
-
-const documentIconSrc = document.getElementById('file-icon').getAttribute("src");
-const folderIconSrc = document.getElementById('folder-icon').getAttribute("src");
-
-const creationElId = 'rz-creation';
-const creationFormId = 'rz-creation-form';
-const creationInputId = 'rz-creation-form-input';
-
-const addFilesButtonList = document.getElementsByClassName('add-file-button')
-const addFoldersButtonList = document.getElementsByClassName('add-folder-button')
-
-const codeArea = document.getElementById("code");
-if (codeArea) {
-    CodeMirror.fromTextArea(codeArea, {
-        lineNumbers: true,
-        styleActiveLine: true,
-        matchBrackets: true,
-        mode: "text/x-stex",
-        autofocus: true,
-        lineWrapping: true,
-        theme: 'idea'
-    });
+// https://stackoverflow.com/a/7616484/1064115
+String.prototype.hashCode = function(){
+	let hash = 0;
+	if (this.length == 0) return hash;
+	for (let i = 0; i < this.length; i++) {
+		let char = this.charCodeAt(i);
+		hash = ((hash<<5)-hash)+char;
+		hash = hash & hash; // Convert to 32bit integer
+	}
+	return hash.toString();
 }
 
 // Where referenceNode is the node you want to put newNode after.
@@ -49,6 +33,73 @@ function parentByLevel(el, level) {
     }
     return el;
 }
+
+/*
+ * Constants
+*/
+
+const maxDepthInFileTree = 4;
+
+const editorArea = document.getElementById("code");
+
+const menuItems = document.getElementsByClassName('rz-menu-item');
+
+const mainForm = document.getElementById('new-item-form');
+const mainFormPathInput = document.getElementById('new-item-form-path');
+const mainFormNameInput = document.getElementById('new-item-form-name');
+const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
+
+const documentIconSrc = document.getElementById('file-icon').getAttribute("src");
+const folderIconSrc = document.getElementById('folder-icon').getAttribute("src");
+
+const creationElId = 'rz-creation';
+const creationFormId = 'rz-creation-form';
+const creationInputId = 'rz-creation-form-input';
+
+const addFilesButtonList = document.getElementsByClassName('add-file-button')
+const addFoldersButtonList = document.getElementsByClassName('add-folder-button')
+
+const showSubTreeButtonList = document.getElementsByClassName('file-tree-show')
+
+function saveCursor(cursor) {
+    localStorage.setItem(currentDocumentHash + '_line', cursor.line);
+    localStorage.setItem(currentDocumentHash + '_ch', cursor.ch);
+}
+
+function getSavedCursor() {
+    const line = parseInt(localStorage.getItem(currentDocumentHash + '_line'));
+    const ch = parseInt(localStorage.getItem(currentDocumentHash + '_ch'));
+    if (typeof line == 'number' && typeof ch == 'number' && !isNaN(line) && !isNaN(ch)) {
+        return {'ch': ch, 'line': line}
+    }
+}
+
+// in case of binary file page will not contain textarea
+if (editorArea) {
+    const editor = CodeMirror.fromTextArea(editorArea, {
+        lineNumbers: true,
+        styleActiveLine: true,
+        matchBrackets: true,
+        mode: "text/x-stex",
+        autofocus: true,
+        lineWrapping: true,
+        theme: 'idea',
+        smartIndent: false,
+        tabSize: 4,
+        indentWithTabs: false,
+    });
+    const cursor = getSavedCursor();
+    if (cursor) {
+        editor.setCursor(cursor);
+    }
+    editor.on("cursorActivity", function () {
+        saveCursor(editor.getCursor());
+    });
+}
+
+/*
+ * Inline file/folder creation
+*/
 
 function buildInputField(iconSrc, depth) {
     const creationElement = document.getElementById(creationElId);
@@ -115,5 +166,44 @@ for (let item of addFoldersButtonList) {
     item.addEventListener('click', function (e) {
         addInput(e, true);
         toggleIsFolder(true);
+    })
+}
+
+/*
+ * File tree hide/show buttons
+*/
+
+function hideSubTree(el) {
+    const hash = el.getAttribute("hash");
+    for (let item of menuItems) {
+        if (item.getAttribute("parent") === hash && !item.classList.contains("hidden")) {
+            item.classList.add("hidden");
+            hideSubTree(item);
+        }
+    }
+}
+
+function showSubTree(el) {
+    const hash = el.getAttribute("hash");
+    for (let item of menuItems) {
+        if (item.getAttribute("parent") === hash && item.classList.contains("hidden")) {
+            item.classList.remove("hidden");
+            showSubTree(item);
+        }
+    }
+}
+
+
+for (let item of showSubTreeButtonList) {
+    item.addEventListener('click', function (e) {
+        const el = e.currentTarget;
+        const parent = parentByLevel(el, 4);
+        if (el.getAttribute("src").includes("down")) {
+            el.setAttribute("src", el.getAttribute("src").replace("down", "next"));
+            hideSubTree(parent);
+        } else {
+            el.setAttribute("src", el.getAttribute("src").replace("next", "down"));
+            showSubTree(parent);
+        }
     })
 }

@@ -11,7 +11,7 @@
       <div class="rz-menu-file-tree-depth-@node.depth-content">
       @if(!node.isRoot) {
         @if(node.files.length > 0) {
-          <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon"/>
+          <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon file-tree-show"/>
         } else {
           <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon"/> }
         }
@@ -39,7 +39,7 @@
 
 @for(file <- node.files) {
 @if(!(ExcludedFileNames contains file.data)) {
-<div class="rz-menu-item" depth="@file.depth">
+<div class="rz-menu-item" depth="@file.depth"  parent="@node.parentHash">
   <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRootEncoded)'>
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
