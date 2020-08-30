@@ -3,20 +3,18 @@ import 'codemirror/mode/stex/stex.js'
 import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/edit/matchbrackets'
 
-/*
- *  JS helpers
-*/
+/**  JS helpers */
 
 // https://stackoverflow.com/a/7616484/1064115
 String.prototype.hashCode = function(){
-	let hash = 0;
-	if (this.length == 0) return hash;
-	for (let i = 0; i < this.length; i++) {
-		let char = this.charCodeAt(i);
-		hash = ((hash<<5)-hash)+char;
-		hash = hash & hash; // Convert to 32bit integer
-	}
-	return hash.toString();
+    let hash = 0;
+    if (this.length == 0) return hash;
+    for (let i = 0; i < this.length; i++) {
+        let char = this.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString();
 }
 
 // Where referenceNode is the node you want to put newNode after.
@@ -34,9 +32,7 @@ function parentByLevel(el, level) {
     return el;
 }
 
-/*
- * Constants
-*/
+/** Constants */
 
 const maxDepthInFileTree = 4;
 
@@ -97,11 +93,9 @@ if (editorArea) {
     });
 }
 
-/*
- * Inline file/folder creation
-*/
+/** Inline file and folder creation */
 
-function buildInputField(iconSrc, depth) {
+function buildInlineInputField(iconSrc, depth) {
     const creationElement = document.getElementById(creationElId);
     if (creationElement) {
         creationElement.remove(); // remove if exists
@@ -128,7 +122,7 @@ function submitFileCreation(e) {
     if (val) {
         mainForm.submit();
     }
-    // You must return false to prevent the default form behavior
+    // must return false to prevent the default form behavior
     return false;
 }
 
@@ -136,12 +130,12 @@ function nextDepth(depth) {
     return depth >= maxDepthInFileTree ? maxDepthInFileTree : depth + 1;
 }
 
-function addInput(e, isFolder) {
+function addInlineInput(e, isFolder) {
     const iconSrc = isFolder ? folderIconSrc : documentIconSrc;
     const parent = parentByLevel(e.currentTarget, 4);
     const depth = parseInt(parent.getAttribute("depth"));
     mainFormPathInput.value = parent.getAttribute("path");
-    insertAfter(buildInputField(iconSrc, nextDepth(depth)), parent);
+    insertAfter(buildInlineInputField(iconSrc, nextDepth(depth)), parent);
     document.getElementById(creationInputId).focus();
     const form = document.getElementById(creationFormId);
     if (form.attachEvent) {
@@ -157,21 +151,19 @@ function toggleIsFolder(value) {
 
 for (let item of addFilesButtonList) {
     item.addEventListener('click', function (e) {
-        addInput(e, false);
+        addInlineInput(e, false);
         toggleIsFolder(false);
     })
 }
 
 for (let item of addFoldersButtonList) {
     item.addEventListener('click', function (e) {
-        addInput(e, true);
+        addInlineInput(e, true);
         toggleIsFolder(true);
     })
 }
 
-/*
- * File tree hide/show buttons
-*/
+/** File tree hide and show buttons */
 
 function hideSubTree(el) {
     const hash = el.getAttribute("hash");
