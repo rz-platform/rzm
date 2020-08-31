@@ -45,6 +45,8 @@ const mainFormPathInput = document.getElementById('new-item-form-path');
 const mainFormNameInput = document.getElementById('new-item-form-name');
 const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
 
+const fileSubmit = document.getElementById('file-save-submit');
+
 const documentIconSrc = document.getElementById('file-icon').getAttribute("src");
 const folderIconSrc = document.getElementById('folder-icon').getAttribute("src");
 
@@ -52,10 +54,12 @@ const creationElId = 'rz-creation';
 const creationFormId = 'rz-creation-form';
 const creationInputId = 'rz-creation-form-input';
 
-const addFilesButtonList = document.getElementsByClassName('add-file-button')
-const addFoldersButtonList = document.getElementsByClassName('add-folder-button')
+const addFilesButtonList = document.getElementsByClassName('add-file-button');
+const addFoldersButtonList = document.getElementsByClassName('add-folder-button');
 
-const showSubTreeButtonList = document.getElementsByClassName('file-tree-show')
+const showSubTreeButtonList = document.getElementsByClassName('file-tree-show');
+
+const currentDocumentHash = window.location.href.hashCode();
 
 function saveCursor(cursor) {
     localStorage.setItem(currentDocumentHash + '_line', cursor.line);
@@ -72,6 +76,7 @@ function getSavedCursor() {
 
 // in case of binary file page will not contain textarea
 if (editorArea) {
+    let unsaved = false;
     const editor = CodeMirror.fromTextArea(editorArea, {
         lineNumbers: true,
         styleActiveLine: true,
@@ -90,6 +95,16 @@ if (editorArea) {
     }
     editor.on("cursorActivity", function () {
         saveCursor(editor.getCursor());
+    });
+    editor.on('change', function(){
+        if (!unsaved) {
+            window.onbeforeunload = function() {
+                return "Data you have entered may not be saved";
+                //if we return nothing here (just calling return;) then there will be no pop-up question at all
+            };
+            fileSubmit.value += "*";
+            unsaved = true;
+        }
     });
 }
 

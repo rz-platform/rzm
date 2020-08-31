@@ -72,7 +72,7 @@ class GitEntitiesController @Inject() (
     mapping(
       "name"     -> nonEmptyText.verifying(checkForExcludedSymbols),
       "rev"      -> nonEmptyText,
-      "path"     -> nonEmptyText,
+      "path"     -> nonEmptyText.verifying(checkForExcludedSymbols),
       "isFolder" -> boolean
     )(NewItem.apply)(NewItem.unapply)
   )
@@ -81,7 +81,7 @@ class GitEntitiesController @Inject() (
     mapping(
       "content"  -> nonEmptyText,
       "rev"      -> nonEmptyText,
-      "path"     -> nonEmptyText,
+      "path"     -> nonEmptyText.verifying(checkForExcludedSymbols),
       "fileName" -> nonEmptyText.verifying(checkForExcludedSymbols)
     )(EditedItem.apply)(EditedItem.unapply)
   )
