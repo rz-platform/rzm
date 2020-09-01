@@ -39,7 +39,7 @@ object AccessLevel {
       case _                             => Option.empty[AccessLevel]
     }
 
-  def userAccess(collaborator: Option[Int], repositoryOwnerId: Long, accountId: Long): Option[AccessLevel] =
+  def fromAccount(collaborator: Option[Int], repositoryOwnerId: Long, accountId: Long): Option[AccessLevel] =
     collaborator match {
       case None if repositoryOwnerId == accountId => Some(OwnerAccess)
       case Some(accessLevel)                      => Some(AccessLevel.fromRole(accessLevel).getOrElse(ViewAccess))

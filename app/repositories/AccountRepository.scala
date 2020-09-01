@@ -66,7 +66,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a simple account from login
    */
-  def getByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[SimpleAccount]] =
+  def getByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
@@ -161,7 +161,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def numberOfUserSshKeys(accountId: Long): Future[Int] =
+  def numberOfAccountSshKeys(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""select count(id) as c from ssh_key where account_id = {accountId}""")
@@ -170,7 +170,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def userSshKeys(accountId: Long): Future[List[SshKey]] =
+  def accountSshKeys(accountId: Long): Future[List[SshKey]] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""select * from ssh_key where account_id = {accountId}""")

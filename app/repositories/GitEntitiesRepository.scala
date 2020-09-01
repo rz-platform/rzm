@@ -35,7 +35,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     }
   }
 
-  def getByAuthorAndName(owner: String, repoName: String): Future[Option[Repository]] =
+  def getByOwnerAndName(owner: String, repoName: String): Future[Option[Repository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -54,12 +54,12 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL"""
-        select repository.id from repository
-        join account on repository.owner_id = account.id
-        where
-        repository.name = {repoName} and
-        account.username = {owner}
-      """.as(SqlParser.int("repository.id").single)
+          select repository.id from repository
+          join account on repository.owner_id = account.id
+          where
+          repository.name = {repoName} and
+          account.username = {owner}
+        """.as(SqlParser.int("repository.id").single)
 
       }
     }(ec)
@@ -67,16 +67,16 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
   def createCollaborator(repositoryId: Long, collaboratorId: Long, role: Int): Future[Option[Long]] = Future {
     db.withConnection { implicit connection =>
       SQL("""
-        insert into collaborator (user_id, repository_id, role) values ({userId}, {repositoryId}, {role})
-      """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId, "role" -> role).executeInsert()
+          insert into collaborator (account_id, repository_id, role) values ({accountId}, {repositoryId}, {role})
+        """).on("accountId" -> collaboratorId, "repositoryId" -> repositoryId, "role" -> role).executeInsert()
     }
   }
 
   def removeCollaborator(repositoryId: Long, collaboratorId: Long): Future[Int] = Future {
     db.withConnection { implicit connection =>
       SQL("""
-        DELETE FROM collaborator WHERE user_id={userId} and repository_id={repositoryId}
-      """).on("userId" -> collaboratorId, "repositoryId" -> repositoryId).executeUpdate()
+          delete from collaborator WHERE account_id={accountId} and repository_id={repositoryId}
+        """).on("accountId" -> collaboratorId, "repositoryId" -> repositoryId).executeUpdate()
     }
   }
 
@@ -88,10 +88,10 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into repository (name, owner_id, description, default_branch) values (
-          {name},{owner_id},{description},{defaultBranch}
-        )
-      """).on(
+          insert into repository (name, owner_id, description, default_branch) values (
+            {name},{owner_id},{description},{defaultBranch}
+          )
+        """).on(
             "name"          -> repository.name,
             "owner_id"      -> ownerId,
             "description"   -> repository.description.getOrElse(""),
@@ -101,15 +101,15 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def isUserCollaborator(repository: Option[Repository], userId: Long): Future[Option[Int]] =
+  def isAccountCollaborator(repository: Option[Repository], accountId: Long): Future[Option[Int]] =
     repository match {
       case Some(repo) =>
         Future {
           db.withConnection { implicit connection =>
             SQL(s"""
-        select role from collaborator
-        where collaborator.user_id = {collaboratorId} and repository_id = {repositoryId}
-          """).on("collaboratorId" -> userId, "repositoryId" -> repo.id)
+              select role from collaborator
+              where collaborator.account_id = {collaboratorId} and repository_id = {repositoryId}
+              """).on("collaboratorId" -> accountId, "repositoryId" -> repo.id)
               .as(SqlParser.int("role").singleOpt)
           }
         }(ec)
@@ -119,11 +119,11 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
-        select * from collaborator
-        join account
-        on account.id = collaborator.user_id
-        where repository_id = {repositoryId}
-        order by collaborator.id asc
+          select * from collaborator
+          join account
+          on account.id = collaborator.account_id
+          where repository_id = {repositoryId}
+          order by collaborator.id asc
         """)
           .on("repositoryId" -> repository.id)
           .as(simpleCollaborator.*)
@@ -140,9 +140,9 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
           join account on repository.owner_id = account.id
           left join collaborator on repository.id = collaborator.repository_id
           where repository.owner_id = $accountId
-          or (collaborator.user_id = $accountId)
+          or (collaborator.account_id = $accountId)
           order by repository.id desc
-      """.as(simple.*)
+        """.as(simple.*)
       }
     }(ec)
 }

@@ -16,7 +16,7 @@ case object GitKeep extends Literal {
 }
 
 case object SessionName extends Literal {
-  val value = "user_id"
+  val value = "account_id"
 }
 
 case object ForbiddenSymbols {

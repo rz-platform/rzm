@@ -9,12 +9,12 @@ GET     /                           controllers.AccountController.index
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Login
-GET     /signin              controllers.AccountController.login
+GET     /signin              controllers.AccountController.signin
 POST     /signin              controllers.AccountController.authenticate
 
 # Sign up
-GET     /signup              controllers.AccountController.register
-POST     /signup              controllers.AccountController.saveUser
+GET     /signup              controllers.AccountController.signup
+POST     /signup              controllers.AccountController.saveAccout
 
 # Log out
 GET /logout controllers.AccountController.logout
@@ -66,12 +66,12 @@ GET /repositories/:account/:repository/:rev/archive controllers.GitEntitiesContr
 
 # Profile editing page
 
-GET /profile controllers.AccountController.profilePage
-GET /profile/image/:account controllers.AccountController.profilePicture(account)
-POST /profile/image/delete controllers.AccountController.removeProfilePicture
-POST /profile controllers.AccountController.editProfile
+GET /profile controllers.AccountController.accountPage
+GET /profile/image/:account controllers.AccountController.accountPicture(account)
+POST /profile/image/delete controllers.AccountController.removeAccountPicture
+POST /profile controllers.AccountController.editAccount
 POST /profilePassword controllers.AccountController.updatePassword
-POST  /uploadProfilePage controllers.AccountController.uploadProfilePicture()
+POST  /uploadProfilePage controllers.AccountController.uploadAccountPicture()
 
 # SSH Keys
 GET /profile/keys controllers.AccountController.keysPage

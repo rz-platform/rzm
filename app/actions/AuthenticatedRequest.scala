@@ -2,7 +2,7 @@ package actions
 
 import controllers.routes
 import javax.inject.{ Inject, Singleton }
-import models.{ SessionName, UserRequest }
+import models.{ SessionName, AccountRequest }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.AccountRepository
@@ -19,14 +19,14 @@ class AuthenticatedRequest @Inject() (
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
 )(implicit val executionContext: ExecutionContext)
-    extends ActionBuilder[UserRequest, AnyContent]
+    extends ActionBuilder[AccountRequest, AnyContent]
     with Results {
 
   override def parser: BodyParser[AnyContent] = playBodyParsers.anyContent
 
   override def invokeBlock[A](
     request: Request[A],
-    block: UserRequest[A] => Future[Result]
+    block: AccountRequest[A] => Future[Result]
   ): Future[Result] = {
     // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {
@@ -34,17 +34,17 @@ class AuthenticatedRequest @Inject() (
     } yield {
       accountService.findById(sessionId.toLong).flatMap {
         case Some(account) =>
-          block(new UserRequest[A](request, account, messagesApi))
+          block(new AccountRequest[A](request, account, messagesApi))
         case None =>
           Future.successful {
-            Redirect(routes.AccountController.login()).withNewSession
+            Redirect(routes.AccountController.signin()).withNewSession
           }
       }
     }
 
     maybeFutureResult.getOrElse {
       Future.successful {
-        Redirect(routes.AccountController.login()).withNewSession
+        Redirect(routes.AccountController.signin()).withNewSession
       }
     }
   }

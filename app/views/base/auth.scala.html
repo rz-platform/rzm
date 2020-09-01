@@ -1,12 +1,12 @@
-@(title: String, fluid: Boolean = false)(body: Html)(implicit request: RequestWithUser)
+@(title: String, fluid: Boolean = false)(body: Html)(implicit request: RequestWithAccount)
 
 @headerHtml = {
 <ul class="rz-menu-list">
   <li class="rz-menu-item">
   <div class="auth-user">
-    <a href="@routes.AccountController.profilePage" class="rz-menu-link">
+    <a href="@routes.AccountController.accountPage" class="rz-menu-link">
       @if(request.account.hasPicture) {
-      <img src="@routes.AccountController.profilePicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
+      <img src="@routes.AccountController.accountPicture(request.account.userName)" alt="request.account.userName" class="profile-picture"/>
       }
       @request.account.userName
     </a>

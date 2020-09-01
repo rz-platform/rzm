@@ -2,25 +2,25 @@ package models
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 
-trait RequestWithUser extends PreferredMessagesProvider with MessagesRequestHeader {
+trait RequestWithAccount extends PreferredMessagesProvider with MessagesRequestHeader {
   def account: SimpleAccount
 }
 
-trait UserRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
+trait AccountRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
   def account: SimpleAccount
 }
-class UserRequest[A](request: Request[A], val account: SimpleAccount, val messagesApi: MessagesApi)
+class AccountRequest[A](request: Request[A], val account: SimpleAccount, val messagesApi: MessagesApi)
     extends WrappedRequest[A](request)
-    with UserRequestHeader
+    with AccountRequestHeader
 
-trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithUser {
+trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
   def account: SimpleAccount
   def repository: Repository
   def role: AccessLevel
 }
 
 class RepositoryRequest[A](
-  request: UserRequest[A],
+  request: AccountRequest[A],
   val repository: Repository,
   val account: SimpleAccount,
   val role: AccessLevel,

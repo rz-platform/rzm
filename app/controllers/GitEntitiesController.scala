@@ -90,22 +90,22 @@ class GitEntitiesController @Inject() (
     username: String,
     repoName: String,
     minAccess: AccessLevel
-  ): ActionRefiner[UserRequest, RepositoryRequest] =
-    new ActionRefiner[UserRequest, RepositoryRequest] {
+  ): ActionRefiner[AccountRequest, RepositoryRequest] =
+    new ActionRefiner[AccountRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
       def refine[A](
-        request: UserRequest[A]
+        request: AccountRequest[A]
       ): Future[Either[Result, RepositoryRequest[A]]] = {
         val items = for {
-          repository: Option[Repository] <- gitEntitiesRepository.getByAuthorAndName(username, repoName)
-          collaborator: Option[Int]      <- gitEntitiesRepository.isUserCollaborator(repository, request.account.id)
+          repository: Option[Repository] <- gitEntitiesRepository.getByOwnerAndName(username, repoName)
+          collaborator: Option[Int]      <- gitEntitiesRepository.isAccountCollaborator(repository, request.account.id)
         } yield (repository, collaborator)
         items.map { data =>
           val (repository, collaborator) = data
           repository match {
             case Some(repo) =>
-              AccessLevel.userAccess(collaborator, repo.owner.id, request.account.id) match {
+              AccessLevel.fromAccount(collaborator, repo.owner.id, request.account.id) match {
                 case Some(access) if access.role <= minAccess.role =>
                   Right(new RepositoryRequest[A](request, repo, request.account, access, messagesApi))
                 case _ => Left(errorHandler.clientError(request, msg = request.messages("error.accessdenied")))
@@ -136,7 +136,7 @@ class GitEntitiesController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
         repository =>
-          gitEntitiesRepository.getByAuthorAndName(request.account.userName, repository.name).flatMap {
+          gitEntitiesRepository.getByOwnerAndName(request.account.userName, repository.name).flatMap {
             case None =>
               gitEntitiesRepository.insertRepository(request.account.id, repository).map { _ =>
                 val git = new GitRepository(request.account, repository.name, gitHome)
@@ -442,10 +442,10 @@ class GitEntitiesController @Inject() (
             BadRequest(html.git.collaborators(formWithErrors, collaborators))
           },
         (data: NewCollaboratorData) =>
-          accountRepository.getByLoginOrEmail(data.emailOrLogin).flatMap {
+          accountRepository.getByUsernameOrEmail(data.emailOrLogin).flatMap {
             case Some(futureCollaborator) =>
               gitEntitiesRepository
-                .isUserCollaborator(Some(req.repository), futureCollaborator.id)
+                .isAccountCollaborator(Some(req.repository), futureCollaborator.id)
                 .flatMap {
                   case None =>
                     gitEntitiesRepository
@@ -478,10 +478,10 @@ class GitEntitiesController @Inject() (
             BadRequest(html.git.collaborators(addCollaboratorForm, collaborators))
           },
         data =>
-          accountRepository.getByLoginOrEmail(data.email).flatMap {
+          accountRepository.getByUsernameOrEmail(data.email).flatMap {
             case Some(collaborator) =>
               gitEntitiesRepository
-                .isUserCollaborator(Some(req.repository), collaborator.id)
+                .isAccountCollaborator(Some(req.repository), collaborator.id)
                 .flatMap {
                   case Some(_) =>
                     gitEntitiesRepository
