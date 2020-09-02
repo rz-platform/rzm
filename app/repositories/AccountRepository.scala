@@ -71,7 +71,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       db.withConnection { implicit connection =>
         SQL(s"""
              select id, username, email, has_picture
-             from account where userName= {usernameOrEmail} or email ={email}""".stripMargin)
+             from account where username={usernameOrEmail} or email ={email}""".stripMargin)
           .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
           .as(simple.singleOpt)
       }
@@ -80,12 +80,12 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a rich account from login
    */
-  def getRichModelByLoginOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[RichAccount]] =
+  def getRichModelByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[RichAccount]] =
     Future {
       db.withConnection { implicit connection =>
         SQL(s"""
              select *
-             from account where userName= {usernameOrEmail} or email ={email}""".stripMargin)
+             from account where username={usernameOrEmail} or email ={email}""".stripMargin)
           .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
           .as(rich.singleOpt)
       }
@@ -113,7 +113,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into account (userName,full_name,email,password,is_admin, has_picture,description) values (
+        insert into account (username,full_name,email,password,is_admin, has_picture,description) values (
           {userName}, {fullName}, {email}, {password}, {isAdmin}, {hasPicture},  {description}
         )
       """).bind(account).executeInsert()

@@ -78,7 +78,7 @@ class AccountController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def index(): Action[AnyContent] =
+  def index: Action[AnyContent] =
     userAction.async(implicit request => Future(Redirect(routes.GitEntitiesController.list())))
 
   def signin: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(signinForm))))
@@ -128,15 +128,16 @@ class AccountController @Inject() (
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
     val cleanData    = clearAccountData(incomingData)
+    logger.info(cleanData.toString())
     signinForm
       .bindFromRequest(cleanData)
       .fold(
         formWithErrors => Future(BadRequest(html.signin(formWithErrors))),
-        account =>
+        accountData =>
           accountService
-            .getRichModelByLoginOrEmail(account.userName)
+            .getRichModelByUsernameOrEmail(accountData.userName)
             .flatMap {
-              case Some(account) if HashedString(account.password).check(account.password) =>
+              case Some(account) if HashedString(account.password).check(accountData.password) =>
                 Future(
                   Redirect(routes.GitEntitiesController.list())
                     .withSession(SessionName.toString -> account.id.toString)

@@ -91,7 +91,8 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
           insert into repository (name, owner_id, description, default_branch) values (
             {name},{owner_id},{description},{defaultBranch}
           )
-        """).on(
+        """)
+          .on(
             "name"          -> repository.name,
             "owner_id"      -> ownerId,
             "description"   -> repository.description.getOrElse(""),
@@ -109,7 +110,8 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
             SQL(s"""
               select role from collaborator
               where collaborator.account_id = {collaboratorId} and repository_id = {repositoryId}
-              """).on("collaboratorId" -> accountId, "repositoryId" -> repo.id)
+              """)
+              .on("collaboratorId" -> accountId, "repositoryId" -> repo.id)
               .as(SqlParser.int("role").singleOpt)
           }
         }(ec)
