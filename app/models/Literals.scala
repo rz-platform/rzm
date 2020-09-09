@@ -48,3 +48,10 @@ case object AccountNameRegex {
 case object RepositoryNameRegex {
   val toRegex: Regex = "^[A-Za-z\\d_\\-]+$".r
 }
+
+sealed trait RepositoryPage
+
+case object FileViewPage extends RepositoryPage
+case object CollaboratorsPage extends RepositoryPage
+case object CommitHistoryPage extends RepositoryPage
+case object FileUploadPage extends RepositoryPage

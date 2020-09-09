@@ -69,7 +69,7 @@
     </div>
 
     <div class="rz-editor-content">
-      @repositoryHeader()
+    @repositoryHeader(FileViewPage)
     @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name), Symbol("enctype") -> "application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
     @CSRF.formField
     <div class="rz-editor-content-header">
@@ -84,7 +84,7 @@
       </div>
       <div class="actions">
         @if(blob.content.viewType == "text"){
-        <input type="submit" class="rz-button button-small" value='@request.messages("repository.edit.submit")' id="file-save-submit"/>
+        <input type="submit" class="rz-button button-small" value='@request.messages("repository.edit.submit")' id="file-save-submit" onclick="window.onbeforeunload = null;"/>
         }
         <a class="rz-button button-small"
            href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">

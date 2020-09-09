@@ -128,7 +128,6 @@ class AccountController @Inject() (
   def authenticate: Action[AnyContent] = Action.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
     val cleanData    = clearAccountData(incomingData)
-    logger.info(cleanData.toString())
     signinForm
       .bindFromRequest(cleanData)
       .fold(

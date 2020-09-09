@@ -4,7 +4,7 @@
 @import helpers._
 
 @auth(request.messages("repository.commitLog.title")) {
-@repositoryHeader()
+@repositoryHeader(CommitHistoryPage)
 
 <h2>@request.messages("repository.commitLog.header") @rev</h2>
 

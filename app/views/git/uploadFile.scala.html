@@ -4,7 +4,7 @@
 @import helpers._
 
 @auth(request.messages("repository.upload.title")) {
-@repositoryHeader()
+@repositoryHeader(FileUploadPage)
 <div class="upload-page">
   <h1>@request.messages("repository.upload.title")</h1>
   @if(!path.isEmpty) {

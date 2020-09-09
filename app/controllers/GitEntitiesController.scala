@@ -210,7 +210,7 @@ class GitEntitiesController @Inject() (
           case Some(blob) =>
             Future.successful {
               Ok(
-                html.git.viewBlob(
+                html.git.viewFile(
                   editorForm.fill(
                     EditedItem(
                       blob.content.content.getOrElse(""),
@@ -301,7 +301,7 @@ class GitEntitiesController @Inject() (
                     Future(
                       BadRequest(
                         html.git
-                          .viewBlob(
+                          .viewFile(
                             formWithErrors,
                             blob,
                             EncodedPath.fromString(path),
