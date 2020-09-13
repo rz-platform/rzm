@@ -1,7 +1,7 @@
 package models
 
 import java.io.{ File, InputStream }
-import java.util.Date
+import java.time.{ LocalDateTime, ZoneId }
 
 import anorm._
 import org.eclipse.jgit.lib.ObjectId
@@ -30,16 +30,6 @@ case class UploadFileForm(path: String)
 /**
  * The file data for the file list of the repository viewer.
  *
- * @param id          the object id
- * @param isDirectory whether is it directory
- * @param name        the file (or directory) name
- * @param path        the file (or directory) complete path
- * @param message     the last commit message
- * @param commitId    the last commit id
- * @param time        the last modified time
- * @param author      the last committer name
- * @param mailAddress the committer's mail address
- * @param linkUrl     the url of submodule
  */
 case class FileInfo(
   id: ObjectId,
@@ -48,15 +38,13 @@ case class FileInfo(
   path: String,
   message: String,
   commitId: String,
-  time: Date,
   author: String,
-  mailAddress: String,
-  linkUrl: Option[String]
+  mailAddress: String
 )
 
 case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
 
-case class NewItem(name: String, rev: String)
+case class NewItem(name: String, rev: String, path: String, isFolder: Boolean)
 
 /**
  * The file content data for the file content view of the repository viewer.
@@ -71,7 +59,7 @@ case class ContentInfo(viewType: String, size: Option[Long], content: Option[Str
   /**
    * the line separator of this content ("LF" or "CRLF")
    */
-  val lineSeparator: String = if (content.exists(_.indexOf("\r\n") >= 0)) "CRLF" else "LF"
+  lazy val lineSeparator: String = if (content.exists(_.indexOf("\r\n") >= 0)) "CRLF" else "LF"
 }
 
 case class Blob(
@@ -85,26 +73,15 @@ case class RawFile(inputStream: InputStream, contentLength: Integer, contentType
 /**
  * The commit data.
  *
- * @param id                    the commit id
- * @param shortMessage          the short message
- * @param fullMessage           the full message
- * @param parents               the list of parent commit id
- * @param authorTime            the author time
- * @param authorName            the author name
- * @param authorEmailAddress    the mail address of the author
- * @param commitTime            the commit time
- * @param committerName         the committer name
- * @param committerEmailAddress the mail address of the committer
  */
 case class CommitInfo(
   id: String,
   shortMessage: String,
   fullMessage: String,
   parents: List[String],
-  authorTime: Date,
   authorName: String,
   authorEmailAddress: String,
-  commitTime: Date,
+  commitTime: LocalDateTime,
   committerName: String,
   committerEmailAddress: String
 ) {
@@ -115,10 +92,9 @@ case class CommitInfo(
       rev.getShortMessage,
       rev.getFullMessage,
       rev.getParents.map(_.name).toList,
-      rev.getAuthorIdent.getWhen,
       rev.getAuthorIdent.getName,
       rev.getAuthorIdent.getEmailAddress,
-      rev.getCommitterIdent.getWhen,
+      rev.getCommitterIdent.getWhen.toInstant.atZone(ZoneId.systemDefault()).toLocalDateTime,
       rev.getCommitterIdent.getName,
       rev.getCommitterIdent.getEmailAddress
     )

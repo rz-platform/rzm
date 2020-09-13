@@ -3,6 +3,7 @@ package controllers
 import javax.inject._
 import play.api._
 import play.api.http.DefaultHttpErrorHandler
+import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc._
 import play.api.routing.Router
@@ -26,13 +27,23 @@ class ErrorHandler @Inject() (
       BadRequest(views.html.error(exception.getMessage))
     }
 
-  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
+  override def onClientError(request: RequestHeader, statusCode: Int = BAD_REQUEST, msg: String): Future[Result] =
     if (env.mode == Mode.Prod) {
       Future.successful {
         implicit val ir: RequestHeader = request
-        BadRequest(views.html.error(message))
+        BadRequest(views.html.error(msg))
       }
     } else {
-      super.onClientError(request, statusCode, message)
+      super.onClientError(request, statusCode, msg)
     }
+
+  /**
+   *
+   * Simple handler for cases when we need just Result
+   *
+   */
+  def clientError(request: RequestHeader, msg: String): Result = {
+    implicit val ir: RequestHeader = request
+    BadRequest(views.html.error(msg))
+  }
 }

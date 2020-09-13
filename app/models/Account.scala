@@ -1,10 +1,8 @@
 package models
 
-import java.util.Calendar
+import java.time.LocalDateTime
 
 import anorm._
-
-import scala.collection.immutable.HashMap
 
 sealed trait Account {
   def id: Long
@@ -25,7 +23,7 @@ case class RichAccount(
   email: String,
   password: String,
   isAdmin: Boolean = false,
-  created: java.util.Date,
+  created: LocalDateTime,
   hasPicture: Boolean,
   description: String = ""
 ) extends Account
@@ -36,11 +34,11 @@ object RichAccount {
   def fromScratch(userForm: AccountRegistrationData): RichAccount =
     RichAccount(
       0,
-      userForm.userName.trim.toLowerCase,
+      userForm.userName,
       userForm.fullName.getOrElse(""),
-      userForm.email.trim.toLowerCase,
+      userForm.email,
       HashedString.fromString(userForm.password).toString,
-      created = Calendar.getInstance().getTime,
+      created = LocalDateTime.now(),
       hasPicture = false
     )
 }

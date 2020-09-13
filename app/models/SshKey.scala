@@ -1,13 +1,15 @@
 package models
 
-import anorm.{ Macro, ToParameterList }
 import java.security.MessageDigest
-import java.util.{ Base64, Date }
+import java.time.LocalDateTime
+import java.util.Base64
+
+import anorm.{ Macro, ToParameterList }
 
 case class SshKey(
   id: Int = 0,
   publicKey: String,
-  createdAt: Date
+  createdAt: LocalDateTime
 ) {
   lazy val fingerprint: String = {
     val derFormat            = publicKey.split(" ")(1).trim
@@ -35,9 +37,5 @@ object SshKey {
   implicit def toParameters: ToParameterList[SshKey] = Macro.toParameters[SshKey]
 }
 
-case class SshKeyData(
-  publicKey: String
-)
-case class SshRemoveData(
-  id: Int
-)
+case class SshKeyData(publicKey: String)
+case class SshRemoveData(id: Int)

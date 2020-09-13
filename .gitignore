@@ -6,13 +6,15 @@ dump
 
 # IDE
 .settings
-.cache
 .project
 .classpath
 .scala_dependencies
 bin
 .idea
 .vscode
+.bloop
+.metals
+metals.sbt
 
 # SBT
 dist

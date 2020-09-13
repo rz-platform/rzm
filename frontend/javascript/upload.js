@@ -1,5 +1,3 @@
-"use strict";
-
 const inputFile = document.getElementById("filepicker");
 
 document.getElementById("single").addEventListener('change', function() {

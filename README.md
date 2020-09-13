@@ -11,7 +11,7 @@ Fully-functional Git Server with authentication against Razam implemented in [Ra
 
 ## Development
 
-This is Scala application that uses [Play](https://playframework.com/documentation/latest/Home) and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
+This is Scala 2.13 (JDK 11+ required) application that uses [Play](https://playframework.com/documentation/latest/Home) and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
 
 Front-end is written in VanillaJS and packaged using Parcel. Stylesheets are written in SCSS and following [SASS Guidelines](https://sass-guidelin.es/). HTML [views](https://github.com/razamgit/razam/tree/master/app/views) are following [CodeGuide](https://codeguide.co/).
 

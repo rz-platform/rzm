@@ -16,13 +16,14 @@ case object GitKeep extends Literal {
 }
 
 case object SessionName extends Literal {
-  val value = "user_id"
+  val value = "account_id"
 }
 
-case object ForbiddenSymbols extends Literal {
-  override def value: String = "?:#/&"
+case object ForbiddenSymbols {
+  private val blockList: List[String]        = List("?", ":", "#", "/", "&", "..", "$", "%")
+  def isNameValid(itemName: String): Boolean = blockList.exists(itemName contains _)
 
-  def toList: Array[String] = value.split("")
+  override def toString: String = blockList.toString()
 }
 
 object ExcludedFileNames {
@@ -47,3 +48,10 @@ case object AccountNameRegex {
 case object RepositoryNameRegex {
   val toRegex: Regex = "^[A-Za-z\\d_\\-]+$".r
 }
+
+sealed trait RepositoryPage
+
+case object FileViewPage      extends RepositoryPage
+case object CollaboratorsPage extends RepositoryPage
+case object CommitHistoryPage extends RepositoryPage
+case object FileUploadPage    extends RepositoryPage

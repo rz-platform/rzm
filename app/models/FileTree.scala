@@ -2,7 +2,7 @@ package models
 
 import scala.collection.mutable.ArrayBuffer
 
-class FileNode(nodeValue: String, path: String) {
+class FileNode(nodeValue: String, path: String, parent: String) {
   val folders = new ArrayBuffer[FileNode]()
   val files   = new ArrayBuffer[FileNode]()
 
@@ -10,19 +10,22 @@ class FileNode(nodeValue: String, path: String) {
   val incrementalPath: String = path
   val pathWithoutRoot: String = path.replaceFirst("./", "")
 
+  val pathWithoutRootUrlEncoded: String = EncodedPath.fromString(pathWithoutRoot)
+
+  val hash: String       = pathWithoutRoot.hashCode.toString
+  val parentHash: String = parent
+
   val isRoot: Boolean = data == FileRoot.toString
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
   val pathWithoutRootEncoded: String = EncodedPath.fromString(pathWithoutRoot)
-  def depth: Int = pathWithoutRoot.count(_ == '/') match {
-    case x if !isRoot                      => x
-    case _ if isRoot                       => 0
-    case x if x > MaxDepthInFileTree.toInt => MaxDepthInFileTree.toInt
-  }
+
+  private def realDepth: Int = pathWithoutRoot.count(_ == '/')
+  def depth: Int             = if (isRoot) 0 else if (realDepth < MaxDepthInFileTree.toInt) realDepth else MaxDepthInFileTree.toInt
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
-    val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
+    val currentChild = new FileNode(list.head, currentPath + "/" + list(0), hash)
     if (list.length == 1) {
       files += currentChild
     } else {
