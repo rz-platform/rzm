@@ -1,7 +1,6 @@
 package repositories
 
 import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
-import java.util
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.{ Lock, ReentrantLock }
 
@@ -13,12 +12,10 @@ import org.apache.commons.io.input.BOMInputStream
 import org.apache.commons.io.{ FileUtils, IOUtils }
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.attributes.Attributes
 import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder, DirCacheEntry }
 import org.eclipse.jgit.errors.MissingObjectException
 import org.eclipse.jgit.lib.{ Repository => _, _ }
 import org.eclipse.jgit.revwalk.{ RevCommit, RevTag, RevTree, RevWalk }
-import org.eclipse.jgit.transport.{ ReceiveCommand, ReceivePack }
 import org.eclipse.jgit.treewalk.TreeWalk.OperationType
 import org.eclipse.jgit.treewalk.filter.{ AndTreeFilter, PathFilter, TreeFilter }
 import org.eclipse.jgit.treewalk.{ CanonicalTreeParser, TreeWalk, WorkingTreeOptions }
@@ -247,11 +244,11 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
         case (objectId, revision) =>
           defining(getRevCommitFromId(git, objectId)) { revCommit =>
             val treeWalk = new TreeWalk(git.getRepository)
-            treeWalk.addTree(revCommit.getTree);
-            treeWalk.setRecursive(false);
+            treeWalk.addTree(revCommit.getTree)
+            treeWalk.setRecursive(false)
             while (treeWalk.next()) {
               if (treeWalk.isSubtree) {
-                treeWalk.enterSubtree();
+                treeWalk.enterSubtree()
               } else {
                 fileTree.addElement(treeWalk.getPathString)
               }
@@ -390,10 +387,8 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
               path,
               getSummaryMessage(commit.getFullMessage, commit.getShortMessage),
               commit.getName,
-              commit.getAuthorIdent.getWhen,
               commit.getAuthorIdent.getName,
-              commit.getAuthorIdent.getEmailAddress,
-              linkUrl
+              commit.getAuthorIdent.getEmailAddress
             )
         }
         .sortWith { (file1, file2) =>

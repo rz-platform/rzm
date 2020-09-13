@@ -3,18 +3,18 @@ package controllers
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Millis, Seconds, Span }
-import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
 import play.api.db.evolutions.Evolutions
-import play.api.db.{ DBApi, Database }
-import play.api.mvc.{ Flash, Result }
+import play.api.db.{DBApi, Database}
+import play.api.mvc.{Flash, Result}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
+import repositories.{AccountRepository, GitEntitiesRepository, GitRepository}
 
 import scala.concurrent.Future
 
@@ -47,7 +47,7 @@ class FunctionalGitEntitiesTest
 
   val defaultBranch = "master"
 
-  val sessionName = SessionName.toString
+  val sessionName: String = SessionName.toString
 
   override def beforeAll(): Unit =
     Evolutions.applyEvolutions(databaseApi.database("default"))

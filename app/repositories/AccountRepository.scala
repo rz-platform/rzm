@@ -1,6 +1,6 @@
 package repositories
 
-import java.util.Date
+import java.time.LocalDateTime
 
 import anorm.SqlParser.get
 import anorm._
@@ -15,21 +15,21 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   private val db     = dbapi.database("default")
   private val logger = play.api.Logger(this.getClass)
 
-  val simple: RowParser[SimpleAccount] = {
+  val simpleAccountParser: RowParser[SimpleAccount] = {
     (get[Long]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
       ~ get[Boolean]("account.has_picture")).map {
       case id ~ userName ~ email ~ hasPicture => SimpleAccount(id, userName, email, hasPicture)
     }
   }
 
-  private val rich = {
+  private val richAccountParser = {
     (get[Long]("account.id") ~
       get[String]("account.username") ~
       get[String]("account.full_name") ~
       get[String]("account.email") ~
       get[String]("account.password") ~
       get[Boolean]("account.is_admin") ~
-      get[Date]("account.created_at") ~
+      get[LocalDateTime]("account.created_at") ~
       get[Boolean]("account.has_picture") ~
       get[String]("account.description")).map {
       case id ~ userName ~ fullName ~ email ~ password ~ isAdmin ~ registeredDate ~ hasPicture ~ description =>
@@ -47,8 +47,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     }
   }
 
-  val sshKeysSimple: RowParser[SshKey] = {
-    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key") ~ get[Date]("ssh_key.created_at")).map {
+  val sshKeyParser: RowParser[SshKey] = {
+    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key") ~ get[LocalDateTime]("ssh_key.created_at")).map {
       case id ~ publicKey ~ createdAt => SshKey(id, publicKey, createdAt)
     }
   }
@@ -59,7 +59,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def findById(id: Long): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL"select id, username, email, has_picture from account where id = $id".as(simple.singleOpt)
+        SQL("select id, username, email, has_picture from account where id = {accountId}")
+          .on("accountId" -> id)
+          .as(simpleAccountParser.singleOpt)
       }
     }(ec)
 
@@ -69,11 +71,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def getByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-             select id, username, email, has_picture
-             from account where username={usernameOrEmail} or email ={email}""".stripMargin)
+        SQL("select id, username, email, has_picture from account where username={usernameOrEmail} or email={email}")
           .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
-          .as(simple.singleOpt)
+          .as(simpleAccountParser.singleOpt)
       }
     }(ec)
 
@@ -83,11 +83,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def getRichModelByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[RichAccount]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-             select *
-             from account where username={usernameOrEmail} or email ={email}""".stripMargin)
+        SQL("select * from account where username={usernameOrEmail} or email={email}")
           .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
-          .as(rich.singleOpt)
+          .as(richAccountParser.singleOpt)
       }
     }(ec)
 
@@ -97,11 +95,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def getRichModelById(accountId: Long): Future[RichAccount] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-             select *
-             from account where id=$accountId
-             """)
-          .as(rich.single)
+        SQL(" select * from account where id={accountId}")
+          .on("accountId" -> accountId)
+          .as(richAccountParser.single)
       }
     }(ec)
 
@@ -113,9 +109,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        insert into account (username,full_name,email,password,is_admin, has_picture,description) values (
-          {userName}, {fullName}, {email}, {password}, {isAdmin}, {hasPicture},  {description}
-        )
+        insert into account (username,full_name,email,password,is_admin, has_picture,description) values
+          ({userName}, {fullName}, {email}, {password}, {isAdmin}, {hasPicture},  {description})
       """).bind(account).executeInsert()
       }
     }(ec)
@@ -123,10 +118,10 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def updatePassword(id: Long, newPasswordHash: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-          UPDATE account
-          SET password = {newPasswordHash}
-          WHERE account.id = {id}
+        SQL("""
+          update account
+          set password = {newPasswordHash}
+          where account.id = {id}
       """).on("newPasswordHash" -> newPasswordHash, "id" -> id).executeUpdate()
       }
     }(ec)
@@ -134,12 +129,12 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def updateProfileInfo(id: Long, accountData: AccountData): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-          UPDATE account
-          SET full_name = {fullName},
+        SQL("""
+          update account
+          set full_name = {fullName},
           email = {email},
           description = {description}
-          WHERE account.id = {id}
+          where account.id = {id}
       """).on(
             "fullName"    -> accountData.fullName.getOrElse(""),
             "email"       -> accountData.email,
@@ -153,9 +148,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def insertSshKey(accountId: Long, key: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-             insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})
-             """)
+        SQL("insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})")
           .on("accountId" -> accountId, "publicKey" -> key)
           .executeUpdate()
       }
@@ -164,7 +157,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def numberOfAccountSshKeys(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select count(id) as c from ssh_key where account_id = {accountId}""")
+        SQL("select count(id) as c from ssh_key where account_id = {accountId}")
           .on("accountId" -> accountId)
           .as(SqlParser.int("c").single)
       }
@@ -173,16 +166,16 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def accountSshKeys(accountId: Long): Future[List[SshKey]] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""select * from ssh_key where account_id = {accountId}""")
+        SQL("select * from ssh_key where account_id = {accountId}")
           .on("accountId" -> accountId)
-          .as(sshKeysSimple.*)
+          .as(sshKeyParser.*)
       }
     }(ec)
 
   def deleteSshKeys(accountId: Long, keyId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""delete from ssh_key where id = {keyId} and account_id={accountId}""")
+        SQL("delete from ssh_key where id = {keyId} and account_id={accountId}")
           .on("accountId" -> accountId, "keyId" -> keyId)
           .executeUpdate()
       }
@@ -191,11 +184,8 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def hasPicture(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-          UPDATE account
-          SET has_picture = true
-          WHERE id = {accountId}
-      """).on("accountId" -> accountId)
+        SQL("update account set has_picture = true where id = {accountId}")
+          .on("accountId" -> accountId)
           .executeUpdate()
       }
     }(ec)
@@ -203,11 +193,9 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   def removePicture(accountId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
-        SQL(s"""
-          UPDATE account
-          SET has_picture = false
-          WHERE id = {accountId}
-      """).on("accountId" -> accountId).executeUpdate()
+        SQL("update account set has_picture = false where id = {accountId}")
+          .on("accountId" -> accountId)
+          .executeUpdate()
       }
     }(ec)
 

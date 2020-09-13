@@ -3,12 +3,12 @@ package controllers
 import javax.inject._
 import play.api._
 import play.api.http.DefaultHttpErrorHandler
+import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc._
 import play.api.routing.Router
 
 import scala.concurrent._
-import play.api.http.Status._
 
 /**
  * Provides an error handler that uses HTML template in error pages in Prod environment

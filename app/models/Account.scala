@@ -1,6 +1,6 @@
 package models
 
-import java.util.Calendar
+import java.time.LocalDateTime
 
 import anorm._
 
@@ -23,7 +23,7 @@ case class RichAccount(
   email: String,
   password: String,
   isAdmin: Boolean = false,
-  created: java.util.Date,
+  created: LocalDateTime,
   hasPicture: Boolean,
   description: String = ""
 ) extends Account
@@ -38,7 +38,7 @@ object RichAccount {
       userForm.fullName.getOrElse(""),
       userForm.email,
       HashedString.fromString(userForm.password).toString,
-      created = Calendar.getInstance().getTime,
+      created = LocalDateTime.now(),
       hasPicture = false
     )
 }

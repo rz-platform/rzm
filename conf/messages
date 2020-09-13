@@ -1,3 +1,9 @@
+# System
+
+format.localDateTime=yyyy-MM-dd HH:mm:ss
+format.date=Date (''{0}'')
+error.pattern=Must not contain forbidden symbols
+
 # Messages
 
 common.done=Done
