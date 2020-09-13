@@ -17,6 +17,15 @@ String.prototype.hashCode = function(){
     return hash.toString();
 }
 
+function getYOffset(el) {
+    var yOffset = 0;
+    while (el && !isNaN(el.offsetLeft) && !isNaN(el.offsetTop)) {
+        yOffset += el.offsetTop - el.scrollTop;
+        el = el.offsetParent;
+    }
+    return yOffset;
+}
+
 // Where referenceNode is the node you want to put newNode after.
 // If referenceNode is the last child within its parent element, that's fine,
 // because referenceNode.nextSibling will be null
@@ -61,6 +70,9 @@ const showSubTreeButtonList = document.getElementsByClassName('file-tree-show');
 
 const currentDocumentHash = window.location.href.hashCode();
 
+const fileTree = document.getElementById('rz-sidebar-filetree');
+const fileTreeChosen = document.getElementById('rz-menu-file-tree-chosen');
+
 function saveCursor(cursor) {
     localStorage.setItem(currentDocumentHash + '_line', cursor.line);
     localStorage.setItem(currentDocumentHash + '_ch', cursor.ch);
@@ -84,7 +96,7 @@ if (editorArea) {
         mode: "text/x-stex",
         autofocus: true,
         lineWrapping: true,
-        theme: 'idea',
+        theme: 'rzm',
         smartIndent: false,
         tabSize: 4,
         indentWithTabs: false,
@@ -107,6 +119,10 @@ if (editorArea) {
         }
     });
 }
+
+/** Scroll to active file in file tree */
+
+fileTree.scrollTo(0, getYOffset(fileTreeChosen) - fileTreeChosen.offsetHeight * 2)
 
 /** Inline file and folder creation */
 
