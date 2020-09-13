@@ -8,8 +8,12 @@
 
 // Vendors
 @import
-  '~codemirror/lib/codemirror',
-  '~codemirror/theme/idea';
+  '~codemirror/lib/codemirror';
+
+// CodeMirror custom theme
+
+@import
+  'theme/rzm.scss';
 
 // Base stuff
 @import

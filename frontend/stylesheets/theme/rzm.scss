@@ -1,0 +1,57 @@
+/**
+    Name: RZM theme
+    Author: Eugene Bosiakov
+ */
+
+$editor-background: #F7F7F7;
+$editor-foreground: #000;
+$editor-lineHighlightBackground: #F0F0F0;
+$editor-selectionBackground: #BFDBFE;
+$editor-selectionHighlightBackground: #E0E0E0;
+
+$token-strings: #448C27;
+$token-numbers: #7A3E9D;
+$token-def: #325CC0;
+$token-punctuation: #777777;
+$token-comments: #AA3731;
+$token-error: #660000;
+
+.cm-s-rzm.CodeMirror { background: $editor-background; color: $editor-foreground; }
+.cm-s-rzm span.cm-meta { color: #808000; }
+.cm-s-rzm span.cm-number { color: $token-numbers; }
+.cm-s-rzm span.cm-keyword { color: $token-def; }
+.cm-s-rzm span.cm-atom { color: $token-def; }
+.cm-s-rzm span.cm-def { color: $token-def; }
+.cm-s-rzm span.cm-variable { color: black; }
+.cm-s-rzm span.cm-variable-2 { color: black; }
+.cm-s-rzm span.cm-variable-3, .cm-s-rzm span.cm-type { color: black; }
+.cm-s-rzm span.cm-property { color: black; }
+.cm-s-rzm span.cm-operator { color: black; }
+.cm-s-rzm span.cm-comment { color: $token-comments; }
+.cm-s-rzm span.cm-string { color: $token-strings; }
+.cm-s-rzm span.cm-string-2 { color: $token-strings; }
+.cm-s-rzm span.cm-qualifier { color: #555; }
+.cm-s-rzm span.cm-error { color: $token-error; }
+.cm-s-rzm span.cm-attribute { color: #0000FF; }
+.cm-s-rzm span.cm-tag { color: #000080; }
+.cm-s-rzm span.cm-link { color: #0000FF; }
+.cm-s-rzm .CodeMirror-activeline-background { background: $editor-lineHighlightBackground; }
+
+.cm-s-rzm span.cm-builtin { color: #30a; }
+.cm-s-rzm span.cm-bracket { color: #cc7; }
+.cm-s-rzm  {
+//   font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+}
+
+.cm-s-rzm .CodeMirror-matchingbracket { outline:1px solid grey; color:black !important; }
+
+.CodeMirror-hints.rzm {
+//   font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  color: #616569;
+  background-color: #ebf3fd !important;
+}
+
+.CodeMirror-hints.rzm .CodeMirror-hint-active {
+  background-color: #a2b8c9 !important;
+  color: #5c6065 !important;
+}
