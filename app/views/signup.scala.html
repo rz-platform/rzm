@@ -1,9 +1,8 @@
 @(signupForm: Form[AccountRegistrationData])(implicit request: MessagesRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
-@header = {}
 
 @html = {
   <div class="rz-auth">
@@ -23,4 +22,4 @@
   }
 }
 
-@main(request.messages("signup.title"))(html, header)
+@main(request.messages("signup.title"))(html, Html(""))()

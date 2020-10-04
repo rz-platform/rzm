@@ -1,9 +1,8 @@
 @(signinForm: Form[AccountLoginData])(implicit request: MessagesRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
-@header = {}
 
 @html = {
   <div class="rz-auth">
@@ -20,4 +19,4 @@
   </div>
 }
 
-@main(request.messages("signin.title"))(html, header)
+@main(request.messages("signin.title"))(html, Html(""))()

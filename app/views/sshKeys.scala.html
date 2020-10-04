@@ -1,7 +1,7 @@
 @(sshKeys: List[SshKey], sshKeyAdd: Form[SshKeyData], sshKeyDelete: Form[SshRemoveData])(implicit request: AccountRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("profile.ssh.title")) {
 <h1>@request.messages("profile.ssh.header")</h1>
@@ -31,4 +31,4 @@
     <input type="submit" value='Add SSH Key' class="rz-button rz-button-primary"/>
   }
 </div>
-}
+}()

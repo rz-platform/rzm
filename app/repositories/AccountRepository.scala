@@ -16,14 +16,14 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   private val logger = play.api.Logger(this.getClass)
 
   val simpleAccountParser: RowParser[SimpleAccount] = {
-    (get[Long]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
+    (get[Int]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
       ~ get[Boolean]("account.has_picture")).map {
       case id ~ userName ~ email ~ hasPicture => SimpleAccount(id, userName, email, hasPicture)
     }
   }
 
   private val richAccountParser = {
-    (get[Long]("account.id") ~
+    (get[Int]("account.id") ~
       get[String]("account.username") ~
       get[String]("account.full_name") ~
       get[String]("account.email") ~
@@ -56,7 +56,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a user from the id.
    */
-  def findById(id: Long): Future[Option[SimpleAccount]] =
+  def findById(id: Int): Future[Option[SimpleAccount]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("select id, username, email, has_picture from account where id = {accountId}")
@@ -92,7 +92,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
   /**
    * Retrieve a rich account from id
    */
-  def getRichModelById(accountId: Long): Future[RichAccount] =
+  def getRichModelById(accountId: Int): Future[RichAccount] =
     Future {
       db.withConnection { implicit connection =>
         SQL(" select * from account where id={accountId}")
@@ -115,7 +115,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def updatePassword(id: Long, newPasswordHash: String): Future[Int] =
+  def updatePassword(id: Int, newPasswordHash: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -126,7 +126,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def updateProfileInfo(id: Long, accountData: AccountData): Future[Int] =
+  def updateProfileInfo(id: Int, accountData: AccountData): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -145,7 +145,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def insertSshKey(accountId: Long, key: String): Future[Int] =
+  def insertSshKey(accountId: Int, key: String): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})")
@@ -154,7 +154,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def numberOfAccountSshKeys(accountId: Long): Future[Int] =
+  def numberOfAccountSshKeys(accountId: Int): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("select count(id) as c from ssh_key where account_id = {accountId}")
@@ -163,7 +163,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def accountSshKeys(accountId: Long): Future[List[SshKey]] =
+  def accountSshKeys(accountId: Int): Future[List[SshKey]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("select * from ssh_key where account_id = {accountId}")
@@ -172,7 +172,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def deleteSshKeys(accountId: Long, keyId: Long): Future[Int] =
+  def deleteSshKeys(accountId: Int, keyId: Long): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("delete from ssh_key where id = {keyId} and account_id={accountId}")
@@ -181,7 +181,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def hasPicture(accountId: Long): Future[Int] =
+  def hasPicture(accountId: Int): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("update account set has_picture = true where id = {accountId}")
@@ -190,7 +190,7 @@ class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionC
       }
     }(ec)
 
-  def removePicture(accountId: Long): Future[Int] =
+  def removePicture(accountId: Int): Future[Int] =
     Future {
       db.withConnection { implicit connection =>
         SQL("update account set has_picture = false where id = {accountId}")

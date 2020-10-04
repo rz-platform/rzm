@@ -8,10 +8,11 @@ import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
 
 case class Repository(
-  id: Long,
+  id: Int,
   owner: SimpleAccount,
   name: String,
-  defaultBranch: String
+  defaultBranch: String,
+  mainFile: Option[String]
 )
 
 object Repository {
@@ -62,11 +63,15 @@ case class ContentInfo(viewType: String, size: Option[Long], content: Option[Str
   lazy val lineSeparator: String = if (content.exists(_.indexOf("\r\n") >= 0)) "CRLF" else "LF"
 }
 
+sealed trait RepositoryTreeContent
+
 case class Blob(
   content: ContentInfo,
   latestCommit: CommitInfo,
   isLfsFile: Boolean
-)
+) extends RepositoryTreeContent
+case object EmptyBlob       extends RepositoryTreeContent
+case object EmptyRepository extends RepositoryTreeContent
 
 case class RawFile(inputStream: InputStream, contentLength: Integer, contentType: String)
 

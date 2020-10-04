@@ -1,7 +1,7 @@
 @(commitLog: Seq[CommitInfo], rev: String, hasNext: Boolean, page: Int)(implicit request: RepositoryRequestHeader)
 
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("repository.commitLog.title")) {
 @repositoryHeader(CommitHistoryPage)
@@ -21,4 +21,4 @@
   @request.messages("repository.commitLog.previousPage")
 </a>
 }
-}
+}()

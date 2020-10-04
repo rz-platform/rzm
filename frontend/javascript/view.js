@@ -44,85 +44,23 @@ function parentByLevel(el, level) {
 /** Constants */
 
 const maxDepthInFileTree = 4;
-
-const editorArea = document.getElementById("code");
-
-const menuItems = document.getElementsByClassName('rz-menu-item');
-
-const mainForm = document.getElementById('new-item-form');
-const mainFormPathInput = document.getElementById('new-item-form-path');
-const mainFormNameInput = document.getElementById('new-item-form-name');
-const mainFormIsFolder = document.getElementById('new-item-form-is-folder');
-
-const fileSubmit = document.getElementById('file-save-submit');
-
-const documentIconSrc = document.getElementById('file-icon').getAttribute("src");
-const folderIconSrc = document.getElementById('folder-icon').getAttribute("src");
-
 const creationElId = 'rz-creation';
 const creationFormId = 'rz-creation-form';
 const creationInputId = 'rz-creation-form-input';
 
-const addFilesButtonList = document.getElementsByClassName('add-file-button');
-const addFoldersButtonList = document.getElementsByClassName('add-folder-button');
 
-const showSubTreeButtonList = document.getElementsByClassName('file-tree-show');
-
-const currentDocumentHash = window.location.href.hashCode();
-
-const fileTree = document.getElementById('rz-sidebar-filetree');
-const fileTreeChosen = document.getElementById('rz-menu-file-tree-chosen');
-
-function saveCursor(cursor) {
-    localStorage.setItem(currentDocumentHash + '_line', cursor.line);
-    localStorage.setItem(currentDocumentHash + '_ch', cursor.ch);
+function saveCursor(documentHash, cursor) {
+    localStorage.setItem(documentHash + '_line', cursor.line);
+    localStorage.setItem(documentHash + '_ch', cursor.ch);
 }
 
-function getSavedCursor() {
-    const line = parseInt(localStorage.getItem(currentDocumentHash + '_line'));
-    const ch = parseInt(localStorage.getItem(currentDocumentHash + '_ch'));
+function getSavedCursor(documentHash) {
+    const line = parseInt(localStorage.getItem(documentHash + '_line'));
+    const ch = parseInt(localStorage.getItem(documentHash + '_ch'));
     if (typeof line == 'number' && typeof ch == 'number' && !isNaN(line) && !isNaN(ch)) {
         return {'ch': ch, 'line': line}
     }
 }
-
-// in case of binary file page will not contain textarea
-if (editorArea) {
-    let unsaved = false;
-    const editor = CodeMirror.fromTextArea(editorArea, {
-        lineNumbers: true,
-        styleActiveLine: true,
-        matchBrackets: true,
-        mode: "text/x-stex",
-        autofocus: true,
-        lineWrapping: true,
-        theme: 'rzm',
-        smartIndent: false,
-        tabSize: 4,
-        indentWithTabs: false,
-    });
-    const cursor = getSavedCursor();
-    if (cursor) {
-        editor.setCursor(cursor);
-    }
-    editor.on("cursorActivity", function () {
-        saveCursor(editor.getCursor());
-    });
-    editor.on('change', function(){
-        if (!unsaved) {
-            window.onbeforeunload = function() {
-                return "Data you have entered may not be saved";
-                //if we return nothing here (just calling return;) then there will be no pop-up question at all
-            };
-            fileSubmit.value += "*";
-            unsaved = true;
-        }
-    });
-}
-
-/** Scroll to active file in file tree */
-
-fileTree.scrollTo(0, getYOffset(fileTreeChosen) - fileTreeChosen.offsetHeight * 2)
 
 /** Inline file and folder creation */
 
@@ -148,10 +86,10 @@ function buildInlineInputField(iconSrc, depth) {
 function submitFileCreation(e) {
     if (e.preventDefault) e.preventDefault();
     const val = document.getElementById(creationInputId).value
-    mainFormNameInput.value = val;
+    document.getElementById('new-item-form-name').value = val;
 
     if (val) {
-        mainForm.submit();
+        document.getElementById('new-item-form').submit();
     }
     // must return false to prevent the default form behavior
     return false;
@@ -162,10 +100,13 @@ function nextDepth(depth) {
 }
 
 function addInlineInput(e, isFolder) {
-    const iconSrc = isFolder ? folderIconSrc : documentIconSrc;
-    const parent = parentByLevel(e.currentTarget, 4);
+    const iconSrc = isFolder ?
+     document.getElementById('folder-icon').getAttribute("src")
+     : document.getElementById('file-icon').getAttribute("src");
+    const parent = parentByLevel(e.target, 4);
+    console.log(parent);
     const depth = parseInt(parent.getAttribute("depth"));
-    mainFormPathInput.value = parent.getAttribute("path");
+    document.getElementById('new-item-form-path').value = parent.getAttribute("path");
     insertAfter(buildInlineInputField(iconSrc, nextDepth(depth)), parent);
     document.getElementById(creationInputId).focus();
     const form = document.getElementById(creationFormId);
@@ -177,21 +118,7 @@ function addInlineInput(e, isFolder) {
 }
 
 function toggleIsFolder(value) {
-    mainFormIsFolder.checked = value;
-}
-
-for (let item of addFilesButtonList) {
-    item.addEventListener('click', function (e) {
-        addInlineInput(e, false);
-        toggleIsFolder(false);
-    })
-}
-
-for (let item of addFoldersButtonList) {
-    item.addEventListener('click', function (e) {
-        addInlineInput(e, true);
-        toggleIsFolder(true);
-    })
+    document.getElementById('new-item-form-is-folder').checked = value;
 }
 
 /** File tree hide and show buttons */
@@ -216,17 +143,111 @@ function showSubTree(el) {
     }
 }
 
+function ready() {
+    console.log('fired')
+    const menuItems = document.getElementsByClassName('rz-menu-item');
 
-for (let item of showSubTreeButtonList) {
-    item.addEventListener('click', function (e) {
-        const el = e.currentTarget;
+    const mainForm = document.getElementById('new-item-form');
+    const mainFormNameInput = document.getElementById('new-item-form-name');
+
+    const fileSubmit = document.getElementById('file-save-submit');
+
+    const addFilesButtonList = document.getElementsByClassName('add-file-button');
+    const addFoldersButtonList = document.getElementsByClassName('add-folder-button');
+
+    const showSubTreeButtonList = document.getElementsByClassName('file-tree-show');
+
+    const currentDocumentHash = window.location.href.hashCode();
+
+    for (let item of showSubTreeButtonList) {
+//        item.removeEventListener('click');
+        item.addEventListener('click', function (e) {
+            const el = e.currentTarget;
+            const parent = parentByLevel(el, 4);
+            if (el.getAttribute("src").includes("down")) {
+                el.setAttribute("src", el.getAttribute("src").replace("down", "next"));
+                hideSubTree(parent);
+            } else {
+                el.setAttribute("src", el.getAttribute("src").replace("next", "down"));
+                showSubTree(parent);
+            }
+        })
+    }
+
+//    document.removeEventListener("click");
+    document.addEventListener("click", event => { // TODO: move into function
+      if (event.target.classList.contains("add-file-button")) {
+        addInlineInput(event, false);
+        toggleIsFolder(false);
+      }
+      if (event.target.classList.contains("add-folder-button")) {
+        addInlineInput(event, true);
+        toggleIsFolder(true);
+      }
+      if (event.target.classList.contains("file-tree-show")) {
+        const el = event.target;
         const parent = parentByLevel(el, 4);
         if (el.getAttribute("src").includes("down")) {
-            el.setAttribute("src", el.getAttribute("src").replace("down", "next"));
-            hideSubTree(parent);
+          el.setAttribute("src", el.getAttribute("src").replace("down", "next"));
+          hideSubTree(parent);
         } else {
-            el.setAttribute("src", el.getAttribute("src").replace("next", "down"));
-            showSubTree(parent);
+          el.setAttribute("src", el.getAttribute("src").replace("next", "down"));
+          showSubTree(parent);
         }
-    })
+      }
+    });
+
+    const editorArea = document.getElementById("code");
+    if (editorArea && !editorArea.getAttribute("initialized")) {
+        editorArea.setAttribute("initialized", "1");
+        let unsaved = false;
+        const editor = CodeMirror.fromTextArea(editorArea, {
+            lineNumbers: true,
+            styleActiveLine: true,
+            matchBrackets: true,
+            mode: "text/x-stex",
+            autofocus: true,
+            lineWrapping: true,
+            theme: 'rzm',
+            smartIndent: false,
+            tabSize: 4,
+            indentWithTabs: false,
+        });
+        const cursor = getSavedCursor(currentDocumentHash);
+        if (cursor) {
+            editor.setCursor(cursor);
+        }
+        editor.on("cursorActivity", function () {
+            saveCursor(currentDocumentHash, editor.getCursor());
+        });
+        editor.on('change', function(){
+            if (!unsaved) {
+                window.onbeforeunload = function() {
+                    return "Data you have entered may not be saved";
+                    //if we return nothing here (just calling return;) then there will be no pop-up question at all
+                };
+                fileSubmit.value += "*";
+                unsaved = true;
+            }
+        });
+    }
+}
+
+document.addEventListener("turbolinks:load", function(event) {
+    const url = event.data.url;
+    if(url.indexOf('repositories') > -1 && url.indexOf('tree') > -1) {
+        ready();
+    }
+});
+
+// the script is meant to be executed after the document has been parsed, but before firing DOMContentLoaded.
+// see: defer
+ready();
+
+/** Scroll to active file in file tree */
+const fileTree = document.getElementById('rz-sidebar-filetree');
+const fileTreeChosen = document.getElementById('rz-menu-file-tree-chosen');
+
+if (fileTree && fileTreeChosen) {
+    fileTree.scrollTo(0, getYOffset(fileTreeChosen) - fileTreeChosen.offsetHeight * 2)
 }

@@ -2,7 +2,7 @@
 
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("repository.collaborator.title")) {
 
@@ -46,4 +46,4 @@ case (collaborator) => {
   <input type="submit" value='@request.messages("repository.collaborator.button")' class="rz-button"/>
 </div>
 }
-}
+}()

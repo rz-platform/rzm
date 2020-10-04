@@ -1,4 +1,4 @@
-@(title: String, fluid: Boolean = false)(body: Html)(implicit request: RequestWithAccount)
+@(title: String, fluid: Boolean = false)(body: Html)(js: Html = Html(""))(implicit request: RequestWithAccount)
 
 @headerHtml = {
 <ul class="rz-menu-list">
@@ -21,4 +21,4 @@
 </ul>
 }
 
-@main(title)(body, headerHtml, fluid)
+@main(title)(body, headerHtml, fluid)(js)

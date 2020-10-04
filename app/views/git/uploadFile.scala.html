@@ -1,7 +1,7 @@
 @(uploadForm: Form[UploadFileForm], rev: String, path: String)(implicit request: RepositoryRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("repository.upload.title")) {
 @repositoryHeader(FileUploadPage)
@@ -33,5 +33,4 @@
   <input type="submit" class="rz-button" value='@request.messages("repository.upload.submit")'/>
   }
 </div>
-<script src='@routes.Assets.at("dist/javascript/upload.js")' type="text/javascript"></script>
-}
+}{<script src='@routes.Assets.at("dist/javascript/upload.js")' type="text/javascript"></script>}

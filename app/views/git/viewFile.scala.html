@@ -1,8 +1,9 @@
-@(editorForm: Form[EditedItem], blob:Blob, path:String, rev: String, breadcrumbs: Breadcrumbs, fileTree: FileTree, newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
+@(editorForm: Form[EditedItem], blob:RepositoryTreeContent, path:String, rev: String, breadcrumbs: FileTreeBreadcrumbs, fileTree: FileTree, newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
+@import editor._
 
 @printNode(node: FileNode) = {
 <div class="rz-menu-item @if(node.isRoot) { menu-item-divided }"  depth="@node.depth" path="@node.pathWithoutRootUrlEncoded" hash="@node.hash" parent="@node.parentHash">
@@ -23,7 +24,7 @@
       }
       </div>
       <div class="action-buttons">
-        <a href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, path)">
+        <a href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathWithoutRootUrlEncoded)">
           <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon">
         </a>
         <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon add-file-button file-tree-icon" />
@@ -39,7 +40,7 @@
 
 @for(file <- node.files) {
 @if(!(ExcludedFileNames contains file.data)) {
-<div class="rz-menu-item" depth="@file.depth" parent="@node.parentHash" @if(file.pathWithoutRoot == path) { id="rz-menu-file-tree-chosen" }>
+<div data-turbolinks="true" class="rz-menu-item" depth="@file.depth" parent="@node.parentHash" @if(file.pathWithoutRoot == path) { id="rz-menu-file-tree-chosen" }>
   <a class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }" href='@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRootEncoded)'>
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon"/> @file.data
@@ -69,53 +70,14 @@
     </div>
 
     <div class="rz-editor-content">
-    @repositoryHeader(FileViewPage)
-    @form(routes.GitEntitiesController.edit(request.repository.owner.userName, request.repository.name), Symbol("enctype") -> "application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
-    @CSRF.formField
-    <div class="rz-editor-content-header">
-      <div class="breadcrumbs">
-        <span class="breadcrumbs-repo-name">@request.repository.name</span> <span class="breadcrumbs-divider">/</span>
-
-        @for(breadcrumb <- breadcrumbs.breadcrumbs){
-        @breadcrumb.name <span class="breadcrumbs-divider">/</span>
-        }
-
-        @inputText(editorForm("fileName"), Symbol("_label") -> "", Symbol("_help") -> "")
-      </div>
-      <div class="actions">
-        @if(blob.content.viewType == "text"){
-        <input type="submit" class="rz-button button-small" value='@request.messages("repository.edit.submit")' id="file-save-submit" onclick="window.onbeforeunload = null;"/>
-        }
-        <a class="rz-button button-small"
-           href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)">
-          <img src='@routes.Assets.at("images/download.svg")' class="svg-icon"/>
-          @request.messages("repository.viewFile.raw")
-        </a>
-      </div>
-      <div class="repo-header-last-modified">
-        @request.messages("repository.viewFile.lastModified", blob.latestCommit.commitTime,
-        blob.latestCommit.committerName)
-      </div>
-    </div>
-    @notificationHeader()
-    @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
-    @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
-    @if(blob.content.viewType == "text"){
-      <div class="code-wrap"><textarea class="editor" id="code" name="content">@blob.content.content.getOrElse("")</textarea></div>
-    }
-    @if(blob.content.viewType == "image"){
-    <img
-      src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"/>
-    }
-
-    @if(blob.content.viewType == "large" || blob.content.viewType == "binary"){
-    <a
-      href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)">
-      @request.messages("repository.viewFile.cant")
-    </a>
-    }
-    }
+      @repositoryHeader(FileViewPage)
+      @{(blob, breadcrumbs)  match {
+      case (content: Blob, contentB: Breadcrumbs) => {
+      fileEditor(editorForm, content, path, rev, contentB, fileTree, newItemForm)
+      }
+      case (EmptyRepository, _) => {""}
+      case _ => {""}
+      }}
   </div>
 </div>
-<script src='@routes.Assets.at("dist/javascript/view.js")' type="text/javascript"></script>
-}
+}{<script src='@routes.Assets.at("dist/javascript/view.js")' type="text/javascript" defer></script>}

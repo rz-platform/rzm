@@ -32,7 +32,7 @@ class AuthenticatedRequest @Inject() (
     val maybeFutureResult: Option[Future[Result]] = for {
       sessionId <- request.session.get(SessionName.toString)
     } yield {
-      accountService.findById(sessionId.toLong).flatMap {
+      accountService.findById(sessionId.toInt).flatMap {
         case Some(account) =>
           block(new AccountRequest[A](request, account, messagesApi))
         case None =>

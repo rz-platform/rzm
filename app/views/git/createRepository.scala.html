@@ -1,7 +1,7 @@
 @(repositoryForm: Form[RepositoryData])(implicit request: AccountRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("repository.create.title")) {
 <h1>@request.messages("repository.create.head")</h1>
@@ -26,4 +26,4 @@
 
 }
 
-}
+}()

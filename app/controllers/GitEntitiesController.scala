@@ -63,16 +63,21 @@ class GitEntitiesController @Inject() (
     mapping("path" -> text)(UploadFileForm.apply)(UploadFileForm.unapply)
   )
 
-  val checkForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
+  val checkNameForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
     if (!ForbiddenSymbols.isNameValid(itemName)) Valid
+    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
+  }
+
+  val checkPathForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
+    if (!ForbiddenSymbols.isPathValid(itemName)) Valid
     else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
   }
 
   val addNewItemForm: Form[NewItem] = Form(
     mapping(
-      "name"     -> nonEmptyText.verifying(checkForExcludedSymbols),
+      "name"     -> nonEmptyText.verifying(checkNameForExcludedSymbols),
       "rev"      -> nonEmptyText,
-      "path"     -> nonEmptyText.verifying(checkForExcludedSymbols),
+      "path"     -> nonEmptyText.verifying(checkPathForExcludedSymbols),
       "isFolder" -> boolean
     )(NewItem.apply)(NewItem.unapply)
   )
@@ -81,8 +86,8 @@ class GitEntitiesController @Inject() (
     mapping(
       "content"  -> nonEmptyText,
       "rev"      -> nonEmptyText,
-      "path"     -> nonEmptyText.verifying(checkForExcludedSymbols),
-      "fileName" -> nonEmptyText.verifying(checkForExcludedSymbols)
+      "path"     -> nonEmptyText.verifying(checkPathForExcludedSymbols),
+      "fileName" -> nonEmptyText.verifying(checkNameForExcludedSymbols)
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
@@ -165,21 +170,6 @@ class GitEntitiesController @Inject() (
     }
   }
 
-  def view(accountName: String, repositoryName: String, path: String = ".", rev: String = ""): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)) { implicit request =>
-      val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
-      val fileTree = git.fileTree(request.repository, rev)
-      Redirect(
-        routes.GitEntitiesController
-          .blob(
-            accountName,
-            repositoryName,
-            rev,
-            EncodedPath.fromString(fileTree.getCommonRoot.files.head.pathWithoutRoot)
-          )
-      )
-    }
-
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)).async { implicit request =>
       val git = new GitRepository(request.repository.owner, repositoryName, gitHome)
@@ -196,6 +186,31 @@ class GitEntitiesController @Inject() (
           }
         case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
       }
+    }
+
+  def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)) {
+      implicit request: RepositoryRequest[AnyContent] =>
+        request.repository.mainFile match {
+          case Some(mainFile) => // TODO: check that main file exists
+            Redirect(
+              routes.GitEntitiesController.blob(accountName, repositoryName, rev, EncodedPath.fromString(mainFile))
+            )
+          case _ =>
+            val git      = new GitRepository(request.repository.owner, repositoryName, gitHome)
+            val fileTree = git.fileTree(request.repository, rev)
+            Ok(
+              html.git.viewFile(
+                editorForm,
+                EmptyBlob,
+                "",
+                rev,
+                EmptyBreadcrumbs(request.repository.name),
+                fileTree,
+                addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+              )
+            )
+        }
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -226,7 +241,7 @@ class GitEntitiesController @Inject() (
                   fileTree,
                   addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
                 )
-              )
+              ).withHeaders(("Turbolinks-Location" -> request.uri))
             }
           case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
         }
@@ -314,7 +329,7 @@ class GitEntitiesController @Inject() (
                     )
                   case None => errorHandler.onClientError(request, msg = Messages("error.notfound"))
                 }
-              case None => Future(Redirect(routes.GitEntitiesController.view(accountName, repositoryName, ".", rev)))
+              case None => Future(Redirect(routes.GitEntitiesController.emptyTree(accountName, repositoryName, rev)))
             }
           },
           (edited: EditedItem) => editFile(edited, gitRepository, accountName, repositoryName)(request)
@@ -326,10 +341,9 @@ class GitEntitiesController @Inject() (
       addNewItemForm.bindFromRequest.fold(
         formWithErrors =>
           Redirect(
-            routes.GitEntitiesController.view(
+            routes.GitEntitiesController.emptyTree(
               accountName,
               repositoryName,
-              ".",
               formWithErrors.data.getOrElse("rev", request.repository.defaultBranch)
             )
           ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
@@ -417,7 +431,7 @@ class GitEntitiesController @Inject() (
               Messages("repository.upload.message", files.length)
             )
             Redirect(
-              routes.GitEntitiesController.view(accountName, repositoryName, EncodedPath.fromString(data.path), rev)
+              routes.GitEntitiesController.emptyTree(accountName, repositoryName, rev)
             ).flashing("success" -> Messages("repository.upload.success"))
           }
         )

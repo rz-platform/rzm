@@ -18,11 +18,12 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Parse a Repository from a ResultSet
    */
   private val simpleGitRepositoryParser = {
-    (get[Long]("repository.id") ~
+    (get[Int]("repository.id") ~
       accountRepository.simpleAccountParser ~
       get[String]("repository.name") ~
-      get[String]("repository.default_branch")).map {
-      case id ~ owner ~ name ~ defaultBranch => Repository(id, owner, name, defaultBranch)
+      get[String]("repository.default_branch") ~
+      get[Option[String]]("repository.main_file")).map {
+      case id ~ owner ~ name ~ defaultBranch ~ mainFile => Repository(id, owner, name, defaultBranch, mainFile)
     }
   }
 
@@ -39,7 +40,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        select repository.id, repository.name, repository.default_branch,
+        select repository.id, repository.name, repository.default_branch, repository.main_file,
         account.id, account.username, account.has_picture, account.email
         from repository
         join account on repository.owner_id = account.id
@@ -66,7 +67,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def createCollaborator(repositoryId: Long, collaboratorId: Long, role: Int): Future[Option[Long]] = Future {
+  def createCollaborator(repositoryId: Int, collaboratorId: Int, role: Int): Future[Option[Long]] = Future {
     db.withConnection { implicit connection =>
       SQL("""
           insert into collaborator (account_id, repository_id, role) values ({accountId}, {repositoryId}, {role})
@@ -88,7 +89,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Insert a new repository
    *
    */
-  def insertRepository(ownerId: Long, repository: RepositoryData): Future[Option[Long]] =
+  def insertRepository(ownerId: Int, repository: RepositoryData): Future[Option[Long]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -139,7 +140,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-          select repository.id, repository.name, repository.default_branch,
+          select repository.id, repository.name, repository.default_branch, repository.main_file,
           account.id, account.username, account.has_picture, account.email
           from repository
           join account on repository.owner_id = account.id

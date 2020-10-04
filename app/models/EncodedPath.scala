@@ -3,6 +3,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 object EncodedPath {
+  // TODO: LRU cache
   def fromString(path: String): String =
     path
       .split("/")

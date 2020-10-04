@@ -1,7 +1,7 @@
 @(userEditForm: Form[AccountData], passwordUpdateForm: Form[PasswordData])(implicit request: AccountRequestHeader)
 @import views.html.helper._
 @import base._
-@import helpers._
+@import header._
 
 @auth(request.messages("profile.title")) {
 <h1>@request.messages("profile.title")</h1>
@@ -57,4 +57,4 @@
 <div class="profile-block">
 <a href="@routes.AccountController.keysPage" class="rz-button">SSH Keys</a>
 </div>
-  }
+  }()

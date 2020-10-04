@@ -7,7 +7,7 @@
     case ViewAccess => {}
     case _ => {
     <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
-      <a href='@routes.GitEntitiesController.view(request.repository.owner.userName, request.repository.name, ".", request.repository.defaultBranch)' class="rz-menu-link">@request.messages("repository.tree.fileview")</a>
+      <a href='@routes.GitEntitiesController.emptyTree(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch)' class="rz-menu-link">@request.messages("repository.tree.fileview")</a>
     </li>
     <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)" class="rz-menu-link">@request.messages("repository.tree.collaborators")</a>

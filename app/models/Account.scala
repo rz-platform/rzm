@@ -5,19 +5,19 @@ import java.time.LocalDateTime
 import anorm._
 
 sealed trait Account {
-  def id: Long
+  def id: Int
   def userName: String
   def email: String
 }
 
-case class SimpleAccount(id: Long, userName: String, email: String, hasPicture: Boolean) extends Account
+case class SimpleAccount(id: Int, userName: String, email: String, hasPicture: Boolean) extends Account
 
 object SimpleAccount {
   implicit def toParameters: ToParameterList[SimpleAccount] = Macro.toParameters[SimpleAccount]
 }
 
 case class RichAccount(
-  id: Long,
+  id: Int,
   userName: String,
   fullName: String = "",
   email: String,

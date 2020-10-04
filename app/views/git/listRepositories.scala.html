@@ -12,7 +12,7 @@
         @repositories.map {
           case (repository) => {
 <div class="repo-list-row">
-  <a href='@routes.GitEntitiesController.view(repository.owner.userName, repository.name, ".", repository.defaultBranch)'> @repository.owner.userName / @repository.name</a>
+  <a href='@routes.GitEntitiesController.emptyTree(repository.owner.userName, repository.name, repository.defaultBranch)'> @repository.owner.userName / @repository.name</a>
 </div>
           }
         }
@@ -22,4 +22,4 @@
     </p>
   }
 </div>
-}
+}()
