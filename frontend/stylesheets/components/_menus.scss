@@ -33,7 +33,6 @@
   white-space: nowrap;
 }
 
-
 /* Submenus should still be display: block; */
 .rz-menu-item .rz-menu-item {
   display: block;
@@ -64,13 +63,13 @@
 /* Vertical Menus - show the dropdown arrow */
 .rz-menu-has-children > .rz-menu-link:after {
   padding-left: 0.5em;
-  content: "\25B8";
+  content: '\25B8';
   font-size: small;
 }
 
 /* Horizontal Menus - show the dropdown arrow */
 .rz-menu-horizontal .rz-menu-has-children > .rz-menu-link:after {
-  content: "\25BE";
+  content: '\25BE';
 }
 
 /* HORIZONTAL MENU */
@@ -109,7 +108,7 @@
   overflow-y: hidden;
   overflow-x: auto;
   /* a little extra padding for this style to allow for scrollbars */
-  padding: .5em 0;
+  padding: 0.5em 0;
 }
 /* misc default styling */
 
@@ -117,13 +116,13 @@
 .rz-menu-horizontal .rz-menu-children .rz-menu-separator {
   background-color: #ccc;
   height: 1px;
-  margin: .3em 0;
+  margin: 0.3em 0;
 }
 
 .rz-menu-horizontal .rz-menu-separator {
   width: 1px;
   height: 1.3em;
-  margin: 0 .3em ;
+  margin: 0 0.3em;
 }
 
 /* Need to reset the separator since submenu is vertical */
@@ -148,11 +147,11 @@
 .rz-menu-link,
 .rz-menu-disabled,
 .rz-menu-heading {
-  padding: .5em 1em;
+  padding: 0.5em 1em;
 }
 
 .rz-menu-disabled {
-  opacity: .5;
+  opacity: 0.5;
 }
 
 .rz-menu-disabled .rz-menu-link:hover {

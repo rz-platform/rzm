@@ -1,28 +1,36 @@
-@(title: String)(body: Html, header: Html, fluid: Boolean = false)(js: Html = Html(""))(implicit request: RequestHeader)
-<!doctype html>
+<!-- prettier-ignore -->
+@(title:String)(body:Html,header:Html,fluid:Boolean=false)(js:Html=Html(""))(implicit request:RequestHeader)
+
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>@title - RAZAM</title>
-    <link rel="stylesheet" href='@routes.Assets.at("dist/stylesheets/main.css")'/>
+    <link
+      rel="stylesheet"
+      href='@routes.Assets.at("dist/stylesheets/main.css")'
+    />
     @js
-    <script src='@routes.Assets.at("dist/javascript/turbo.js")' type="text/javascript"></script>
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/page-accelerator/0.1.1/page-accelerator.min.js" integrity="sha512-YZMsq9hQOwRuYLHDE3xu5Fuqc7dsw8JW93koppkyK4dxD963sMKZkZQFF62HpQIA74nmG8mK4lzKQf0IpFOU2Q==" crossorigin="anonymous"></script>-->
-    <meta name="turbolinks-root" content="/">
+    <script
+      src='@routes.Assets.at("dist/javascript/turbo.js")'
+      type="text/javascript"
+    ></script>
+    <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/page-accelerator/0.1.1/page-accelerator.min.js" integrity="sha512-YZMsq9hQOwRuYLHDE3xu5Fuqc7dsw8JW93koppkyK4dxD963sMKZkZQFF62HpQIA74nmG8mK4lzKQf0IpFOU2Q==" crossorigin="anonymous"></script>-->
+    <meta name="turbolinks-root" content="/" />
   </head>
   <body>
-    <header class="rz-header rz-menu rz-menu-horizontal">
+    <header
+      class="rz-header rz-menu rz-menu-horizontal"
+    >
       <div class="rz-menu-heading rz-logo">
         RAZAM
       </div>
       @header
     </header>
-      @if(!fluid) {
-        <div class="container">
-        }
-        @body
-        @if(!fluid) {
-          </div>
-        }
+    @if(!fluid) {
+    <div class="container">
+      } @body @if(!fluid) {
+    </div>
+    }
   </body>
 </html>

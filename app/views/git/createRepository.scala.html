@@ -1,29 +1,23 @@
-@(repositoryForm: Form[RepositoryData])(implicit request: AccountRequestHeader)
+<!-- prettier-ignore -->
+@(repositoryForm: Form[RepositoryData])(implicit request: AccountRequestHeader) 
 @import views.html.helper._
-@import base._
-@import header._
-
-@auth(request.messages("repository.create.title")) {
-<h1>@request.messages("repository.create.head")</h1>
-@notificationHeader()
-
-@form(routes.GitEntitiesController.saveRepository(), Symbol("class") -> "rz-form") {
-
-<fieldset>
-  @CSRF.formField
-  @inputText(repositoryForm("name"),
-  Symbol("_label") -> request.messages("repository.create.name"),
-  Symbol("_help") -> "")
-
-  @inputText(repositoryForm("description"),
-  Symbol("_label") -> request.messages("repository.create.desc"),
-  Symbol("_help") -> "")
-</fieldset>
+@base.auth(request.messages("repository.create.title"))
+{
+<h1>
+  @request.messages("repository.create.head")
+</h1>
+@header.notificationHeader()
+@form(routes.GitEntitiesController.saveRepository(),Symbol("class")->"rz-form"){
+@CSRF.formField
+@inputText(repositoryForm("name"),Symbol("_label")->request.messages("repository.create.name"),Symbol("_help")->"")
+@inputText(repositoryForm("description"),Symbol("_label")->request.messages("repository.create.desc"),Symbol("_help")->"")
 
 <div class="actions">
-  <input type="submit" value='@request.messages("repository.create.submit")' class="rz-button rz-button-primary">
+  <input
+    type="submit"
+    value='@request.messages("repository.create.submit")'
+    class="rz-button rz-button-primary"
+  />
 </div>
 
-}
-
-}()
+} }()

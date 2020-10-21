@@ -1,12 +1,16 @@
-@()(implicit request: MessagesRequestHeader)
-
+@()(implicit request:MessagesRequestHeader)
 @request.flash.get("success").map { message =>
 <div class="alert-message warning">
-  <strong>@request.messages("common.done")</strong> @message
+  <strong
+    >@request.messages("common.done")</strong
+  >
+  @message
 </div>
-}
-@request.flash.get("error").map { message =>
+} @request.flash.get("error").map { message =>
 <div class="alert-message warning">
-  <strong>@request.messages("common.error")</strong> @message
+  <strong
+    >@request.messages("common.error")</strong
+  >
+  @message
 </div>
 }

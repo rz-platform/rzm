@@ -1,25 +1,31 @@
+<!-- prettier-ignore -->
 @(currentPage: List[Repository])(implicit request: AccountRequestHeader)
-
-@import base._
-
-@auth(request.messages("repository.list.title")) {
+@base.auth(request.messages("repository.list.title"))
+{
 <div class="repo-list-header">
-  <a class="rz-button" href="@routes.GitEntitiesController.createRepository">@request.messages("repository.list.createNew")</a>
+  <a
+    class="rz-button"
+    href="@routes.GitEntitiesController.createRepository"
+    >@request.messages("repository.list.createNew")</a
+  >
 </div>
 
 <div class="repo-list">
-  @Option(currentPage).filterNot(_.isEmpty).map { repositories =>
-        @repositories.map {
-          case (repository) => {
-<div class="repo-list-row">
-  <a href='@routes.GitEntitiesController.emptyTree(repository.owner.userName, repository.name, repository.defaultBranch)'> @repository.owner.userName / @repository.name</a>
-</div>
-          }
-        }
-  }.getOrElse {
-    <p>
-      @request.messages("repository.list.empty")
-    </p>
+  @Option(currentPage).filterNot(_.isEmpty).map {
+  repositories => @repositories.map { case
+  (repository) => {
+  <div class="repo-list-row">
+    <a
+      href="@routes.GitEntitiesController.emptyTree(repository.owner.userName, repository.name, repository.defaultBranch)"
+    >
+      @repository.owner.userName /
+      @repository.name
+    </a>
+  </div>
+  } } }.getOrElse {
+  <p>
+    @request.messages("repository.list.empty")
+  </p>
   }
 </div>
 }()
