@@ -1,4 +1,3 @@
-<!-- prettier-ignore -->
 @(signupForm:Form[AccountRegistrationData])(implicit request: MessagesRequestHeader) 
 @import views.html.helper._ 
 
@@ -6,37 +5,18 @@
 <div class="rz-auth">
   <h1> @request.messages("signup.head") </h1>
   @header.notificationHeader()
-  @form(routes.AccountController.saveAccout(),
-  Symbol("class") -> "rz-form") { @CSRF.formField
-  @inputText(signupForm("userName"),
-  Symbol("_label") ->
-  request.messages("signup.form.userName"),
-  Symbol("_help") -> "")
-  @inputPassword(signupForm("password"),
-  Symbol("_label") ->
-  request.messages("signup.form.password"),
-  Symbol("_help") -> "")
-  @inputText(signupForm("mailAddress"),
-  Symbol("_label") ->
-  request.messages("signup.form.email"),
-  Symbol("_help") -> "")
-  @inputText(signupForm("fullName"),
-  Symbol("_label") ->
-  request.messages("signup.form.fullname"),
-  Symbol("_help") -> "")
+  @form(routes.AccountController.saveAccout(), Symbol("class") -> "rz-form") {
+  @CSRF.formField @inputText(signupForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"),
+  Symbol("_help") -> "") @inputPassword(signupForm("password"), Symbol("_label") ->
+  request.messages("signup.form.password"), Symbol("_help") -> "") @inputText(signupForm("mailAddress"),
+  Symbol("_label") -> request.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),
+  Symbol("_label") -> request.messages("signup.form.fullname"), Symbol("_help") -> "")
 
-  <input
-    type="submit"
-    value='@request.messages("signup.submit")'
-    class="rz-button rz-button-primary"
-  />
+  <input type="submit" value='@request.messages("signup.submit")' class="rz-button rz-button-primary" />
   or
-  <a
-    class="rz-button"
-    href="@routes.AccountController.signin"
-    >@request.messages("signup.signInLink")</a
-  >
-</div>
-} }
-@base.main(request.messages("signup.title"))(html,
-Html(""))()
+  <a class="rz-button" href="@routes.AccountController.signin">@request.messages("signup.signInLink")</a>
+  }
+}
+
+
+@base.main(request.messages("signup.title"))(html, Html(""))()

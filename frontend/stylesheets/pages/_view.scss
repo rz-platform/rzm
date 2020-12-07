@@ -46,7 +46,7 @@
   }
 
   dl {
-    margin: 0px;
+    margin: 0;
   }
 }
 
@@ -57,7 +57,7 @@
   .rz-sidebar {
     display: flex;
     flex-direction: row;
-    min-height: calc(100%-52px);
+    min-height: calc(100% - 52px);
   }
 
   .rz-sidebar > div {

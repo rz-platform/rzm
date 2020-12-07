@@ -3,7 +3,7 @@ package repositories
 import anorm.SqlParser.get
 import anorm._
 import javax.inject.{ Inject, Singleton }
-import models.{ Collaborator, Repository, RepositoryData }
+import models.{ Collaborator, RepositoryData, RzRepository }
 import play.api.db.DBApi
 
 import scala.concurrent.Future
@@ -23,7 +23,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       get[String]("repository.name") ~
       get[String]("repository.default_branch") ~
       get[Option[String]]("repository.main_file")).map {
-      case id ~ owner ~ name ~ defaultBranch ~ mainFile => Repository(id, owner, name, defaultBranch, mainFile)
+      case id ~ owner ~ name ~ defaultBranch ~ mainFile => RzRepository(id, owner, name, defaultBranch, mainFile)
     }
   }
 
@@ -36,7 +36,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     }
   }
 
-  def getByOwnerAndName(owner: String, repoName: String): Future[Option[Repository]] =
+  def getByOwnerAndName(owner: String, repoName: String): Future[Option[RzRepository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -100,13 +100,13 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
             "name"          -> repository.name,
             "owner_id"      -> ownerId,
             "description"   -> repository.description.getOrElse(""),
-            "defaultBranch" -> Repository.defaultBranchName
+            "defaultBranch" -> RzRepository.defaultBranchName
           )
           .executeInsert()
       }
     }(ec)
 
-  def isAccountCollaborator(repository: Option[Repository], accountId: Long): Future[Option[Int]] =
+  def isAccountCollaborator(repository: Option[RzRepository], accountId: Long): Future[Option[Int]] =
     repository match {
       case Some(repo) =>
         Future {
@@ -121,7 +121,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         }(ec)
       case None => Future(None)
     }
-  def getCollaborators(repository: Repository): Future[List[Collaborator]] =
+  def getCollaborators(repository: RzRepository): Future[List[Collaborator]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -136,7 +136,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def listRepositories(accountId: Long): Future[List[Repository]] =
+  def listRepositories(accountId: Long): Future[List[RzRepository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""

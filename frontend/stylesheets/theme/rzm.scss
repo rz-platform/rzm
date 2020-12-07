@@ -12,9 +12,9 @@ $editor-selectionHighlightBackground: #e0e0e0;
 $token-strings: #448c27;
 $token-numbers: #7a3e9d;
 $token-def: #325cc0;
-$token-punctuation: #777777;
+$token-punctuation: #777;
 $token-comments: #aa3731;
-$token-error: #660000;
+$token-error: #600;
 
 .cm-s-rzm.CodeMirror {
   background: $editor-background;
@@ -67,13 +67,13 @@ $token-error: #660000;
   color: $token-error;
 }
 .cm-s-rzm span.cm-attribute {
-  color: #0000ff;
+  color: #00f;
 }
 .cm-s-rzm span.cm-tag {
   color: #000080;
 }
 .cm-s-rzm span.cm-link {
-  color: #0000ff;
+  color: #00f;
 }
 .cm-s-rzm .CodeMirror-activeline-background {
   background: $editor-lineHighlightBackground;

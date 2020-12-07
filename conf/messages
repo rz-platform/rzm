@@ -1,7 +1,5 @@
 # System
 
-format.localDateTime=yyyy-MM-dd HH:mm:ss
-format.date=Date (''{0}'')
 error.pattern=Must not contain forbidden symbols
 
 # Messages
@@ -59,13 +57,13 @@ profile.ssh.notification.added=Ssh Key Added
 profile.ssh.notification.removed=Ssh Key Removed
 profile.ssh.notification.toomuch=Too many keys
 
-repository.collaborator.title=Repository collaborators
+repository.collaborator.title=Project collaborators
 repository.collaborator.emailOrLogin=User login or email
 repository.collaborator.accessLevel=Access Level
 repository.collaborator.accessLevel.read=Read
 repository.collaborator.accessLevel.write=Write
 repository.collaborator.remove = Remove
-repository.collaborator.list = Project members
+repository.collaborator.list = Project collaborators
 repository.collaborator.button=Invite a collaborator
 repository.collaborator.error.alreadycollab = User is already a collaborator
 repository.collaborator.error.nosuchuser = No such user
@@ -98,7 +96,7 @@ repository.upload.singleFile=Files one by one
 repository.upload.completeDirectory=Complete Directory
 repository.edit.commitmessage=Uploaded via web
 repository.edit.path=You are uploading to
-repository.upload.submit=Commit changes
+repository.upload.submit=Upload
 repository.upload.success = Successfully uploaded
 repository.upload.title=File upload
 repository.upload.messagePath=Uploading files to {0}
@@ -109,7 +107,7 @@ repository.viewFile.title=View file
 repository.viewFile.raw=Download file
 repository.viewFile.edit=Edit
 repository.viewFile.cant=We can't dispay file. Download by direct link
-repository.viewFile.lastModified=Last modified on {0} by {1}
+repository.viewFile.lastModified=Last modified by {0}
 repository.viewFile.commitMessage=Modified {0}
 
 repository.tree.uploadFiles=Upload files
@@ -119,6 +117,7 @@ repository.tree.createFolder=Create new folder
 repository.tree.createFolder.formName=Folder name
 repository.tree.commits=Project history
 repository.tree.fileview=File view
+repository.tree.cloneby=Clone
 
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name

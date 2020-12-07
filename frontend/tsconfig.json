@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "outDir": "../public/dist/",
+    "noImplicitAny": false,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
+    "types": [],
+    "strict": true,
+    "moduleResolution": "node"
+  },
+  "paths": {
+      "*": ["@types/*"],
+      "@javacript/*": ["app/*"]
+  },
+  "exclude": [
+    "node_modules",
+    "./node_modules",
+    "./node_modules/*",
+    "./node_modules/@types/node/index.d.ts",
+    "./webpack.config.js"
+  ]
+}

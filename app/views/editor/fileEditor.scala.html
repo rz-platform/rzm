@@ -1,21 +1,20 @@
-<!-- prettier-ignore -->
-@(editorForm: Form[EditedItem], blob:Blob,path:String, rev: String, breadcrumbs:Breadcrumbs, fileTree: FileTree,newItemForm:Form[NewItem])(implicit request: RepositoryRequestHeader) @import
-views.html.helper._
+@(editorForm: Form[EditedItem], blob:Blob,path:String, rev: String, breadcrumbs:Breadcrumbs, fileTree: FileTree,newItemForm:Form[NewItem])(implicit request: RepositoryRequestHeader) 
+@import views.html.helper._
+@import print.date
 
-@form(routes.GitEntitiesController.edit(request.repository.owner.userName,request.repository.name),Symbol("enctype")->"application/x-www-form-urlencoded",Symbol("accept-charset")->"UTF-8",Symbol("class")->"rz-editor-form")
-{ @CSRF.formField
+@form(routes.GitEntitiesController.edit(request.repository.owner.userName,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
+
+@CSRF.formField
 <div class="rz-editor-content-header">
   <div class="breadcrumbs">
-    <span class="breadcrumbs-repo-name"
-      >@request.repository.name</span
-    >
+    <span class="breadcrumbs-repo-name">@request.repository.name</span>
     <span class="breadcrumbs-divider">/</span>
 
     @for(breadcrumb <- breadcrumbs.breadcrumbs){
-    @breadcrumb.name
-    <span class="breadcrumbs-divider">/</span>
-    } @inputText(editorForm("fileName"),
-    Symbol("_label") -> "", Symbol("_help") -> "")
+      @breadcrumb.name
+      <span class="breadcrumbs-divider">/</span>
+    } 
+    @inputText(editorForm("fileName"), Symbol("_label") -> "", Symbol("_help") -> "")
   </div>
   <div class="actions">
     @if(blob.content.viewType == "text"){
@@ -31,47 +30,36 @@ views.html.helper._
       class="rz-button button-small"
       href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, rev, path)"
     >
-      <img
-        src='@routes.Assets.at("images/download.svg")'
-        class="svg-icon"
-      />
+      <img src='@routes.Assets.at("images/download.svg")' class="svg-icon" />
       @request.messages("repository.viewFile.raw")
     </a>
   </div>
   <div class="repo-header-last-modified">
-    @request.messages("repository.viewFile.lastModified",
-    blob.latestCommit.commitTime,
-    blob.latestCommit.committerName)
+    @request.messages("repository.viewFile.lastModified", blob.latestCommit.committerName) 
+    @date(blob.latestCommit.commitTime)
   </div>
 </div>
+
 @header.notificationHeader()
-@inputText(editorForm("path"),
-Symbol("hidden")->"hidden", Symbol("_label") ->
-"", Symbol("_help") -> "",
-Symbol("_class")->"hidden")
-@inputText(editorForm("rev"),
-Symbol("hidden")->"hidden", Symbol("_label") ->
-"", Symbol("_help") -> "",
-Symbol("_class")->"hidden")
+@inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "",Symbol("_help") -> "", Symbol("_class")->"hidden")
+@inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
+
 @if(blob.content.viewType == "text"){
-<div class="code-wrap">
-  <textarea
-    class="editor"
-    id="code"
-    name="content"
+  <div class="code-wrap">
+    <textarea class="editor" id="code" name="content">@blob.content.content.getOrElse("")</textarea>
+  </div>
+}
+@if(blob.content.viewType == "image"){
+  <img
+    src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
+  />
+}
+@if(blob.content.viewType == "large" || blob.content.viewType == "binary") {
+  <a
+    href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
   >
-@blob.content.content.getOrElse("")</textarea
-  >
-</div>
-} @if(blob.content.viewType == "image"){
-<img
-  src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
-/>
-} @if(blob.content.viewType == "large" ||
-blob.content.viewType == "binary"){
-<a
-  href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
->
-  @request.messages("repository.viewFile.cant")
-</a>
-} }
+    @request.messages("repository.viewFile.cant")
+  </a>
+}
+
+}

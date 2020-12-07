@@ -13,22 +13,14 @@ Fully-functional Git Server with authentication against Razam implemented in [Ra
 
 This is Scala 2.13 (JDK 11+ required) application that uses [Play](https://playframework.com/documentation/latest/Home) and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
 
-Front-end is written in VanillaJS and packaged using Parcel. Stylesheets are written in SCSS and following [SASS Guidelines](https://sass-guidelin.es/). HTML [views](https://github.com/razamgit/razam/tree/master/app/views) are following [CodeGuide](https://codeguide.co/).
-
 ---
 
-Razam requires Postgres database. You can find default credentials in [application.conf](https://github.com/razamgit/razam/blob/master/conf/application.conf) (db.default section). Snippet for creation:
-
-```
-create database razam;
-create user razam with encrypted password 'razam';
-grant all privileges on database razam to razam;
-```
+Razam requires Postgres database. You can find default credentials in [application.conf](https://github.com/razamgit/razam/blob/master/conf/application.conf) (db.default section).
 
 Build front-end:
 
 ```
-cd frontend && npm install && npm run build
+cd frontend && npm install && npm run watch
 ```
 
 Run app in live-reload mode (from repository root):

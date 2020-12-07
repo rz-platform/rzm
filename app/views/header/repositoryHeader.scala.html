@@ -1,26 +1,17 @@
-@(page: RepositoryPage)(implicit request:
-RepositoryRequestHeader)
+@(page: RepositoryPage)(implicit request: RepositoryRequestHeader)
 
 <div class="rz-menu rz-menu-horizontal">
-  <span class="repository-name"
-    >@request.repository.owner.userName /
-    @request.repository.name →
-  </span>
+  <span class="repository-name">@request.repository.owner.userName / @request.repository.name → </span>
   <ul class="rz-menu-list">
-    @request.role match { case ViewAccess => {}
-    case _ => {
-    <li
-      class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }"
-    >
+    @request.role match { case ViewAccess => {} case _ => {
+    <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
       <a
         href="@routes.GitEntitiesController.emptyTree(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
     </li>
-    <li
-      class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }"
-    >
+    <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a
         href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)"
         class="rz-menu-link"
@@ -35,14 +26,21 @@ RepositoryRequestHeader)
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
-    <li
-      class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }"
-    >
+    <li class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }">
       <a
         href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)"
         class="rz-menu-link"
         >@request.messages("repository.tree.commits")</a
       >
+    </li>
+    <li class="rz-menu-item cloneby">
+        <input type="radio" id="showHttp" name="radios" checked> 
+        <label for="showHttp" class="cloneLabel">HTTPS</label>
+        <input type="radio" id="showSsh" name="radios"> 
+        <label for="showSsh" class="cloneLabel">SSH</label>
+      
+        <input id="gitHttpUrl" type="text" readonly value="@request.repository.httpUrl(request)"  />
+        <input id="gitSshUrl" type="text" readonly value="@request.repository.sshUrl(request)"  />
     </li>
   </ul>
 </div>

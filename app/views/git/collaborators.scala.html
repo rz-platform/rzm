@@ -1,56 +1,37 @@
-<!-- prettier-ignore -->
 @(addCollaboratorForm:Form[NewCollaboratorData],collaborators:Seq[Collaborator])(implicit request:RepositoryRequestHeader) 
 @import views.html.helper._
+
 @base.auth(request.messages("repository.collaborator.title")){
 @header.repositoryHeader(CollaboratorsPage)
 @header.notificationHeader()
 @if(collaborators.length > 0) {
-<h2>
-  @request.messages("repository.collaborator.list")
-</h2>
-} @collaborators.map { case (collaborator) => {
-@form(routes.GitEntitiesController.removeCollaborator(request.repository.owner.userName,
-request.repository.name)) { @CSRF.formField
-<input
-  type="hidden"
-  name="email"
-  value="@collaborator.account.email"
-/>
+<h2> @request.messages("repository.collaborator.list") </h2>
+} 
+@collaborators.map { 
+case (collaborator) => {
+@form(routes.GitEntitiesController.removeCollaborator(request.repository.owner.userName, request.repository.name)) {
+@CSRF.formField
+<input type="hidden" name="email" value="@collaborator.account.email" />
 <div class="collaborator-row">
-  @collaborator.account.userName /
-  @{collaborator.accessLevel match { case
-  Some(EditAccess) => {
-  request.messages("repository.collaborator.accessLevel.write")
-  } case Some(ViewAccess) => {
-  request.messages("repository.collaborator.accessLevel.read")
-  } case _ => () }}
+  @collaborator.account.userName / @{collaborator.accessLevel match { case Some(EditAccess) => {
+  request.messages("repository.collaborator.accessLevel.write") } case Some(ViewAccess) => {
+  request.messages("repository.collaborator.accessLevel.read") } case _ => () }}
 
-  <button class="rz-button" type="submit">
-    @request.messages("repository.collaborator.remove")
-  </button>
+  <button class="rz-button" type="submit"> @request.messages("repository.collaborator.remove") </button>
 </div>
-} } }
+} 
+} 
+}
 <h2>Add member</h2>
-@form(routes.GitEntitiesController.addCollaborator(request.repository.owner.userName,
-request.repository.name), Symbol("class") ->
-"rz-form") { @CSRF.formField
-@inputText(addCollaboratorForm("emailOrLogin"),
-Symbol("_label") ->
-request.messages("repository.collaborator.emailOrLogin"),
-Symbol("_help") -> "") @select(field =
-addCollaboratorForm("accessLevel"), options =
-Seq(ViewAccess.toString ->
-request.messages("repository.collaborator.accessLevel.read"),
-EditAccess.toString ->
-request.messages("repository.collaborator.accessLevel.write")),
-Symbol("_label") ->
-request.messages("repository.collaborator.accessLevel")
-)
+@form(routes.GitEntitiesController.addCollaborator(request.repository.owner.userName, request.repository.name),Symbol("class") -> "rz-form") { 
+@CSRF.formField 
+@inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"), Symbol("_help") -> "")
+@select(field = addCollaboratorForm("accessLevel"), options = Seq(
+	ViewAccess.toString -> request.messages("repository.collaborator.accessLevel.read"), 
+	EditAccess.toString -> request.messages("repository.collaborator.accessLevel.write")), 
+	Symbol("_label") -> request.messages("repository.collaborator.accessLevel") )
 <div class="actions">
-  <input
-    type="submit"
-    value='@request.messages("repository.collaborator.button")'
-    class="rz-button"
-  />
+  <input type="submit" value='@request.messages("repository.collaborator.button")' class="rz-button" />
 </div>
-} }()
+}
+}()

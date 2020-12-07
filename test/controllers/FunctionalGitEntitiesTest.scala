@@ -135,7 +135,7 @@ class FunctionalGitEntitiesTest
     await(result)
   }
 
-  def listFileInRepo(gitRepository: GitRepository, repository: Repository, path: String): RepositoryGitData =
+  def listFileInRepo(gitRepository: GitRepository, repository: RzRepository, path: String): RepositoryGitData =
     gitRepository
       .fileList(repository, path = path)
       .getOrElse(RepositoryGitData(List(), None))
@@ -214,7 +214,7 @@ class FunctionalGitEntitiesTest
       createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
 
       val git           = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val listRootFiles = listFileInRepo(git, Repository(0, account, repoName, "master"), ".")
+      val listRootFiles = listFileInRepo(git, RzRepository(0, account, repoName, "master", None), ".")
 
       listRootFiles.files.exists(_.name contains fileName) must equal(true)
     }

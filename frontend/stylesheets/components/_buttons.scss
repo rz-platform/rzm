@@ -1,6 +1,4 @@
-/*csslint outline-none:false*/
 .rz-button {
-  /* Structure */
   display: inline-block;
   line-height: normal;
   white-space: nowrap;
@@ -15,8 +13,8 @@
   padding: 0.5em 1em;
   color: #444; /* rgba not supported (IE 8) */
   color: rgba(0, 0, 0, 0.8); /* rgba supported */
-  border: 1px solid #999; /*IE 6/7/8*/
-  border: none rgba(0, 0, 0, 0); /*IE9 + everything else*/
+  border: 1px solid #999; /* IE 6/7/8 */
+  border: none rgba(0, 0, 0, 0); /* IE9 + everything else */
   background-color: #e6e6e6;
   text-decoration: none;
   border-radius: 2px;
@@ -31,19 +29,12 @@
 /* Inherit .rz-g styles */
 .rz-button-group {
   letter-spacing: -0.31em; /* Webkit: collapse white-space between units */
-  text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */
+  text-rendering: optimizeSpeed; /* Webkit: fixes text-rendering: optimizeLegibility */
 }
 
 .opera-only :-o-prefocus,
 .rz-button-group {
   word-spacing: -0.43em;
-}
-
-.rz-button-group .rz-button {
-  letter-spacing: normal;
-  word-spacing: normal;
-  vertical-align: top;
-  text-rendering: auto;
 }
 
 .rz-button-hover,
@@ -87,6 +78,10 @@ a.rz-button-selected {
 
 /* Button Groups */
 .rz-button-group .rz-button {
+  letter-spacing: normal;
+  word-spacing: normal;
+  vertical-align: top;
+  text-rendering: auto;
   margin: 0;
   border-radius: 0;
   border-right: 1px solid #111; /* fallback color for rgba() for IE7/8 */

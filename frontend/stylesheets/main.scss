@@ -19,8 +19,9 @@
 @import 'layout/header', 'layout/container', 'layout/layout';
 
 // Components
-@import 'components/buttons', 'components/repoHeader', 'components/forms', 'components/menus', 'components/icons';
+@import 'components/buttons', 'components/dates', 'components/repoHeader', 'components/forms', 'components/menus',
+  'components/icons';
 
 // Page-specific styles
 @import 'pages/auth', 'pages/repo', 'pages/collaborators', 'pages/profile', 'pages/view', 'pages/repoList',
-  'pages/upload', 'pages/sshKeys', 'pages/commitLog';
+  'pages/sshKeys', 'pages/commitLog';

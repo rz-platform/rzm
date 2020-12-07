@@ -1,14 +1,10 @@
-<!-- prettier-ignore -->
 @(title:String,fluid:Boolean=false)(body:Html)(js:Html=Html(""))(implicit request:RequestWithAccount)
 
 @headerHtml = {
 <ul class="rz-menu-list">
   <li class="rz-menu-item">
     <div class="auth-user">
-      <a
-        href="@routes.AccountController.accountPage"
-        class="rz-menu-link"
-      >
+      <a href="@routes.AccountController.accountPage" class="rz-menu-link">
         @if(request.account.hasPicture){
         <img
           src="@routes.AccountController.accountPicture(request.account.userName)"
@@ -19,18 +15,11 @@
     </div>
   </li>
   <li class="rz-menu-item">
-    <a
-      href="@routes.GitEntitiesController.list"
-      class="rz-menu-link"
-      >@request.messages("common.myRepositories")</a
-    >
+    <a href="@routes.GitEntitiesController.list" class="rz-menu-link">@request.messages("common.myRepositories")</a>
   </li>
   <li class="rz-menu-item">
-    <a
-      href="@routes.AccountController.logout"
-      class="rz-menu-link"
-      >@request.messages("common.signout")</a
-    >
+    <a href="@routes.AccountController.logout" class="rz-menu-link">@request.messages("common.signout")</a>
   </li>
 </ul>
-} @main(title)(body,headerHtml,fluid)(js)
+} 
+@main(title)(body,headerHtml,fluid)(js)

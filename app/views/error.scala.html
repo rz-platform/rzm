@@ -1,6 +1,6 @@
-<!-- prettier-ignore -->
 @(message: String)(implicit request:play.api.mvc.RequestHeader) 
-@base.main("Error")({
-<h1>Oops</h1>
-<p>@message</p>
-} , Html(""))()
+@html = {
+	<h1>Oops</h1>
+	<p>@message</p>
+}
+@base.main("Error")(html, Html(""))()

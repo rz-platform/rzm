@@ -5,14 +5,6 @@ dt {
   margin-right: 0;
 }
 
-/*csslint box-model:false*/
-/*
-Box-model set to false because we're setting a height on select elements, which
-also have border and padding. This is done because some browsers don't render
-the padding. We explicitly set the box-model for select elements to border-box,
-so we can ignore the csslint warning.
-*/
-
 .rz-form input[type='text'],
 .rz-form input[type='password'],
 .rz-form input[type='email'],
@@ -38,6 +30,73 @@ so we can ignore the csslint warning.
   box-sizing: border-box;
 }
 
+.rz-form-stacked input[type='text'],
+.rz-form-stacked input[type='password'],
+.rz-form-stacked input[type='email'],
+.rz-form-stacked input[type='url'],
+.rz-form-stacked input[type='date'],
+.rz-form-stacked input[type='month'],
+.rz-form-stacked input[type='time'],
+.rz-form-stacked input[type='datetime'],
+.rz-form-stacked input[type='datetime-local'],
+.rz-form-stacked input[type='week'],
+.rz-form-stacked input[type='number'],
+.rz-form-stacked input[type='search'],
+.rz-form-stacked input[type='tel'],
+.rz-form-stacked input[type='color'],
+.rz-form-stacked input[type='file'],
+.rz-form-stacked select,
+.rz-form-stacked label,
+.rz-form-stacked textarea {
+  display: block;
+  margin: 0.25em 0;
+}
+
+.rz-form select {
+  /* Normalizes the height; padding is not sufficient. */
+  height: 2.25em;
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+.rz-form-aligned input,
+.rz-form-aligned textarea,
+.rz-form-aligned select,
+.rz-form-message-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+.rz-form-aligned textarea {
+  vertical-align: top;
+}
+
+.rz-form fieldset {
+  margin: 0;
+  padding: 0.35em 0 0.75em;
+  border: 0;
+}
+
+/* Rounded Inputs */
+.rz-form input.rz-input-rounded,
+.rz-form .rz-input-rounded {
+  border-radius: 2em;
+  padding: 0.5em 1em;
+}
+
+/* Grouped Inputs */
+.rz-form .rz-group fieldset {
+  margin-bottom: 10px;
+}
+.rz-form .rz-group input,
+.rz-form .rz-group textarea {
+  display: block;
+  padding: 10px;
+  margin: 0 0 -1px;
+  border-radius: 0;
+  position: relative;
+  top: -1px;
+}
+
 /*
 Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
 since IE8 won't execute CSS that contains a CSS3 selector.
@@ -50,8 +109,13 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   border-radius: 4px;
   box-sizing: border-box;
 }
+.rz-form-stacked input:not([type]) {
+  display: block;
+  margin: 0.25em 0;
+}
 
 /* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */
+
 /* May be able to remove this tweak as color inputs become more standardized across browsers. */
 .rz-form input[type='color'] {
   padding: 0.2em 0.5em;
@@ -119,10 +183,6 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   color: #cad2d3;
 }
 
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
 .rz-form input:not([type])[disabled] {
   cursor: not-allowed;
   background-color: #eaeded;
@@ -147,22 +207,11 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 .rz-form input[type='checkbox']:focus:invalid:focus {
   outline-color: #e9322d;
 }
-.rz-form select {
-  /* Normalizes the height; padding is not sufficient. */
-  height: 2.25em;
-  border: 1px solid #ccc;
-  background-color: white;
-}
 .rz-form select[multiple] {
   height: auto;
 }
 .rz-form label {
   margin: 0.5em 0 0.2em;
-}
-.rz-form fieldset {
-  margin: 0;
-  padding: 0.35em 0 0.75em;
-  border: 0;
 }
 .rz-form legend {
   display: block;
@@ -171,47 +220,6 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   margin-bottom: 0.3em;
   color: #333;
   border-bottom: 1px solid #e5e5e5;
-}
-
-.rz-form-stacked input[type='text'],
-.rz-form-stacked input[type='password'],
-.rz-form-stacked input[type='email'],
-.rz-form-stacked input[type='url'],
-.rz-form-stacked input[type='date'],
-.rz-form-stacked input[type='month'],
-.rz-form-stacked input[type='time'],
-.rz-form-stacked input[type='datetime'],
-.rz-form-stacked input[type='datetime-local'],
-.rz-form-stacked input[type='week'],
-.rz-form-stacked input[type='number'],
-.rz-form-stacked input[type='search'],
-.rz-form-stacked input[type='tel'],
-.rz-form-stacked input[type='color'],
-.rz-form-stacked input[type='file'],
-.rz-form-stacked select,
-.rz-form-stacked label,
-.rz-form-stacked textarea {
-  display: block;
-  margin: 0.25em 0;
-}
-
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.rz-form-stacked input:not([type]) {
-  display: block;
-  margin: 0.25em 0;
-}
-.rz-form-aligned input,
-.rz-form-aligned textarea,
-.rz-form-aligned select,
-.rz-form-message-inline {
-  display: inline-block;
-  vertical-align: middle;
-}
-.rz-form-aligned textarea {
-  vertical-align: top;
 }
 
 /* Aligned Forms */
@@ -229,26 +237,6 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   margin: 1.5em 0 0 11em;
 }
 
-/* Rounded Inputs */
-.rz-form input.rz-input-rounded,
-.rz-form .rz-input-rounded {
-  border-radius: 2em;
-  padding: 0.5em 1em;
-}
-
-/* Grouped Inputs */
-.rz-form .rz-group fieldset {
-  margin-bottom: 10px;
-}
-.rz-form .rz-group input,
-.rz-form .rz-group textarea {
-  display: block;
-  padding: 10px;
-  margin: 0 0 -1px;
-  border-radius: 0;
-  position: relative;
-  top: -1px;
-}
 .rz-form .rz-group input:focus,
 .rz-form .rz-group textarea:focus {
   z-index: 3;
@@ -259,16 +247,16 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   border-radius: 4px 4px 0 0;
   margin: 0;
 }
-.rz-form .rz-group input:first-child:last-child,
-.rz-form .rz-group textarea:first-child:last-child {
-  top: 1px;
-  border-radius: 4px;
-  margin: 0;
-}
 .rz-form .rz-group input:last-child,
 .rz-form .rz-group textarea:last-child {
   top: -2px;
   border-radius: 0 0 4px 4px;
+  margin: 0;
+}
+.rz-form .rz-group input:first-child:last-child,
+.rz-form .rz-group textarea:first-child:last-child {
+  top: 1px;
+  border-radius: 4px;
   margin: 0;
 }
 .rz-form .rz-group button {
@@ -368,6 +356,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   .rz-form-message {
     display: block;
     font-size: 0.75em;
+
     /* Increased bottom padding to make it group with its related input element. */
     padding: 0.2em 0 0.8em;
   }

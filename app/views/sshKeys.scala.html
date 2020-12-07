@@ -1,10 +1,7 @@
-<!-- prettier-ignore -->
 @(sshKeys: List[SshKey], sshKeyAdd: Form[SshKeyData], sshKeyDelete: Form[SshRemoveData])(implicit request:AccountRequestHeader) 
 
 @import views.html.helper._
-@base.auth(request.messages("profile.ssh.title"))
-{
-
+@base.auth(request.messages("profile.ssh.title")){
 <h1> @request.messages("profile.ssh.header") </h1>
 
 @header.notificationHeader() @sshKeys.map { key =>
@@ -12,41 +9,22 @@
   <div>
     <span>@key.email</span>
     <span>@key.fingerprint</span>
-    <span
-      >@request.messages("profile.ssh.createdAt",
-      key.createdAt)</span
-    >
+    <span>@request.messages("profile.ssh.createdAt", key.createdAt)</span>
   </div>
   <div>
-    @form(routes.AccountController.deleteSshKey())
-    { @CSRF.formField
-    <input
-      type="hidden"
-      name="id"
-      value="@key.id"
-    />
-    <button class="rz-button" type="submit">
-      @request.messages("profile.ssh.remove")
-    </button>
+    @form(routes.AccountController.deleteSshKey()) { @CSRF.formField
+    <input type="hidden" name="id" value="@key.id" />
+    <button class="rz-button" type="submit"> @request.messages("profile.ssh.remove") </button>
     }
   </div>
 </div>
 }
 
 <div class="ssh-key-actions">
-  @form(routes.AccountController.addSshKey(),
-  Symbol("class") -> "rz-form") { @CSRF.formField
-  @textarea(sshKeyAdd("publicKey"),
-  Symbol("_label") ->
-  request.messages("profile.ssh.addkeytitle"),
-  Symbol("_help") -> "", Symbol("class") ->
-  "ssh-key-textarea",
-  Symbol("placeholder")->request.messages("profile.ssh.addplaceholder"))
-  <input
-    type="submit"
-    value="Add SSH Key"
-    class="rz-button rz-button-primary"
-  />
+  @form(routes.AccountController.addSshKey(), Symbol("class") -> "rz-form") { @CSRF.formField
+  @textarea(sshKeyAdd("publicKey"), Symbol("_label") -> request.messages("profile.ssh.addkeytitle"), Symbol("_help") ->
+  "", Symbol("class") -> "ssh-key-textarea", Symbol("placeholder")->request.messages("profile.ssh.addplaceholder"))
+  <input type="submit" value="Add SSH Key" class="rz-button rz-button-primary" />
   }
 </div>
 }()
