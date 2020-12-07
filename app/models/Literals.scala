@@ -25,6 +25,8 @@ case object ForbiddenSymbols {
 
   def isPathValid(itemName: String): Boolean = pathForbiddenSymbols.exists(itemName contains _)
   def isNameValid(itemName: String): Boolean = generalForbiddenSymbols.exists(itemName contains _)
+
+  override def toString: String = generalForbiddenSymbols.mkString("") // for testing purposes
 }
 
 object ExcludedFileNames {

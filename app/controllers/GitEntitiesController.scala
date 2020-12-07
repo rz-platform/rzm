@@ -39,8 +39,7 @@ class GitEntitiesController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val gitHome                  = config.get[String]("play.server.git.path")
-  private val gitServerBaseUrl: String = config.get[String]("play.server.gitserver.baseurl")
+  private val gitHome = config.get[String]("play.server.git.path")
 
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
@@ -146,7 +145,7 @@ class GitEntitiesController @Inject() (
           gitEntitiesRepository.getByOwnerAndName(req.account.userName, repository.name).flatMap {
             case None =>
               gitEntitiesRepository.insertRepository(req.account.id, repository).map { _ =>
-                // git.create(req.repository)
+                git.create(RzRepository(0, req.account, repository.name, RzRepository.defaultBranchName, None))
                 Redirect(routes.GitEntitiesController.list())
                   .flashing("success" -> Messages("repository.create.flash.success"))
               }
@@ -331,16 +330,14 @@ class GitEntitiesController @Inject() (
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit req =>
       addNewItemForm.bindFromRequest.fold(
-        formWithErrors => {
-          logger.info(formWithErrors.toString)
+        formWithErrors =>
           Redirect(
             routes.GitEntitiesController.emptyTree(
               accountName,
               repositoryName,
               formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
             )
-          ).flashing("error" -> Messages("repository.addNewItem.error.namereq"))
-        },
+          ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
         (newItem: NewItem) => {
           val fName = DecodedPath(newItem.path, newItem.name, newItem.isFolder).toString
           git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
