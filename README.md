@@ -1,4 +1,5 @@
-Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE) [![Build Status](https://travis-ci.org/razamgit/razam.svg?branch=master)](https://travis-ci.org/razamgit/razam)
+Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE)
+
 =====
 
 Razam is web-based Git repository hosting (much like GitHub) for writing scientific papers in a browser and full integration with TeX.
@@ -12,8 +13,6 @@ Fully-functional Git Server with authentication against Razam implemented in [Ra
 ## Development
 
 This is Scala 2.13 (JDK 11+ required) application that uses [Play](https://playframework.com/documentation/latest/Home) and communicates with PostgreSQL using [Anorm](https://playframework.github.io/anorm/).
-
----
 
 Razam requires Postgres database. You can find default credentials in [application.conf](https://github.com/razamgit/razam/blob/master/conf/application.conf) (db.default section).
 
