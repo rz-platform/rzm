@@ -20,10 +20,13 @@ case object SessionName extends Literal {
 }
 
 case object ForbiddenSymbols {
-  private val blockList: List[String]        = List("?", ":", "#", "/", "&", "..", "$", "%")
-  def isNameValid(itemName: String): Boolean = blockList.exists(itemName contains _)
+  private val pathForbiddenSymbols: List[String]    = List("?", ":", "#", "&", "..", "$", "%")
+  private val generalForbiddenSymbols: List[String] = pathForbiddenSymbols :+ "/"
 
-  override def toString: String = blockList.toString()
+  def isPathValid(itemName: String): Boolean = pathForbiddenSymbols.exists(itemName contains _)
+  def isNameValid(itemName: String): Boolean = generalForbiddenSymbols.exists(itemName contains _)
+
+  override def toString: String = generalForbiddenSymbols.mkString("") // for testing purposes
 }
 
 object ExcludedFileNames {

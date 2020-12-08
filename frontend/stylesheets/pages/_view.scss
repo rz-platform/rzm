@@ -9,14 +9,14 @@
   }
 
   .rz-menu-file-tree-depth-#{$i}-content {
-    width: $filetree-width - ($base-file-tree-padding*$i)- 36px - 60px;
+    width: $filetree-width - ($base-file-tree-padding * $i)- 36px - 60px;
     overflow: hidden;
     display: inline-block;
-    vertical-align:top
+    vertical-align: top;
   }
 
   .rz-menu-file-tree-depth-#{$i}-content input {
-    width: $filetree-width - ($base-file-tree-padding*$i)- 36px - 100px;
+    width: $filetree-width - ($base-file-tree-padding * $i)- 36px - 100px;
   }
 }
 
@@ -26,7 +26,7 @@
 
 .action-buttons {
   display: inline-block;
-  vertical-align:top;
+  vertical-align: top;
 
   a {
     text-decoration: none;
@@ -46,7 +46,7 @@
   }
 
   dl {
-    margin: 0px;
+    margin: 0;
   }
 }
 
@@ -54,57 +54,56 @@
   color: #6a737d;
 }
 @media (min-width: 992px) {
-.rz-sidebar {
-  display: flex;
-  flex-direction: row;
-  min-height: calc(100%-52px);
-}
+  .rz-sidebar {
+    display: flex;
+    flex-direction: row;
+    min-height: calc(100% - 52px);
+  }
 
-.rz-sidebar > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
+  .rz-sidebar > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.rz-sidebar-filetree {
-  max-width: $filetree-width;
-  border-right: 1px solid #ebebeb;
-  overflow-x: hidden;
-  flex:1 1 auto;
-  position: relative;
-}
+  .rz-sidebar-filetree {
+    max-width: $filetree-width;
+    border-right: 1px solid #ebebeb;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    position: relative;
+  }
 
-.rz-editor-form {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  flex: 1;
-}
+  .rz-editor-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+  }
 
-.code-wrap {
-  flex:1 1 auto;
-  margin-top:0;
-  height:100%;
-  position:relative;
-}
-.CodeMirror {
-  position:absolute;
-  top:0;
-  bottom:0;
-  left:0;
-  right:0;
-  height:100%;
-}
-.rz-menu-file-tree {
-  position:absolute;
-  top:0;
-  bottom:0;
-  left:0;
-  right:0;
-  height:100%;
-}
-
+  .code-wrap {
+    flex: 1 1 auto;
+    margin-top: 0;
+    height: 100%;
+    position: relative;
+  }
+  .CodeMirror {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+  }
+  .rz-menu-file-tree {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+  }
 }
 .rz-editor-content-header {
   display: flex;

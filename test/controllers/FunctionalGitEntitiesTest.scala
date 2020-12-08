@@ -33,7 +33,7 @@ class FunctionalGitEntitiesTest
   implicit val sys: ActorSystem = ActorSystem("RepositoryTest")
 
   def getRandomString: String =
-    java.util.UUID.randomUUID.toString
+    java.util.UUID.randomUUID.toString.replace("-", "")
 
   def databaseApi: DBApi                   = app.injector.instanceOf[DBApi]
   def config: Configuration                = app.injector.instanceOf[Configuration]
@@ -42,10 +42,11 @@ class FunctionalGitEntitiesTest
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
   def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
+  def git: GitRepository = app.injector.instanceOf[GitRepository]
 
   val defaultDatabase: Database = databaseApi.database("default")
 
-  val defaultBranch = "master"
+  val defaultBranch = RzRepository
 
   val sessionName: String = SessionName.toString
 
@@ -74,14 +75,14 @@ class FunctionalGitEntitiesTest
     }
   }
 
-  def createRepository(controller: GitEntitiesController, name: String, owner: SimpleAccount): Result = {
+  def createRepository(controller: GitEntitiesController, name: String, owner: SimpleAccount): (Result, RzRepository) = {
     val request = addCSRFToken(
       FakeRequest(routes.GitEntitiesController.saveRepository())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
         .withSession((sessionName, owner.id.toString))
     )
-
-    await(controller.saveRepository().apply(request))
+    val result = await(controller.saveRepository().apply(request))
+    (result, RzRepository(0, owner, name, RzRepository.defaultBranchName, Some("")))
   }
 
   def addCollaborator(
@@ -125,20 +126,17 @@ class FunctionalGitEntitiesTest
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
-        .withFormUrlEncodedBody("name" -> name, "rev" -> defaultBranch, "path" -> path, "isFolder" -> (if (isFolder) "true" else "false"))
+        .withFormUrlEncodedBody("name" -> name, "rev" -> RzRepository.defaultBranchName, "path" -> path, "isFolder" -> (if (isFolder) "true" else "false"))
         .withSession((sessionName, creator.id.toString))
     )
 
-    val result: Future[Result] =
-      call(controller.addNewItem(creator.userName, repositoryName), newFileRequest)
+    val result: Future[Result] = call(controller.addNewItem(creator.userName, repositoryName), newFileRequest)
 
     await(result)
   }
 
-  def listFileInRepo(gitRepository: GitRepository, repository: Repository, path: String): RepositoryGitData =
-    gitRepository
-      .fileList(repository, path = path)
-      .getOrElse(RepositoryGitData(List(), None))
+  def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData =
+    git.fileList(repository, path = path).getOrElse(RepositoryGitData(List(), None))
 
   "AccountController" must {
     "Attempt to create user with bad name" in {
@@ -193,7 +191,7 @@ class FunctionalGitEntitiesTest
       val account  = createAccount()
       val repoName = getRandomString
 
-      val result = createRepository(controller, repoName, account)
+      val (result, _) = createRepository(controller, repoName, account)
       result.header.headers(LOCATION) must equal(routes.GitEntitiesController.list().toString)
 
       defaultDatabase.withConnection { connection =>
@@ -209,12 +207,11 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
       val fileName = getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
 
-      val git           = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val listRootFiles = listFileInRepo(git, Repository(0, account, repoName, "master"), ".")
+      val listRootFiles = listFileInRepo(r, ".")
 
       listRootFiles.files.exists(_.name contains fileName) must equal(true)
     }
@@ -224,17 +221,15 @@ class FunctionalGitEntitiesTest
       val repoName   = getRandomString
       val folderName = getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
 
-      val git          = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo         = Repository(0, account, repoName, "master")
-      val rootFileList = listFileInRepo(git, repo, ".")
+      val rootFileList = listFileInRepo(r, ".")
 
       rootFileList.files.exists(_.name contains folderName) must equal(true)
 
-      val folderFileList = listFileInRepo(git, repo, folderName)
+      val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains ".gitkeep") must equal(true)
     }
 
@@ -244,11 +239,12 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
       val fileName = getRandomString + ForbiddenSymbols.toString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       val result = createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
       result.header.status must equal(303)
-      result.newFlash.getOrElse(Flash(Map())).data.contains("error") must equal(true)
+      val folderFileList = listFileInRepo(r, ".")
+      folderFileList.files.exists(_.name contains fileName) must equal(false)
     }
 
     "Attempt to create folder with forbidden symbols" in {
@@ -257,11 +253,12 @@ class FunctionalGitEntitiesTest
       val repoName   = getRandomString
       val folderName = getRandomString + ForbiddenSymbols.toString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       val result = createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
       result.header.status must equal(303)
-      result.newFlash.getOrElse(Flash(Map())).data.contains("error") must equal(true)
+      val folderFileList = listFileInRepo(r, ".")
+      folderFileList.files.exists(_.name contains folderName) must equal(false)
     }
 
     "Create file in subfolder" in {
@@ -271,14 +268,12 @@ class FunctionalGitEntitiesTest
       val folderName          = getRandomString
       val fileInSubfolderName = getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
       createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
-      val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, account, repoName, "master")
-      val folderFileList = listFileInRepo(git, repo, folderName)
+      val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
     }
 
@@ -289,14 +284,12 @@ class FunctionalGitEntitiesTest
       val folderName            = getRandomString
       val folderInSubfolderName = getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
       createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
-      val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, account, repoName, "master")
-      val folderFileList = listFileInRepo(git, repo, folderName)
+      val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
     }
 
@@ -307,14 +300,12 @@ class FunctionalGitEntitiesTest
       val folderName            = getRandomString + " " + getRandomString
       val folderInSubfolderName = getRandomString + " " + getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
       createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
-      val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, account, repoName, "master")
-      val folderFileList = listFileInRepo(git, repo, folderName)
+      val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
     }
 
@@ -325,14 +316,12 @@ class FunctionalGitEntitiesTest
       val folderName          = getRandomString + " " + getRandomString
       val fileInSubfolderName = getRandomString + " " + getRandomString
 
-      createRepository(controller, repoName, account)
+      val (_, r) = createRepository(controller, repoName, account)
 
       createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
       createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
-      val git            = new GitRepository(account, repoName, config.get[String]("play.server.git.path"))
-      val repo           = Repository(0, account, repoName, "master")
-      val folderFileList = listFileInRepo(git, repo, folderName)
+      val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
     }
 

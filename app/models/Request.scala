@@ -15,13 +15,13 @@ class AccountRequest[A](request: Request[A], val account: SimpleAccount, val mes
 
 trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
   def account: SimpleAccount
-  def repository: Repository
+  def repository: RzRepository
   def role: AccessLevel
 }
 
 class RepositoryRequest[A](
   request: AccountRequest[A],
-  val repository: Repository,
+  val repository: RzRepository,
   val account: SimpleAccount,
   val role: AccessLevel,
   val messagesApi: MessagesApi

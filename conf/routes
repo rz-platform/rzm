@@ -28,14 +28,12 @@ GET /repositories      controllers.GitEntitiesController.list
 GET /repositories/create controllers.GitEntitiesController.createRepository
 POST /repositories/create controllers.GitEntitiesController.saveRepository
 
+# File view
+
 # Repository view
 
-GET /repositories/:account/:repository/tree/:rev controllers.GitEntitiesController.view(account:String, repository:String, path: String = ".", rev)
-GET /repositories/:account/:repository/tree/:rev/*path controllers.GitEntitiesController.view(account:String, repository:String, path: String, rev: String)
-
-# Blob view
-
-GET /repositories/:account/:repository/blob/:rev/*path controllers.GitEntitiesController.blob(account:String, repository:String, rev: String, path: String)
+GET /repositories/:account/:repository/tree/:rev controllers.GitEntitiesController.emptyTree(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/tree/:rev/*path controllers.GitEntitiesController.blob(account:String, repository:String, rev: String, path: String)
 
 # Raw view
 

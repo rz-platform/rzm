@@ -3,44 +3,25 @@
 // This file should not contain anything but @import and comments.
 
 // Configuration and helpers
-@import
-  'abstracts/variables';
+@import 'abstracts/variables';
 
 // Vendors
-@import
-  '~codemirror/lib/codemirror';
+@import '../node_modules/codemirror/lib/codemirror.css';
 
 // CodeMirror custom theme
 
-@import
-  'theme/rzm.scss';
+@import 'theme/rzm.scss';
 
 // Base stuff
-@import
-  'base/typography';
+@import 'base/typography';
 
 // Layout-related sections
-@import
-  'layout/header',
-  'layout/container',
-  'layout/layout';
+@import 'layout/header', 'layout/container', 'layout/layout';
 
 // Components
-@import
-  'components/buttons',
-  'components/repoHeader',
-  'components/forms',
-  'components/menus',
+@import 'components/buttons', 'components/dates', 'components/repoHeader', 'components/forms', 'components/menus',
   'components/icons';
 
 // Page-specific styles
-@import
-  'pages/auth',
-  'pages/repo',
-  'pages/collaborators',
-  'pages/profile',
-  'pages/view',
-  'pages/repoList',
-  'pages/upload',
-  'pages/sshKeys',
-  'pages/commitLog';
+@import 'pages/auth', 'pages/repo', 'pages/collaborators', 'pages/profile', 'pages/view', 'pages/repoList',
+  'pages/sshKeys', 'pages/commitLog';

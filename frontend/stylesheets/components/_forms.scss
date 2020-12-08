@@ -1,30 +1,24 @@
-dd, dl, dt {
+dd,
+dl,
+dt {
   margin-left: 0;
   margin-right: 0;
 }
 
-/*csslint box-model:false*/
-/*
-Box-model set to false because we're setting a height on select elements, which
-also have border and padding. This is done because some browsers don't render
-the padding. We explicitly set the box-model for select elements to border-box,
-so we can ignore the csslint warning.
-*/
-
-.rz-form input[type="text"],
-.rz-form input[type="password"],
-.rz-form input[type="email"],
-.rz-form input[type="url"],
-.rz-form input[type="date"],
-.rz-form input[type="month"],
-.rz-form input[type="time"],
-.rz-form input[type="datetime"],
-.rz-form input[type="datetime-local"],
-.rz-form input[type="week"],
-.rz-form input[type="number"],
-.rz-form input[type="search"],
-.rz-form input[type="tel"],
-.rz-form input[type="color"],
+.rz-form input[type='text'],
+.rz-form input[type='password'],
+.rz-form input[type='email'],
+.rz-form input[type='url'],
+.rz-form input[type='date'],
+.rz-form input[type='month'],
+.rz-form input[type='time'],
+.rz-form input[type='datetime'],
+.rz-form input[type='datetime-local'],
+.rz-form input[type='week'],
+.rz-form input[type='number'],
+.rz-form input[type='search'],
+.rz-form input[type='tel'],
+.rz-form input[type='color'],
 .rz-form select,
 .rz-form textarea {
   padding: 0.5em 0.6em;
@@ -36,158 +30,21 @@ so we can ignore the csslint warning.
   box-sizing: border-box;
 }
 
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.rz-form input:not([type]) {
-  padding: 0.5em 0.6em;
-  display: inline-block;
-  border: 1px solid #ccc;
-  box-shadow: inset 0 1px 3px #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-
-/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */
-/* May be able to remove this tweak as color inputs become more standardized across browsers. */
-.rz-form input[type="color"] {
-  padding: 0.2em 0.5em;
-}
-
-
-.rz-form input[type="text"]:focus,
-.rz-form input[type="password"]:focus,
-.rz-form input[type="email"]:focus,
-.rz-form input[type="url"]:focus,
-.rz-form input[type="date"]:focus,
-.rz-form input[type="month"]:focus,
-.rz-form input[type="time"]:focus,
-.rz-form input[type="datetime"]:focus,
-.rz-form input[type="datetime-local"]:focus,
-.rz-form input[type="week"]:focus,
-.rz-form input[type="number"]:focus,
-.rz-form input[type="search"]:focus,
-.rz-form input[type="tel"]:focus,
-.rz-form input[type="color"]:focus,
-.rz-form select:focus,
-.rz-form textarea:focus {
-  outline: 0;
-  border-color: #129FEA;
-}
-
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.rz-form input:not([type]):focus {
-  outline: 0;
-  border-color: #129FEA;
-}
-
-.rz-form input[type="file"]:focus,
-.rz-form input[type="radio"]:focus,
-.rz-form input[type="checkbox"]:focus {
-  outline: thin solid #129FEA;
-  outline: 1px auto #129FEA;
-}
-.rz-form .rz-checkbox,
-.rz-form .rz-radio {
-  margin: 0.5em 0;
-  display: block;
-}
-
-.rz-form input[type="text"][disabled],
-.rz-form input[type="password"][disabled],
-.rz-form input[type="email"][disabled],
-.rz-form input[type="url"][disabled],
-.rz-form input[type="date"][disabled],
-.rz-form input[type="month"][disabled],
-.rz-form input[type="time"][disabled],
-.rz-form input[type="datetime"][disabled],
-.rz-form input[type="datetime-local"][disabled],
-.rz-form input[type="week"][disabled],
-.rz-form input[type="number"][disabled],
-.rz-form input[type="search"][disabled],
-.rz-form input[type="tel"][disabled],
-.rz-form input[type="color"][disabled],
-.rz-form select[disabled],
-.rz-form textarea[disabled] {
-  cursor: not-allowed;
-  background-color: #eaeded;
-  color: #cad2d3;
-}
-
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.rz-form input:not([type])[disabled] {
-  cursor: not-allowed;
-  background-color: #eaeded;
-  color: #cad2d3;
-}
-.rz-form input[readonly],
-.rz-form select[readonly],
-.rz-form textarea[readonly] {
-  background-color: #eee; /* menu hover bg color */
-  color: #777; /* menu text color */
-  border-color: #ccc;
-}
-
-.rz-form input:focus:invalid,
-.rz-form textarea:focus:invalid,
-.rz-form select:focus:invalid {
-  color: #b94a48;
-  border-color: #e9322d;
-}
-.rz-form input[type="file"]:focus:invalid:focus,
-.rz-form input[type="radio"]:focus:invalid:focus,
-.rz-form input[type="checkbox"]:focus:invalid:focus {
-  outline-color: #e9322d;
-}
-.rz-form select {
-  /* Normalizes the height; padding is not sufficient. */
-  height: 2.25em;
-  border: 1px solid #ccc;
-  background-color: white;
-}
-.rz-form select[multiple] {
-  height: auto;
-}
-.rz-form label {
-  margin: 0.5em 0 0.2em;
-}
-.rz-form fieldset {
-  margin: 0;
-  padding: 0.35em 0 0.75em;
-  border: 0;
-}
-.rz-form legend {
-  display: block;
-  width: 100%;
-  padding: 0.3em 0;
-  margin-bottom: 0.3em;
-  color: #333;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.rz-form-stacked input[type="text"],
-.rz-form-stacked input[type="password"],
-.rz-form-stacked input[type="email"],
-.rz-form-stacked input[type="url"],
-.rz-form-stacked input[type="date"],
-.rz-form-stacked input[type="month"],
-.rz-form-stacked input[type="time"],
-.rz-form-stacked input[type="datetime"],
-.rz-form-stacked input[type="datetime-local"],
-.rz-form-stacked input[type="week"],
-.rz-form-stacked input[type="number"],
-.rz-form-stacked input[type="search"],
-.rz-form-stacked input[type="tel"],
-.rz-form-stacked input[type="color"],
-.rz-form-stacked input[type="file"],
+.rz-form-stacked input[type='text'],
+.rz-form-stacked input[type='password'],
+.rz-form-stacked input[type='email'],
+.rz-form-stacked input[type='url'],
+.rz-form-stacked input[type='date'],
+.rz-form-stacked input[type='month'],
+.rz-form-stacked input[type='time'],
+.rz-form-stacked input[type='datetime'],
+.rz-form-stacked input[type='datetime-local'],
+.rz-form-stacked input[type='week'],
+.rz-form-stacked input[type='number'],
+.rz-form-stacked input[type='search'],
+.rz-form-stacked input[type='tel'],
+.rz-form-stacked input[type='color'],
+.rz-form-stacked input[type='file'],
 .rz-form-stacked select,
 .rz-form-stacked label,
 .rz-form-stacked textarea {
@@ -195,14 +52,13 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   margin: 0.25em 0;
 }
 
-/*
-Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
-since IE8 won't execute CSS that contains a CSS3 selector.
-*/
-.rz-form-stacked input:not([type]) {
-  display: block;
-  margin: 0.25em 0;
+.rz-form select {
+  /* Normalizes the height; padding is not sufficient. */
+  height: 2.25em;
+  border: 1px solid #ccc;
+  background-color: white;
 }
+
 .rz-form-aligned input,
 .rz-form-aligned textarea,
 .rz-form-aligned select,
@@ -214,19 +70,10 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   vertical-align: top;
 }
 
-/* Aligned Forms */
-.rz-form-aligned .rz-control-group {
-  margin-bottom: 0.5em;
-}
-.rz-form-aligned .rz-control-group label {
-  text-align: right;
-  display: inline-block;
-  vertical-align: middle;
-  width: 10em;
-  margin: 0 1em 0 0;
-}
-.rz-form-aligned .rz-controls {
-  margin: 1.5em 0 0 11em;
+.rz-form fieldset {
+  margin: 0;
+  padding: 0.35em 0 0.75em;
+  border: 0;
 }
 
 /* Rounded Inputs */
@@ -249,6 +96,147 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   position: relative;
   top: -1px;
 }
+
+/*
+Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
+since IE8 won't execute CSS that contains a CSS3 selector.
+*/
+.rz-form input:not([type]) {
+  padding: 0.5em 0.6em;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-shadow: inset 0 1px 3px #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.rz-form-stacked input:not([type]) {
+  display: block;
+  margin: 0.25em 0;
+}
+
+/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */
+
+/* May be able to remove this tweak as color inputs become more standardized across browsers. */
+.rz-form input[type='color'] {
+  padding: 0.2em 0.5em;
+}
+
+.rz-form input[type='text']:focus,
+.rz-form input[type='password']:focus,
+.rz-form input[type='email']:focus,
+.rz-form input[type='url']:focus,
+.rz-form input[type='date']:focus,
+.rz-form input[type='month']:focus,
+.rz-form input[type='time']:focus,
+.rz-form input[type='datetime']:focus,
+.rz-form input[type='datetime-local']:focus,
+.rz-form input[type='week']:focus,
+.rz-form input[type='number']:focus,
+.rz-form input[type='search']:focus,
+.rz-form input[type='tel']:focus,
+.rz-form input[type='color']:focus,
+.rz-form select:focus,
+.rz-form textarea:focus {
+  outline: 0;
+  border-color: #129fea;
+}
+
+/*
+Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
+since IE8 won't execute CSS that contains a CSS3 selector.
+*/
+.rz-form input:not([type]):focus {
+  outline: 0;
+  border-color: #129fea;
+}
+
+.rz-form input[type='file']:focus,
+.rz-form input[type='radio']:focus,
+.rz-form input[type='checkbox']:focus {
+  outline: thin solid #129fea;
+  outline: 1px auto #129fea;
+}
+.rz-form .rz-checkbox,
+.rz-form .rz-radio {
+  margin: 0.5em 0;
+  display: block;
+}
+
+.rz-form input[type='text'][disabled],
+.rz-form input[type='password'][disabled],
+.rz-form input[type='email'][disabled],
+.rz-form input[type='url'][disabled],
+.rz-form input[type='date'][disabled],
+.rz-form input[type='month'][disabled],
+.rz-form input[type='time'][disabled],
+.rz-form input[type='datetime'][disabled],
+.rz-form input[type='datetime-local'][disabled],
+.rz-form input[type='week'][disabled],
+.rz-form input[type='number'][disabled],
+.rz-form input[type='search'][disabled],
+.rz-form input[type='tel'][disabled],
+.rz-form input[type='color'][disabled],
+.rz-form select[disabled],
+.rz-form textarea[disabled] {
+  cursor: not-allowed;
+  background-color: #eaeded;
+  color: #cad2d3;
+}
+
+.rz-form input:not([type])[disabled] {
+  cursor: not-allowed;
+  background-color: #eaeded;
+  color: #cad2d3;
+}
+.rz-form input[readonly],
+.rz-form select[readonly],
+.rz-form textarea[readonly] {
+  background-color: #eee; /* menu hover bg color */
+  color: #777; /* menu text color */
+  border-color: #ccc;
+}
+
+.rz-form input:focus:invalid,
+.rz-form textarea:focus:invalid,
+.rz-form select:focus:invalid {
+  color: #b94a48;
+  border-color: #e9322d;
+}
+.rz-form input[type='file']:focus:invalid:focus,
+.rz-form input[type='radio']:focus:invalid:focus,
+.rz-form input[type='checkbox']:focus:invalid:focus {
+  outline-color: #e9322d;
+}
+.rz-form select[multiple] {
+  height: auto;
+}
+.rz-form label {
+  margin: 0.5em 0 0.2em;
+}
+.rz-form legend {
+  display: block;
+  width: 100%;
+  padding: 0.3em 0;
+  margin-bottom: 0.3em;
+  color: #333;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* Aligned Forms */
+.rz-form-aligned .rz-control-group {
+  margin-bottom: 0.5em;
+}
+.rz-form-aligned .rz-control-group label {
+  text-align: right;
+  display: inline-block;
+  vertical-align: middle;
+  width: 10em;
+  margin: 0 1em 0 0;
+}
+.rz-form-aligned .rz-controls {
+  margin: 1.5em 0 0 11em;
+}
+
 .rz-form .rz-group input:focus,
 .rz-form .rz-group textarea:focus {
   z-index: 3;
@@ -259,16 +247,16 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   border-radius: 4px 4px 0 0;
   margin: 0;
 }
-.rz-form .rz-group input:first-child:last-child,
-.rz-form .rz-group textarea:first-child:last-child {
-  top: 1px;
-  border-radius: 4px;
-  margin: 0;
-}
 .rz-form .rz-group input:last-child,
 .rz-form .rz-group textarea:last-child {
   top: -2px;
   border-radius: 0 0 4px 4px;
+  margin: 0;
+}
+.rz-form .rz-group input:first-child:last-child,
+.rz-form .rz-group textarea:first-child:last-child {
+  top: 1px;
+  border-radius: 4px;
   margin: 0;
 }
 .rz-form .rz-group button {
@@ -310,46 +298,46 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   font-size: 0.875em;
 }
 
-@media only screen and (max-width : 480px) {
-  .rz-form button[type="submit"] {
+@media only screen and (max-width: 480px) {
+  .rz-form button[type='submit'] {
     margin: 0.7em 0 0;
   }
 
   .rz-form input:not([type]),
-  .rz-form input[type="text"],
-  .rz-form input[type="password"],
-  .rz-form input[type="email"],
-  .rz-form input[type="url"],
-  .rz-form input[type="date"],
-  .rz-form input[type="month"],
-  .rz-form input[type="time"],
-  .rz-form input[type="datetime"],
-  .rz-form input[type="datetime-local"],
-  .rz-form input[type="week"],
-  .rz-form input[type="number"],
-  .rz-form input[type="search"],
-  .rz-form input[type="tel"],
-  .rz-form input[type="color"],
+  .rz-form input[type='text'],
+  .rz-form input[type='password'],
+  .rz-form input[type='email'],
+  .rz-form input[type='url'],
+  .rz-form input[type='date'],
+  .rz-form input[type='month'],
+  .rz-form input[type='time'],
+  .rz-form input[type='datetime'],
+  .rz-form input[type='datetime-local'],
+  .rz-form input[type='week'],
+  .rz-form input[type='number'],
+  .rz-form input[type='search'],
+  .rz-form input[type='tel'],
+  .rz-form input[type='color'],
   .rz-form label {
     margin-bottom: 0.3em;
     display: block;
   }
 
   .rz-group input:not([type]),
-  .rz-group input[type="text"],
-  .rz-group input[type="password"],
-  .rz-group input[type="email"],
-  .rz-group input[type="url"],
-  .rz-group input[type="date"],
-  .rz-group input[type="month"],
-  .rz-group input[type="time"],
-  .rz-group input[type="datetime"],
-  .rz-group input[type="datetime-local"],
-  .rz-group input[type="week"],
-  .rz-group input[type="number"],
-  .rz-group input[type="search"],
-  .rz-group input[type="tel"],
-  .rz-group input[type="color"] {
+  .rz-group input[type='text'],
+  .rz-group input[type='password'],
+  .rz-group input[type='email'],
+  .rz-group input[type='url'],
+  .rz-group input[type='date'],
+  .rz-group input[type='month'],
+  .rz-group input[type='time'],
+  .rz-group input[type='datetime'],
+  .rz-group input[type='datetime-local'],
+  .rz-group input[type='week'],
+  .rz-group input[type='number'],
+  .rz-group input[type='search'],
+  .rz-group input[type='tel'],
+  .rz-group input[type='color'] {
     margin-bottom: 0;
   }
 
@@ -368,6 +356,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   .rz-form-message {
     display: block;
     font-size: 0.75em;
+
     /* Increased bottom padding to make it group with its related input element. */
     padding: 0.2em 0 0.8em;
   }

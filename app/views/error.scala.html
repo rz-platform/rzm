@@ -1,14 +1,6 @@
-@(message: String)(implicit request: play.api.mvc.RequestHeader)
-
-@import views.html.helper._
-@import base._
-
+@(message: String)(implicit request:play.api.mvc.RequestHeader) 
 @html = {
-  <h1>Oops</h1>
-  <p>@message</p>
+	<h1>Oops</h1>
+	<p>@message</p>
 }
-
-@header = {}
-
-
-@main("Error")(html, header)
+@base.main("Error")(html, Html(""))()

@@ -1,24 +1,30 @@
-@(commitLog: Seq[CommitInfo], rev: String, hasNext: Boolean, page: Int)(implicit request: RepositoryRequestHeader)
+@(commitLog: Seq[CommitInfo], rev:String, hasNext:Boolean, page:Int)(implicit request: RepositoryRequestHeader)
+@import print.date
 
-@import base._
-@import helpers._
+@base.auth(request.messages("repository.commitLog.title")){
+@header.repositoryHeader(CommitHistoryPage)
 
-@auth(request.messages("repository.commitLog.title")) {
-@repositoryHeader(CommitHistoryPage)
-
-<h2>@request.messages("repository.commitLog.header") @rev</h2>
+<h2> @request.messages("repository.commitLog.header") @rev </h2>
 
 @commitLog.map { commitInfo =>
-<p>@commitInfo.fullMessage <span class="info">by</span> @commitInfo.authorName <span class="info">on</span> <span class="info">@commitInfo.commitTime</span></p>
-}
-
-@if(hasNext) {
-<a class="button"
-   href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)">@request.messages("repository.commitLog.nextPage")</a>
-}
-@if(page > 1) {
-<a class="button" href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)">
+<p>
+  @commitInfo.fullMessage
+  <span class="info">by</span>
+  @commitInfo.authorName
+  <span class="info">on</span>
+  <span class="info">@date(commitInfo.commitTime)</span>
+</p>
+} @if(hasNext) {
+<a
+  class="button"
+  href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)"
+  >@request.messages("repository.commitLog.nextPage")</a
+>
+} @if(page > 1) {
+<a
+  class="button"
+  href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)"
+>
   @request.messages("repository.commitLog.previousPage")
 </a>
-}
-}
+} }()

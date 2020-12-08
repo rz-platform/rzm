@@ -2,3 +2,36 @@
   font-size: 18px;
   padding-left: 10px;
 }
+
+input[type='radio'] {
+  display: none;
+}
+
+input[type='radio']:checked + label {
+  color: #000;
+}
+
+.cloneLabel {
+  cursor: pointer;
+}
+
+.cloneLabel:hover {
+  text-decoration: underline dashed;
+}
+
+input[id='showHttp']:checked ~ #gitSshUrl {
+  display: none;
+}
+
+input[id='showSsh']:checked ~ #gitHttpUrl {
+  display: none;
+}
+
+.cloneby {
+  color: $base-gray-color;
+}
+
+#gitHttpUrl,
+#gitSshUrl {
+  width: 250px;
+}

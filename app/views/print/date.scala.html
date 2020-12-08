@@ -1,0 +1,5 @@
+@(d: java.time.LocalDateTime)(implicit request: RepositoryRequestHeader)
+@import models.DateTime._
+
+<span class="date"><span class="short-date">@DateTime.printShort(d)</span><span class="full-date hidden">@DateTime.printFull(d)</span></span>
+

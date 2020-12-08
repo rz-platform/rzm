@@ -1,24 +1,21 @@
-@(title: String)(body: Html, header: Html, fluid: Boolean = false)(implicit request: RequestHeader)
-<!doctype html>
+@(title:String)(body:Html,header:Html,fluid:Boolean=false)(js:Html=Html(""))(implicit request:RequestHeader)
+
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>@title - RAZAM</title>
-    <link rel="stylesheet" href='@routes.Assets.at("dist/stylesheets/main.css")'/>
+    <link rel="stylesheet" href='@routes.Assets.at("dist/main.bundle.css")' />
+    @js
+    <script src='@routes.Assets.at("dist/turbo.bundle.js")' type="text/javascript"></script>
   </head>
   <body>
     <header class="rz-header rz-menu rz-menu-horizontal">
-      <div class="rz-menu-heading rz-logo">
-        RAZAM
-      </div>
+      <div class="rz-menu-heading rz-logo"> RAZAM </div>
       @header
     </header>
-      @if(!fluid) {
-        <div class="container">
-        }
-        @body
-        @if(!fluid) {
-          </div>
-        }
+    @if(!fluid) {
+    <div class="container"> } @body @if(!fluid) { </div>
+    }
   </body>
 </html>

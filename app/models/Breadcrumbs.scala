@@ -2,7 +2,11 @@ package models
 
 case class Breadcrumb(name: String, path: String)
 
-case class Breadcrumbs(fileName: String, breadcrumbs: Array[Breadcrumb])
+sealed trait FileTreeBreadcrumbs {
+  def fileName: String
+}
+case class Breadcrumbs(fileName: String, breadcrumbs: Array[Breadcrumb]) extends FileTreeBreadcrumbs
+case class EmptyBreadcrumbs(fileName: String)                            extends FileTreeBreadcrumbs
 
 object Breadcrumbs {
   private def splitPathIntoBreadcrumbs(path: String, isFile: Boolean = false): Array[Breadcrumb] =

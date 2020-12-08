@@ -3,7 +3,7 @@ package repositories
 import anorm.SqlParser.get
 import anorm._
 import javax.inject.{ Inject, Singleton }
-import models.{ Collaborator, Repository, RepositoryData }
+import models.{ Collaborator, RepositoryData, RzRepository }
 import play.api.db.DBApi
 
 import scala.concurrent.Future
@@ -18,11 +18,12 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Parse a Repository from a ResultSet
    */
   private val simpleGitRepositoryParser = {
-    (get[Long]("repository.id") ~
+    (get[Int]("repository.id") ~
       accountRepository.simpleAccountParser ~
       get[String]("repository.name") ~
-      get[String]("repository.default_branch")).map {
-      case id ~ owner ~ name ~ defaultBranch => Repository(id, owner, name, defaultBranch)
+      get[String]("repository.default_branch") ~
+      get[Option[String]]("repository.main_file")).map {
+      case id ~ owner ~ name ~ defaultBranch ~ mainFile => RzRepository(id, owner, name, defaultBranch, mainFile)
     }
   }
 
@@ -35,11 +36,11 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
     }
   }
 
-  def getByOwnerAndName(owner: String, repoName: String): Future[Option[Repository]] =
+  def getByOwnerAndName(owner: String, repoName: String): Future[Option[RzRepository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-        select repository.id, repository.name, repository.default_branch,
+        select repository.id, repository.name, repository.default_branch, repository.main_file,
         account.id, account.username, account.has_picture, account.email
         from repository
         join account on repository.owner_id = account.id
@@ -66,7 +67,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def createCollaborator(repositoryId: Long, collaboratorId: Long, role: Int): Future[Option[Long]] = Future {
+  def createCollaborator(repositoryId: Int, collaboratorId: Int, role: Int): Future[Option[Long]] = Future {
     db.withConnection { implicit connection =>
       SQL("""
           insert into collaborator (account_id, repository_id, role) values ({accountId}, {repositoryId}, {role})
@@ -88,7 +89,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
    * Insert a new repository
    *
    */
-  def insertRepository(ownerId: Long, repository: RepositoryData): Future[Option[Long]] =
+  def insertRepository(ownerId: Int, repository: RepositoryData): Future[Option[Long]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -99,13 +100,13 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
             "name"          -> repository.name,
             "owner_id"      -> ownerId,
             "description"   -> repository.description.getOrElse(""),
-            "defaultBranch" -> Repository.defaultBranchName
+            "defaultBranch" -> RzRepository.defaultBranchName
           )
           .executeInsert()
       }
     }(ec)
 
-  def isAccountCollaborator(repository: Option[Repository], accountId: Long): Future[Option[Int]] =
+  def isAccountCollaborator(repository: Option[RzRepository], accountId: Long): Future[Option[Int]] =
     repository match {
       case Some(repo) =>
         Future {
@@ -120,7 +121,7 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
         }(ec)
       case None => Future(None)
     }
-  def getCollaborators(repository: Repository): Future[List[Collaborator]] =
+  def getCollaborators(repository: RzRepository): Future[List[Collaborator]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
@@ -135,11 +136,11 @@ class GitEntitiesRepository @Inject() (accountRepository: AccountRepository, dba
       }
     }(ec)
 
-  def listRepositories(accountId: Long): Future[List[Repository]] =
+  def listRepositories(accountId: Long): Future[List[RzRepository]] =
     Future {
       db.withConnection { implicit connection =>
         SQL("""
-          select repository.id, repository.name, repository.default_branch,
+          select repository.id, repository.name, repository.default_branch, repository.main_file,
           account.id, account.username, account.has_picture, account.email
           from repository
           join account on repository.owner_id = account.id

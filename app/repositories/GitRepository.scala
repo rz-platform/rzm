@@ -4,6 +4,7 @@ import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.{ Lock, ReentrantLock }
 
+import javax.inject.Inject
 import models._
 import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
@@ -21,6 +22,7 @@ import org.eclipse.jgit.treewalk.filter.{ AndTreeFilter, PathFilter, TreeFilter 
 import org.eclipse.jgit.treewalk.{ CanonicalTreeParser, TreeWalk, WorkingTreeOptions }
 import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
+import play.api.Configuration
 
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
@@ -29,10 +31,12 @@ import scala.util.Using.Releasable
 
 // Package contains parts of code inherited from GitBucket project
 
-class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gitHome: String) {
+class GitRepository @Inject() (config: Configuration) {
   private val logger = play.api.Logger(this.getClass)
 
-  def repositoryDir: File = new File(s"$gitHome/${owner.userName}/$repositoryName.git")
+  private val gitHome = config.get[String]("play.server.git.path")
+
+  def repositoryDir(repo: RzRepository): File = new File(s"$gitHome/${repo.owner.userName}/${repo.name}.git")
 
   implicit val objectDatabaseReleasable: Releasable[ObjectDatabase] = new Releasable[ObjectDatabase] {
     override def release(resource: ObjectDatabase): Unit = resource.close()
@@ -81,12 +85,12 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     }
   }
 
-  def fileList(repository: Repository, revstr: String = "", path: String = "."): Option[RepositoryGitData] =
-    Using.resource(Git.open(repositoryDir)) { git =>
+  def fileList(repo: RzRepository, revstr: String = "", path: String = "."): Option[RepositoryGitData] =
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
       if (isEmpty(git)) {
         None
       } else {
-        getDefaultBranch(git, repository, revstr).map {
+        getDefaultBranch(git, repo, revstr).map {
           case (objectId, revision) =>
             defining(getRevCommitFromId(git, objectId)) { revCommit =>
               val lastModifiedCommit = if (path == ".") revCommit else getLastModifiedCommit(git, revCommit, path)
@@ -175,8 +179,8 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       }
     }
 
-  def blobFile(path: String, rev: String): Option[Blob] =
-    Using.resource(Git.open(repositoryDir)) { git =>
+  def blobFile(repo: RzRepository, path: String, rev: String): Option[Blob] =
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
       val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
       getPathObjectId(git, path, revCommit).map { objectId =>
         val content    = getContentInfo(git, path, objectId)
@@ -236,11 +240,11 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       case _: MissingObjectException => None
     }
 
-  def fileTree(repository: Repository, revstr: String): FileTree = {
+  def fileTree(repo: RzRepository, revstr: String): FileTree = {
     val fileTree = new FileTree(new FileNode(".", ".", ""))
 
-    Using.resource(Git.open(repositoryDir)) { git =>
-      getDefaultBranch(git, repository, revstr).map {
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
+      getDefaultBranch(git, repo, revstr).map {
         case (objectId, revision) =>
           defining(getRevCommitFromId(git, objectId)) { revCommit =>
             val treeWalk = new TreeWalk(git.getRepository)
@@ -411,10 +415,10 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       }
     }
 
-  private def getDefaultBranch(git: Git, repository: Repository, revstr: String): Option[(ObjectId, String)] = {
+  private def getDefaultBranch(git: Git, repo: RzRepository, revstr: String): Option[(ObjectId, String)] = {
     val branchList = git.branchList.call.asScala.map(ref => ref.getName.stripPrefix("refs/heads/")).toList
     Seq(
-      Some(if (revstr.isEmpty) repository.defaultBranch else revstr),
+      Some(if (revstr.isEmpty) repo.defaultBranch else revstr),
       branchList.headOption
     ).flatMap {
       case Some(rev) => Some((git.getRepository.resolve(rev), rev))
@@ -422,11 +426,11 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     }.find(_._1 != null)
   }
 
-  def commitFiles(branch: String, path: String, message: String, loginAccount: SimpleAccount)(
+  def commitFiles(repo: RzRepository, branch: String, path: String, message: String, loginAccount: SimpleAccount)(
     f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
   ): ObjectId =
-    lock(s"${owner.userName}/$repositoryName") {
-      Using.resource(Git.open(repositoryDir)) { git =>
+    lock(s"${repo.owner.userName}/${repo.name}") {
+      Using.resource(Git.open(repositoryDir(repo))) { git =>
         val builder  = DirCache.newInCore.builder()
         val inserter = git.getRepository.newObjectInserter()
         val headName = s"refs/heads/$branch"
@@ -467,13 +471,13 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       }
     }
 
-  def create(): Unit = {
-    initRepo()
-    createFile("README.md", "Initial commit", owner)
+  def create(repo: RzRepository): Unit = {
+    initRepo(repo)
+    createFile(repo, "README.md", "Initial commit", repo.owner)
   }
 
-  def createFile(fileName: String, commitName: String, account: SimpleAccount): Unit =
-    Using.resource(Git.open(repositoryDir)) { git =>
+  def createFile(repo: RzRepository, fileName: String, commitName: String, account: SimpleAccount): Unit =
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
       val builder  = DirCache.newInCore.builder()
       val inserter = git.getRepository.newObjectInserter()
       val headId   = git.getRepository.resolve(Constants.HEAD + "^{commit}")
@@ -502,12 +506,13 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     }
 
   def getCommitsLog(
+    repo: RzRepository,
     revision: String,
     page: Int,
     limit: Int,
     path: String = ""
   ): Either[String, (List[CommitInfo], Boolean)] =
-    Using.resource(Git.open(repositoryDir))(git => getCommitLog(git, revision, page, limit, path))
+    Using.resource(Git.open(repositoryDir(repo)))(git => getCommitLog(git, revision, page, limit, path))
 
   /**
    * Returns the commit list of the specified branch.
@@ -560,8 +565,8 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
     }
   }
 
-  private def initRepo(): Unit =
-    Using(new RepositoryBuilder().setGitDir(repositoryDir).setBare().build) { repository =>
+  private def initRepo(repo: RzRepository): Unit =
+    Using(new RepositoryBuilder().setGitDir(repositoryDir(repo)).setBare().build) { repository =>
       repository.create(true)
       setReceivePack(repository)
     }
@@ -652,17 +657,17 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
   ): T =
     Using.resource(TreeWalk.forPath(git.getRepository, path, tree))(treeWalk => openFile(git, treeWalk)(f))
 
-  private def archiveRepo(path: String, revision: String, archive: ArchiveOutputStream)(
+  private def archiveRepo(repo: RzRepository, path: String, revision: String, archive: ArchiveOutputStream)(
     entryCreator: (String, Long, java.util.Date, Int) => ArchiveEntry
   ): Unit =
-    Using.resource(Git.open(repositoryDir)) { git =>
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
       val oid              = git.getRepository.resolve(revision)
       val commit           = getRevCommitFromId(git, oid)
       val date             = commit.getCommitterIdent.getWhen
       val sha1             = oid.getName
       val repositorySuffix = (if (sha1.startsWith(revision)) sha1 else revision).replace('/', '-')
       val pathSuffix       = if (path.isEmpty) "" else s"-${path.replace('/', '-')}"
-      val baseName         = repositoryName + "-" + repositorySuffix + pathSuffix
+      val baseName         = repo.name + "-" + repositorySuffix + pathSuffix
 
       Using.resource(new TreeWalk(git.getRepository)) { treeWalk =>
         treeWalk.addTree(commit.getTree)
@@ -677,7 +682,7 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
               else path.split("/").last + treeWalk.getPathString.substring(path.length)
             val mode = treeWalk.getFileMode.getBits
             openFile(git, commit.getTree, treeWalk.getPathString) { in =>
-              val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive")
+              val tempFile = File.createTempFile(repo.name + "-" + revision, ".archive")
               val size = Using.resource(new FileOutputStream(tempFile)) { out =>
                 CompressIOUtils.copy(
                   EolStreamTypeUtil.wrapInputStream(
@@ -709,10 +714,10 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
       .replace("text/html", "text/plain")
       .replace("image/svg+xml", "text/plain; charset=UTF-8")
 
-  def createArchive(path: String, revision: String): File = {
-    val tempFile = File.createTempFile(repositoryName + "-" + revision, ".archive.zip")
+  def createArchive(repo: RzRepository, path: String, revision: String): File = {
+    val tempFile = File.createTempFile(repo.name + "-" + revision, ".archive.zip")
     Using.resource(new ZipArchiveOutputStream(tempFile)) { zip =>
-      archiveRepo(path, revision, zip) { (path, size, date, mode) =>
+      archiveRepo(repo, path, revision, zip) { (path, size, date, mode) =>
         val entry = new ZipArchiveEntry(path)
         entry.setSize(size)
         entry.setUnixMode(mode)
@@ -724,13 +729,14 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
   }
 
   def commitUploadedFiles(
+    repo: RzRepository,
     files: Seq[CommitFile],
     account: SimpleAccount,
     rev: String,
     path: String,
     message: String
   ): ObjectId =
-    commitFiles(rev, path, message, account) {
+    commitFiles(repo, rev, path, message, account) {
       case (git, headTip, builder, inserter) =>
         processTree(git, headTip) { (path, tree) =>
           if (!files.exists(_.name.contains(path))) {
@@ -747,8 +753,8 @@ class GitRepository(val owner: SimpleAccount, val repositoryName: String, val gi
         }
     }
 
-  def getRawFile(rev: String, path: String): Option[RawFile] =
-    Using.resource(Git.open(repositoryDir)) { git =>
+  def getRawFile(repo: RzRepository, rev: String, path: String): Option[RawFile] =
+    Using.resource(Git.open(repositoryDir(repo))) { git =>
       val revCommit = getRevCommitFromId(git, git.getRepository.resolve(rev))
       getPathObjectId(git, path, revCommit).flatMap { objectId =>
         getObjectLoaderFromId(git, objectId) { loader =>

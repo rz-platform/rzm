@@ -8,17 +8,17 @@
   padding-bottom: 10px;
   border-radius: 4px;
 
+  span {
+    padding-top: 5px;
+    display: block;
+  }
+
   span:first-child {
     font-weight: bold;
   }
 
   div:last-child {
     padding-left: 15px;
-  }
-
-  span {
-    padding-top: 5px;
-    display: block;
   }
 }
 

@@ -32,6 +32,7 @@ RUNNING_PID
 node_modules/
 jspm_packages/
 package-lock.json
+yarn.lock
 .npm
 
 # parcel-bundler cache (https://parceljs.org/)
