@@ -1,4 +1,4 @@
-Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE)
+Razam [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/razam/razam/blob/master/LICENSE) [![Build Status](https://github.com/razamgit/razam/workflows/build/badge.svg)](https://github.com/razamgit/razam/actions)
 
 =====
 

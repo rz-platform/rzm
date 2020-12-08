@@ -3,8 +3,20 @@ name: test_backend
 on:
   push:
     branches:
+    paths:
+      - '.github/workflows/ci-test-backend.yml'
+      - 'app/**'
+      - 'conf/**'
+      - 'project/**'
+      - 'test/**'
   pull_request:
     branches:
+    paths:
+      - '.github/workflows/ci-test-backend.yml'
+      - 'app/**'
+      - 'conf/**'
+      - 'project/**'
+      - 'test/**'
 
 jobs:
   build:
