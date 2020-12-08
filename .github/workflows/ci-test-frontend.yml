@@ -1,0 +1,32 @@
+name: test_frontend
+
+on:
+  push:
+    branches:
+    paths:
+      - '.github/workflows/ci-test-frontend.yml'
+      - 'frontend/**'
+  pull_request:
+    branches: 
+    paths:
+      - '.github/workflows/ci-test-frontend.yml'
+      - 'frontend/**'
+
+jobs:
+  frontend-lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [12.16]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm install
+        working-directory: ./frontend
+
+      - run: npm run check
+        working-directory: ./frontend

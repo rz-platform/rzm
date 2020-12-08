@@ -120,9 +120,7 @@ function submitFileCreation(e: Event): boolean {
   if (creationInput && newItem && newItemForm) {
     const val = creationInput.value;
     newItem.value = val;
-    console.log(creationInput.value);
     if (val) {
-      console.log('submit');
       newItemForm.submit();
     }
   }
@@ -135,7 +133,6 @@ function nextDepth(depth: number): number {
 }
 
 function addInlineInput(e: Event, isFolder: boolean): void {
-  console.log(e);
   if (e.target) {
     const target = e.target as HTMLElement;
     const parent = parentByLevel(target, 4);
@@ -155,7 +152,7 @@ function addInlineInput(e: Event, isFolder: boolean): void {
         const creationInput = <HTMLInputElement>document.getElementById(creationInputId);
         if (form && newItemForm && creationInput && newItemPath) {
           // form.attachEvent
-          let parent_path = parent.getAttribute('path');
+          const parent_path = parent.getAttribute('path');
           newItemPath.value = parent_path ? parent_path : '.';
           creationInput.focus();
 
@@ -195,11 +192,9 @@ function toggleSubTree(el: HTMLElement) {
 }
 
 function clickHandler(event: MouseEvent) {
-  console.log('exactly one click handler');
   if (event && event.target) {
     const target = event.target as HTMLElement;
     if (target.classList.contains('add-file-button')) {
-      console.log('123');
       addInlineInput(event, false);
       toggleIsFolder(false);
     }
@@ -226,8 +221,6 @@ function clickHandler(event: MouseEvent) {
 }
 
 function ready() {
-  console.log('fired');
-
   document.removeEventListener('click', clickHandler);
 
   document.addEventListener('click', clickHandler);
