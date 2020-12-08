@@ -3,7 +3,6 @@ name: test_frontend
 on:
   push:
     branches:
-    tags:
     paths:
       - '.github/workflows/ci-test-frontend.yml'
       - 'frontend/**'
@@ -30,5 +29,5 @@ jobs:
       - run: npm install
         working-directory: ./frontend
 
-      - run: npx run check
+      - run: npm run check
         working-directory: ./frontend
