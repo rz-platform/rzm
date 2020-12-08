@@ -3,12 +3,16 @@ name: test_frontend
 on:
   push:
     branches:
+    paths:
+      - '.github/workflows/ci-test-frontend.yml'
+      - 'frontend/**'
   pull_request:
     branches: 
+    paths:
+      - '.github/workflows/ci-test-frontend.yml'
+      - 'frontend/**'
 
 jobs:
-  frontend-check:
-
   frontend-lint:
     runs-on: ubuntu-latest
     strategy:
