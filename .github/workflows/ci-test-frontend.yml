@@ -3,13 +3,8 @@ name: test_frontend
 on:
   push:
     branches:
-    paths:
-      - '.github/workflows/ci-test-frontend.yml'
-      - 'frontend/**'
   pull_request:
-    paths:
-      - '.github/workflows/ci-test-frontend.yml'
-      - 'frontend/**'
+    branches: 
 
 jobs:
   frontend-check:
