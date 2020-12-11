@@ -27,9 +27,9 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_DB: razam
-          POSTGRES_PASSWORD: razam
-          POSTGRES_USER: razam
+          POSTGRES_DB: rzm
+          POSTGRES_PASSWORD: rzm
+          POSTGRES_USER: rzm
         ports:
           - 5432:5432
         options: >-
