@@ -64,7 +64,7 @@ class FunctionalGitEntitiesTest
           "userName"    -> userName,
           "fullName"    -> getRandomString,
           "password"    -> getRandomString,
-          "mailAddress" -> s"$getRandomString@razam.dev"
+          "mailAddress" -> s"$getRandomString@rzm.dev"
         )
     )
     await(AccountController.saveAccout().apply(request))
@@ -149,7 +149,7 @@ class FunctionalGitEntitiesTest
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
-              "mailAddress" -> s"$getRandomString@razam.dev"
+              "mailAddress" -> s"$getRandomString@rzm.dev"
             )
         )
 
@@ -167,7 +167,7 @@ class FunctionalGitEntitiesTest
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
-              "mailAddress" -> s"$getRandomString@razam.dev"
+              "mailAddress" -> s"$getRandomString@rzm.dev"
             )
         )
 
