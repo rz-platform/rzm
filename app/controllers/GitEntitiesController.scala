@@ -359,7 +359,9 @@ class GitEntitiesController @Inject() (
               )
               builder.finish()
           }
-          Redirect(routes.GitEntitiesController.blob(accountName, repositoryName, newItem.rev, fName))
+          Redirect(
+            routes.GitEntitiesController.blob(accountName, repositoryName, newItem.rev, EncodedPath.fromString(fName))
+          )
         }
       )
     }
