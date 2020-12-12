@@ -85,7 +85,7 @@ class GitEntitiesController @Inject() (
 
   val editorForm: Form[EditedItem] = Form(
     mapping(
-      "content"  -> nonEmptyText,
+      "content"  -> text,
       "rev"      -> nonEmptyText,
       "path"     -> nonEmptyText.verifying(checkPathForExcludedSymbols),
       "fileName" -> nonEmptyText.verifying(checkNameForExcludedSymbols)
@@ -327,43 +327,55 @@ class GitEntitiesController @Inject() (
       )
     }
 
+  private def cleanItemData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
+    val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
+    form.map {
+      case (key, values) if key == "name" => (key, values.map(DecodedPath(_).toString.trim))
+      case (key, values) if key == "path" => (key, values.map(DecodedPath(_).toString.trim))
+      case (key, values)                  => (key, values)
+    }
+  }
+
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit req =>
-      addNewItemForm.bindFromRequest.fold(
-        formWithErrors =>
-          Redirect(
-            routes.GitEntitiesController.emptyTree(
-              accountName,
-              repositoryName,
-              formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
-            )
-          ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
-        (newItem: NewItem) => {
-          val fName = DecodedPath(newItem.path, newItem.name, newItem.isFolder).toString
-          git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
-            case (git_, headTip, builder, inserter) =>
-              git.processTree(git_, headTip) { (path, tree) =>
-                if (!fName.contains(path)) {
-                  builder.add(
-                    git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-                  )
-                }
-              }
-              val emptyArray = Array.empty[Byte]
-              builder.add(
-                git.createDirCacheEntry(
-                  fName,
-                  FileMode.REGULAR_FILE,
-                  inserter.insert(Constants.OBJ_BLOB, emptyArray)
-                )
+      val cleanData = cleanItemData(req.body.asFormUrlEncoded)
+      addNewItemForm
+        .bindFromRequest(cleanData)
+        .fold(
+          formWithErrors =>
+            Redirect(
+              routes.GitEntitiesController.emptyTree(
+                accountName,
+                repositoryName,
+                formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
               )
-              builder.finish()
+            ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
+          (newItem: NewItem) => {
+            val fName = DecodedPath(newItem.path, newItem.name, newItem.isFolder).toString
+            git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
+              case (git_, headTip, builder, inserter) =>
+                git.processTree(git_, headTip) { (path, tree) =>
+                  if (!fName.contains(path)) {
+                    builder.add(
+                      git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
+                    )
+                  }
+                }
+                val emptyArray = Array.empty[Byte]
+                builder.add(
+                  git.createDirCacheEntry(
+                    fName,
+                    FileMode.REGULAR_FILE,
+                    inserter.insert(Constants.OBJ_BLOB, emptyArray)
+                  )
+                )
+                builder.finish()
+            }
+            Redirect(
+              routes.GitEntitiesController.blob(accountName, repositoryName, newItem.rev, EncodedPath.fromString(fName))
+            )
           }
-          Redirect(
-            routes.GitEntitiesController.blob(accountName, repositoryName, newItem.rev, EncodedPath.fromString(fName))
-          )
-        }
-      )
+        )
     }
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
