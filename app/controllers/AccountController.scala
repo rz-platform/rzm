@@ -1,9 +1,6 @@
 package controllers
 
-import java.io.{ File, IOException }
-
 import actions.AuthenticatedRequest
-import javax.inject.Inject
 import models._
 import play.api.Configuration
 import play.api.data.Forms._
@@ -14,6 +11,8 @@ import play.api.mvc._
 import repositories.AccountRepository
 import views._
 
+import java.io.{ File, IOException }
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class AccountController @Inject() (

@@ -18,7 +18,12 @@ case class DecodedPath(uri: String, cleared: Boolean) {
 }
 
 object DecodedPath {
-  private def decodeNameFromUrl(key: String): String = URLDecoder.decode(key.replace("+", " "), "utf-8")
+  private def decodeNameFromUrl(key: String): String =
+    try {
+      URLDecoder.decode(key.replace("+", " "), "utf-8")
+    } catch {
+      case _: java.lang.IllegalArgumentException => ""
+    }
 
   def apply(uri: String): DecodedPath = DecodedPath(decodeNameFromUrl(uri), cleared = true)
 

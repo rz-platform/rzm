@@ -1,12 +1,12 @@
 package actions
 
 import controllers.routes
-import javax.inject.{ Inject, Singleton }
 import models.{ AccountRequest, SessionName }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.AccountRepository
 
+import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**

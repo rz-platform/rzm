@@ -1,4 +1,4 @@
-@(editorForm:Form[EditedItem],blob:RepositoryTreeContent,path:String, rev: String,breadcrumbs:FileTreeBreadcrumbs, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader) 
+@(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String,breadcrumbs:FileTreeBreadcrumbs, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader) 
 
 @import views.html.helper._
 @printNode(node: FileNode) = {
