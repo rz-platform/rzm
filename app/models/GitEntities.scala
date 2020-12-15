@@ -1,13 +1,11 @@
 package models
 
-import java.io.{ File, InputStream }
-import java.time.{ LocalDateTime, ZoneId }
-
 import anorm._
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
 
-import play.api.mvc._
+import java.io.{ File, InputStream }
+import java.time.{ LocalDateTime, ZoneId }
 
 case class RzRepository(
   id: Int,

@@ -1,10 +1,10 @@
 package models
 
+import anorm.{ Macro, ToParameterList }
+
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64
-
-import anorm.{ Macro, ToParameterList }
 
 case class SshKey(
   id: Int = 0,

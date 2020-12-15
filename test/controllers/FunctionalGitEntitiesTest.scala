@@ -3,18 +3,18 @@ package controllers
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
+import org.scalatest.time.{ Millis, Seconds, Span }
+import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
 import play.api.db.evolutions.Evolutions
-import play.api.db.{DBApi, Database}
-import play.api.mvc.{Flash, Result}
+import play.api.db.{ DBApi, Database }
+import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import repositories.{AccountRepository, GitEntitiesRepository, GitRepository}
+import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
 
 import scala.concurrent.Future
 
@@ -42,7 +42,7 @@ class FunctionalGitEntitiesTest
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
   def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
-  def git: GitRepository = app.injector.instanceOf[GitRepository]
+  def git: GitRepository                           = app.injector.instanceOf[GitRepository]
 
   val defaultDatabase: Database = databaseApi.database("default")
 
@@ -53,8 +53,7 @@ class FunctionalGitEntitiesTest
   override def beforeAll(): Unit =
     Evolutions.applyEvolutions(databaseApi.database("default"))
 
-  override def afterAll(): Unit =
-    Evolutions.cleanupEvolutions(databaseApi.database("default"))
+  // override def afterAll(): Unit = Evolutions.cleanupEvolutions(databaseApi.database("default"))
 
   def createAccount(): SimpleAccount = {
     val userName = getRandomString
@@ -75,7 +74,11 @@ class FunctionalGitEntitiesTest
     }
   }
 
-  def createRepository(controller: GitEntitiesController, name: String, owner: SimpleAccount): (Result, RzRepository) = {
+  def createRepository(
+    controller: GitEntitiesController,
+    name: String,
+    owner: SimpleAccount
+  ): (Result, RzRepository) = {
     val request = addCSRFToken(
       FakeRequest(routes.GitEntitiesController.saveRepository())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
@@ -126,7 +129,13 @@ class FunctionalGitEntitiesTest
   ): Result = {
     val newFileRequest = addCSRFToken(
       FakeRequest()
-        .withFormUrlEncodedBody("name" -> name, "rev" -> RzRepository.defaultBranchName, "path" -> path, "isFolder" -> (if (isFolder) "true" else "false"))
+        .withFormUrlEncodedBody(
+          "name" -> name,
+          "rev"  -> RzRepository.defaultBranchName,
+          "path" -> path,
+          "isFolder" -> (if (isFolder) "true"
+                         else "false")
+        )
         .withSession((sessionName, creator.id.toString))
     )
 
@@ -159,7 +168,12 @@ class FunctionalGitEntitiesTest
     }
 
     "Successful attempt to create user" in {
-      val goodUserNames = List(getRandomString, "with_underscore", "with-minus", "MiXeDcAse")
+      val goodUserNames = List(
+        getRandomString,
+        "with_underscore" + getRandomString.take(4),
+        "with-minus" + getRandomString.take(4),
+        "MiXeDcAse" + getRandomString.take(4)
+      )
       goodUserNames.map { username =>
         val request = addCSRFToken(
           FakeRequest(routes.AccountController.saveAccout())
@@ -323,6 +337,30 @@ class FunctionalGitEntitiesTest
 
       val folderFileList = listFileInRepo(r, folderName)
       folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
+    }
+
+    "Create file with non-ascii name" in {
+      val nonAsciiNames = List("ÇŞĞIİÖÜ", "测试", "кирилицца", "ظضذخثتش")
+      nonAsciiNames.map { name =>
+        val account  = createAccount()
+        val repoName = getRandomString
+        val (_, r)   = createRepository(controller, repoName, account)
+        createNewItem(controller, name, repoName, account, isFolder = false, ".")
+        val folderFileList = listFileInRepo(r, ".")
+        folderFileList.files.exists(_.name contains name) must equal(true)
+      }
+    }
+
+    "Create folder with non-ascii name" in {
+      val nonAsciiNames = List("ÇŞĞIİÖÜ", "测试", "кирилицца", "ظضذخثتش")
+      nonAsciiNames.map { name =>
+        val account  = createAccount()
+        val repoName = getRandomString
+        val (_, r)   = createRepository(controller, repoName, account)
+        createNewItem(controller, name, repoName, account, isFolder = true, ".")
+        val folderFileList = listFileInRepo(r, ".")
+        folderFileList.files.exists(_.name contains name) must equal(true)
+      }
     }
 
     "Add collaborator successfully" in {

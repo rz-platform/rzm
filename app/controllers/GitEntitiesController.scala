@@ -1,12 +1,8 @@
 package controllers
-import java.io.File
-import java.nio.file.{ Files, Path }
-
 import actions.AuthenticatedRequest
 import akka.stream.IOResult
 import akka.stream.scaladsl.{ FileIO, Sink, StreamConverters }
 import akka.util.ByteString
-import javax.inject.Inject
 import models._
 import org.eclipse.jgit.lib.{ Constants, FileMode }
 import play.api.Configuration
@@ -23,6 +19,9 @@ import play.core.parsers.Multipart.FileInfo
 import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
 import views._
 
+import java.io.File
+import java.nio.file.{ Files, Path }
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class GitEntitiesController @Inject() (
@@ -229,7 +228,7 @@ class GitEntitiesController @Inject() (
                   )
                 ),
                 blob,
-                path,
+                DecodedPath(path).toString,
                 rev,
                 Breadcrumbs(path, isFile = true),
                 fileTree,

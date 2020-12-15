@@ -2,10 +2,10 @@ package repositories
 
 import anorm.SqlParser.get
 import anorm._
-import javax.inject.{ Inject, Singleton }
 import models.{ Collaborator, RepositoryData, RzRepository }
 import play.api.db.DBApi
 
+import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 
 @Singleton

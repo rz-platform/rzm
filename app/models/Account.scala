@@ -1,8 +1,8 @@
 package models
 
-import java.time.LocalDateTime
-
 import anorm._
+
+import java.time.LocalDateTime
 
 sealed trait Account {
   def id: Int

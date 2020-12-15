@@ -1,7 +1,7 @@
 package models
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 object DateTime {
   val shortFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")

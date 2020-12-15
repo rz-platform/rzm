@@ -1,8 +1,9 @@
 package repositories
 
 import akka.actor.ActorSystem
-import javax.inject._
 import play.api.libs.concurrent.CustomExecutionContext
+
+import javax.inject._
 
 /**
  * This class is a pointer to an execution context configured to point to "database.dispatcher"

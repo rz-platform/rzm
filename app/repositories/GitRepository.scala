@@ -1,10 +1,5 @@
 package repositories
 
-import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.{ Lock, ReentrantLock }
-
-import javax.inject.Inject
 import models._
 import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
@@ -24,6 +19,10 @@ import org.eclipse.jgit.util.io.EolStreamTypeUtil
 import org.mozilla.universalchardet.UniversalDetector
 import play.api.Configuration
 
+import java.io.{ File, FileInputStream, FileOutputStream, InputStream }
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.{ Lock, ReentrantLock }
+import javax.inject.Inject
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 import scala.util.Using

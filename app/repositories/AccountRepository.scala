@@ -1,13 +1,12 @@
 package repositories
 
-import java.time.LocalDateTime
-
 import anorm.SqlParser.get
 import anorm._
-import javax.inject.{ Inject, Singleton }
 import models.{ AccountData, RichAccount, SimpleAccount, SshKey }
 import play.api.db.DBApi
 
+import java.time.LocalDateTime
+import javax.inject.{ Inject, Singleton }
 import scala.concurrent.Future
 
 @Singleton

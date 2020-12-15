@@ -1,9 +1,9 @@
 package models
 
+import org.mindrot.jbcrypt.BCrypt
+
 import java.math.BigInteger
 import java.security.MessageDigest
-
-import org.mindrot.jbcrypt.BCrypt
 
 case class HashedString(hash: String) {
   override def toString: String = hash
