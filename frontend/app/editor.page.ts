@@ -107,7 +107,9 @@ function buildInlineInputField(iconSrc: string, depth: number): HTMLElement {
     '" />' +
     '<input type="text" id="' +
     creationInputId +
-    '" />' +
+    '" ' +
+    'autocomplete="off"' +
+    '/>' +
     '</form></div></div>';
   return el;
 }

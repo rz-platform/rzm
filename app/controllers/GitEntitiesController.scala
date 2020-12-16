@@ -84,10 +84,10 @@ class GitEntitiesController @Inject() (
 
   val editorForm: Form[EditedItem] = Form(
     mapping(
-      "content"  -> text,
-      "rev"      -> nonEmptyText,
-      "path"     -> nonEmptyText.verifying(checkPathForExcludedSymbols),
-      "fileName" -> nonEmptyText.verifying(checkNameForExcludedSymbols)
+      "content" -> text,
+      "rev"     -> nonEmptyText,
+      "path"    -> nonEmptyText.verifying(checkPathForExcludedSymbols),
+      "name"    -> nonEmptyText.verifying(checkNameForExcludedSymbols)
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
@@ -248,7 +248,7 @@ class GitEntitiesController @Inject() (
     val oldPath = DecodedPath(editedFile.path).toString
     val newPath = DecodedPath(
       DecodedPath(editedFile.path).pathWithoutFilename,
-      editedFile.fileName,
+      editedFile.name,
       isFolder = false
     ).toString
 
@@ -291,41 +291,6 @@ class GitEntitiesController @Inject() (
     )
   }
 
-  def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async { implicit req =>
-      editorForm.bindFromRequest.fold(
-        formWithErrors => {
-          val rev  = formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
-          val path = formWithErrors.data.get("path")
-          path match {
-            case Some(path) =>
-              val fileTree = git.fileTree(req.repository, rev)
-              val blob     = git.blobFile(req.repository, DecodedPath(path).toString, rev)
-              blob match {
-                case Some(blob) =>
-                  Future(
-                    BadRequest(
-                      html.git
-                        .viewFile(
-                          formWithErrors,
-                          blob,
-                          EncodedPath.fromString(path),
-                          rev,
-                          Breadcrumbs(path),
-                          fileTree,
-                          addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
-                        )
-                    )
-                  )
-                case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
-              }
-            case None => Future(Redirect(routes.GitEntitiesController.emptyTree(accountName, repositoryName, rev)))
-          }
-        },
-        (edited: EditedItem) => editFile(edited, accountName, repositoryName)(req)
-      )
-    }
-
   private def cleanItemData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
     form.map {
@@ -334,6 +299,44 @@ class GitEntitiesController @Inject() (
       case (key, values)                  => (key, values)
     }
   }
+
+  def edit(accountName: String, repositoryName: String): Action[AnyContent] =
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)).async { implicit req =>
+      val cleanData = cleanItemData(req.body.asFormUrlEncoded)
+      editorForm
+        .bindFromRequest(cleanData)
+        .fold(
+          formWithErrors => {
+            val rev  = formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
+            val path = formWithErrors.data.get("path")
+            path match {
+              case Some(path) =>
+                val fileTree = git.fileTree(req.repository, rev)
+                val blob     = git.blobFile(req.repository, DecodedPath(path).toString, rev)
+                blob match {
+                  case Some(blob) =>
+                    Future(
+                      BadRequest(
+                        html.git
+                          .viewFile(
+                            formWithErrors,
+                            blob,
+                            EncodedPath.fromString(path),
+                            rev,
+                            Breadcrumbs(path),
+                            fileTree,
+                            addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+                          )
+                      )
+                    )
+                  case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
+                }
+              case None => Future(Redirect(routes.GitEntitiesController.emptyTree(accountName, repositoryName, rev)))
+            }
+          },
+          (edited: EditedItem) => editFile(edited, accountName, repositoryName)(req)
+        )
+    }
 
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, EditAccess)) { implicit req =>

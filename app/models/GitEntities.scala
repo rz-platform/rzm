@@ -28,7 +28,7 @@ case class RepositoryData(name: String, description: Option[String])
 
 case class CommitFile(id: String, name: String, file: File)
 
-case class EditedItem(content: String, rev: String, path: String, fileName: String)
+case class EditedItem(content: String, rev: String, path: String, name: String)
 
 case class UploadFileForm(path: String)
 

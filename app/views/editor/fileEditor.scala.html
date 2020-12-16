@@ -14,7 +14,7 @@
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
     } 
-    @inputText(editorForm("fileName"), Symbol("_label") -> "", Symbol("_help") -> "")
+    @inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")
   </div>
   <div class="actions">
     @if(blob.content.viewType == "text"){
