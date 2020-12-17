@@ -235,7 +235,6 @@ function ready() {
     editorArea.setAttribute('initialized', '1');
     let unsaved = false;
     const editor = CodeMirror.fromTextArea(editorArea, {
-      lineNumbers: true,
       styleActiveLine: true,
       matchBrackets: true,
       mode: 'text/x-stex',

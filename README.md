@@ -77,8 +77,10 @@ target/universal/stage/bin/rzm  -Dplay.evolutions.db.default.autoApply=true  -Dp
 
 Copyright 2020 Eugene Bosiakov (@bosiakov).
 
-RZM contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
+RZM contains parts of code of the following projects:
 
-[Turbolinks license](./frontend/turbolinks/README.md).
+* [GitBucket](https://github.com/gitbucket/gitbucket/blob/master/LICENSE), Apache 2 Licence
+* [t2v/play2-auth](https://github.com/t2v/play2-auth/blob/master/LICENSE), Apache 2 Licence
+* [Turbolinks](./frontend/turbolinks/README.md), MIT License
 
 Icons made by <a href="https://www.flaticon.com/authors/becris" title="Becris">Becris</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
