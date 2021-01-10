@@ -1,36 +1,58 @@
 package models
 
-import anorm._
 import org.eclipse.jgit.lib.ObjectId
-import org.eclipse.jgit.revwalk.RevCommit
+import repositories.{ ParsingError, RzError }
 
-import java.io.{ File, InputStream }
+import java.io.InputStream
 import java.time.{ LocalDateTime, ZoneId }
 
 case class RzRepository(
-  id: Int,
-  owner: SimpleAccount,
+  owner: Account,
   name: String,
-  defaultBranch: String,
-  mainFile: Option[String]
+  entrypoint: Option[String],
+  createdAt: Long,
+  updatedAt: Long
 ) {
+  def id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
+
+  def collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner + ":" + name
+
   def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/${name}.git"
 
   def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
+
+  def toMap = Map("entrypoint" -> entrypoint, "createdAt" -> createdAt, "updatedAt" -> updatedAt)
+
+  def this(owner: Account, name: String) = this(owner, name, None, DateTime.now, DateTime.now)
 }
 
 object RzRepository {
-  implicit def toParameters: ToParameterList[RzRepository] = Macro.toParameters[RzRepository]
-  val defaultBranchName                                    = "master"
+  def id(owner: String, name: String): String = IdTable.rzRepoPrefix + owner + ":" + name
+
+  val defaultBranch = "master"
+
+  def parseId(id: String): (String, String) = {
+    val s = id.split(":")
+    (s(1), s(2))
+  }
+
+  def make(name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] = {
+    val a = for {
+      createdAt <- data.get("createdAt")
+      updatedAt <- data.get("updatedAt")
+    } yield RzRepository(
+      owner,
+      name,
+      data.get("entrypoint"),
+      DateTime.parseTimestamp(createdAt),
+      DateTime.parseTimestamp(updatedAt)
+    )
+    a match {
+      case Some(a) => Right(a)
+      case None    => Left(ParsingError)
+    }
+  }
 }
-
-case class RepositoryData(name: String, description: Option[String])
-
-case class CommitFile(id: String, name: String, file: File)
-
-case class EditedItem(content: String, rev: String, path: String, name: String)
-
-case class UploadFileForm(path: String)
 
 /**
  * The file data for the file list of the repository viewer.
@@ -46,10 +68,6 @@ case class FileInfo(
   author: String,
   mailAddress: String
 )
-
-case class RepositoryGitData(files: List[FileInfo], lastCommit: Option[RevCommit])
-
-case class NewItem(name: String, rev: String, path: String, isFolder: Boolean)
 
 /**
  * The file content data for the file content view of the repository viewer.
@@ -74,7 +92,9 @@ case class Blob(
   latestCommit: CommitInfo,
   isLfsFile: Boolean
 ) extends RepositoryTreeContent
-case object EmptyBlob       extends RepositoryTreeContent
+
+case object EmptyBlob extends RepositoryTreeContent
+
 case object EmptyRepository extends RepositoryTreeContent
 
 case class RawFile(inputStream: InputStream, contentLength: Integer, contentType: String)
@@ -94,7 +114,6 @@ case class CommitInfo(
   committerName: String,
   committerEmailAddress: String
 ) {
-
   def this(rev: org.eclipse.jgit.revwalk.RevCommit) =
     this(
       rev.getName,

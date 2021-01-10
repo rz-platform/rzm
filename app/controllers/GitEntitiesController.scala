@@ -16,7 +16,7 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
-import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
+import repositories._
 import views._
 
 import java.io.File
@@ -26,7 +26,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class GitEntitiesController @Inject() (
   git: GitRepository,
-  gitEntitiesRepository: GitEntitiesRepository,
+  gitEntitiesRepository: RzGitRepository,
   accountRepository: AccountRepository,
   authenticatedAction: AuthenticatedRequest,
   errorHandler: ErrorHandler,
@@ -37,8 +37,6 @@ class GitEntitiesController @Inject() (
     extends MessagesAbstractController(cc) {
 
   private val logger = play.api.Logger(this.getClass)
-
-  private val gitHome = config.get[String]("play.server.git.path")
 
   type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
@@ -92,33 +90,35 @@ class GitEntitiesController @Inject() (
   )
 
   def repositoryActionOn(
-    username: String,
+    ownerName: String,
     repoName: String,
     minAccess: AccessLevel
   ): ActionRefiner[AccountRequest, RepositoryRequest] =
     new ActionRefiner[AccountRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
+      private def checkAccess(account: Account): Either[RzError, (RzRepository, AccessLevel)] =
+        gitEntitiesRepository.getByOwnerAndName(ownerName, repoName) match {
+          case Right(repo: RzRepository) =>
+            gitEntitiesRepository.getCollaborator(account, repo) match {
+              case Right(c: Collaborator) if c.role.role <= minAccess.role => Right((repo, c.role))
+              case _                                                       => Left(AccessDenied)
+            }
+          case _ => Left(NotFoundInRepository)
+        }
+
       def refine[A](
         request: AccountRequest[A]
-      ): Future[Either[Result, RepositoryRequest[A]]] = {
-        val items = for {
-          repository: Option[RzRepository] <- gitEntitiesRepository.getByOwnerAndName(username, repoName)
-          collaborator: Option[Int]        <- gitEntitiesRepository.isAccountCollaborator(repository, request.account.id)
-        } yield (repository, collaborator)
-        items.map { data =>
-          val (repository, collaborator) = data
-          repository match {
-            case Some(repo) =>
-              AccessLevel.fromAccount(collaborator, repo.owner.id, request.account.id) match {
-                case Some(access) if access.role <= minAccess.role =>
-                  Right(new RepositoryRequest[A](request, repo, request.account, access, messagesApi))
-                case _ => Left(errorHandler.clientError(request, msg = request.messages("error.accessdenied")))
-              }
-            case _ => Left(errorHandler.clientError(request, msg = request.messages("error.notfound")))
-          }
+      ): Future[Either[Result, RepositoryRequest[A]]] =
+        checkAccess(request.account) match {
+          case Right(data) =>
+            val (repository: RzRepository, access: AccessLevel) = data
+            Future(Right(new RepositoryRequest[A](request, repository, request.account, access, messagesApi)))
+          case Left(AccessDenied) =>
+            Future(Left(errorHandler.clientError(request, msg = request.messages("error.accessdenied"))))
+          case Left(_) =>
+            Future(Left(errorHandler.clientError(request, msg = request.messages("error.notfound"))))
         }
-      }
     }
 
   def createRepository: Action[AnyContent] = authenticatedAction.async { implicit req =>
@@ -141,14 +141,17 @@ class GitEntitiesController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
         repository =>
-          gitEntitiesRepository.getByOwnerAndName(req.account.userName, repository.name).flatMap {
-            case None =>
-              gitEntitiesRepository.insertRepository(req.account.id, repository).map { _ =>
-                git.create(RzRepository(0, req.account, repository.name, RzRepository.defaultBranchName, None))
+          gitEntitiesRepository.getByOwnerAndName(req.account.userName, repository.name) match {
+            case Left(NotFoundInRepository) =>
+              val repo   = new RzRepository(req.account, repository.name)
+              val author = new Collaborator(req.account, OwnerAccess)
+              gitEntitiesRepository.setRzRepo(repo, author)
+              git.create(repo)
+              Future(
                 Redirect(routes.GitEntitiesController.list())
                   .flashing("success" -> Messages("repository.create.flash.success"))
-              }
-            case Some(_) =>
+              )
+            case _ =>
               val formBuiltFromRequest = createRepositoryForm.bindFromRequest
               val newForm = createRepositoryForm.bindFromRequest.copy(
                 errors = formBuiltFromRequest.errors ++ Seq(
@@ -164,9 +167,7 @@ class GitEntitiesController @Inject() (
    * Display list of repositories.
    */
   def list: Action[AnyContent] = authenticatedAction.async { implicit req =>
-    gitEntitiesRepository.listRepositories(req.account.id).map { repositories =>
-      Ok(html.git.listRepositories(repositories))
-    }
+    Future(Ok(html.git.listRepositories(gitEntitiesRepository.listRepositories(req.account))))
   }
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -188,25 +189,25 @@ class GitEntitiesController @Inject() (
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, ViewAccess)) { implicit req =>
-      req.repository.mainFile match {
-        case Some(mainFile) => // TODO: check that main file exists
-          Redirect(
-            routes.GitEntitiesController.blob(accountName, repositoryName, rev, EncodedPath.fromString(mainFile))
-          )
-        case _ =>
-          val fileTree = git.fileTree(req.repository, rev)
-          Ok(
-            html.git.viewFile(
-              editorForm,
-              EmptyBlob,
-              "",
-              rev,
-              EmptyBreadcrumbs(req.repository.name),
-              fileTree,
-              addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
-            )
-          )
-      }
+//      req.repository.mainFile match {
+//        case Some(mainFile) => // TODO: check that main file exists
+//          Redirect(
+//            routes.GitEntitiesController.blob(accountName, repositoryName, rev, EncodedPath.fromString(mainFile))
+//          )
+//        case _ =>
+      val fileTree = git.fileTree(req.repository, rev)
+      Ok(
+        html.git.viewFile(
+          editorForm,
+          EmptyBlob,
+          "",
+          rev,
+          EmptyBreadcrumbs(req.repository.name),
+          fileTree,
+          addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+        )
+      )
+//      }
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -234,7 +235,7 @@ class GitEntitiesController @Inject() (
                 fileTree,
                 addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
               )
-            ).withHeaders(("Turbolinks-Location" -> req.uri))
+            ).withHeaders("Turbolinks-Location" -> req.uri)
           }
         case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
       }
@@ -307,7 +308,7 @@ class GitEntitiesController @Inject() (
         .bindFromRequest(cleanData)
         .fold(
           formWithErrors => {
-            val rev  = formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
+            val rev  = formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch)
             val path = formWithErrors.data.get("path")
             path match {
               case Some(path) =>
@@ -349,7 +350,7 @@ class GitEntitiesController @Inject() (
               routes.GitEntitiesController.emptyTree(
                 accountName,
                 repositoryName,
-                formWithErrors.data.getOrElse("rev", req.repository.defaultBranch)
+                formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch)
               )
             ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
           (newItem: NewItem) => {
@@ -416,7 +417,7 @@ class GitEntitiesController @Inject() (
             BadRequest(
               html.git.uploadFile(
                 formWithErrors,
-                formWithErrors.data.getOrElse("rev", req.repository.defaultBranch),
+                formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
                 formWithErrors.data.getOrElse("path", ".")
               )
             ),
@@ -430,7 +431,7 @@ class GitEntitiesController @Inject() (
               req.repository,
               files,
               req.account,
-              if (!rev.isEmpty) rev else req.repository.defaultBranch,
+              if (rev.nonEmpty) rev else RzRepository.defaultBranch,
               data.path,
               Messages("repository.upload.message", files.length)
             )
@@ -443,73 +444,65 @@ class GitEntitiesController @Inject() (
 
   def collaboratorsPage(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      gitEntitiesRepository.getCollaborators(req.repository).map { collaborators: Seq[Collaborator] =>
-        Ok(html.git.collaborators(addCollaboratorForm, collaborators))
-      }
+      val collaborators = gitEntitiesRepository.getCollaborators(req.repository)
+      Future(Ok(html.git.collaborators(addCollaboratorForm, collaborators)))
     }
 
   private def collaboratorPageRedirect(req: RepositoryRequest[AnyContent]): Result =
     Redirect(routes.GitEntitiesController.collaboratorsPage(req.repository.owner.userName, req.repository.name))
 
   def addCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      addCollaboratorForm.bindFromRequest.fold(
-        formWithErrors =>
-          gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.git.collaborators(formWithErrors, collaborators))
-          },
-        (data: NewCollaboratorData) =>
-          accountRepository.getByUsernameOrEmail(data.emailOrLogin).flatMap {
-            case Some(futureCollaborator) =>
-              gitEntitiesRepository
-                .isAccountCollaborator(Some(req.repository), futureCollaborator.id)
-                .flatMap {
-                  case None =>
-                    gitEntitiesRepository
-                      .createCollaborator(
-                        req.repository.id,
-                        futureCollaborator.id,
-                        AccessLevel.fromString(data.accessLevel).getOrElse(ViewAccess).role
-                      )
-                      .flatMap(_ => Future(collaboratorPageRedirect(req)))
-                  case Some(_) =>
-                    Future(
-                      collaboratorPageRedirect(req)
-                        .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
-                    )
+    authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async {
+      implicit req: RepositoryRequest[AnyContent] =>
+        addCollaboratorForm.bindFromRequest.fold(
+          formWithErrors =>
+            Future(
+              BadRequest(html.git.collaborators(formWithErrors, gitEntitiesRepository.getCollaborators(req.repository)))
+            ),
+          (data: NewCollaboratorData) =>
+            accountRepository.getByUsernameOrEmail(data.emailOrLogin) match {
+              case Right(futureCollaborator: Account) =>
+                if (!gitEntitiesRepository.isAccountCollaborator(futureCollaborator, req.repository)) {
+                  Future(
+                    collaboratorPageRedirect(req)
+                      .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
+                  )
+                } else {
+                  val c = new Collaborator(req.account, AccessLevel.fromString(data.accessLevel).getOrElse(ViewAccess))
+                  gitEntitiesRepository.addCollaborator(c, req.repository)
+                  Future(collaboratorPageRedirect(req))
                 }
-            case None =>
-              Future(
-                collaboratorPageRedirect(req)
-                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
-              )
-          }
-      )
+              case _ =>
+                Future(
+                  collaboratorPageRedirect(req)
+                    .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+                )
+            }
+        )
     }
 
   def removeCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
     authenticatedAction.andThen(repositoryActionOn(accountName, repositoryName, OwnerAccess)).async { implicit req =>
       removeCollaboratorForm.bindFromRequest.fold(
         _ =>
-          gitEntitiesRepository.getCollaborators(req.repository).map { collaborators =>
-            BadRequest(html.git.collaborators(addCollaboratorForm, collaborators))
-          },
-        data =>
-          accountRepository.getByUsernameOrEmail(data.email).flatMap {
-            case Some(collaborator) =>
-              gitEntitiesRepository
-                .isAccountCollaborator(Some(req.repository), collaborator.id)
-                .flatMap {
-                  case Some(_) =>
-                    gitEntitiesRepository
-                      .removeCollaborator(req.repository.id, collaborator.id)
-                      .flatMap(_ => Future(collaboratorPageRedirect(req)))
-                  case None => Future(collaboratorPageRedirect(req))
-                }
-            case None =>
+          Future(
+            BadRequest(
+              html.git.collaborators(addCollaboratorForm, gitEntitiesRepository.getCollaborators(req.repository))
+            )
+          ),
+        (data: RemoveCollaboratorData) =>
+          accountRepository.getById(data.id) match {
+            case Right(account: Account) => {
+              if (gitEntitiesRepository.isAccountCollaborator(account, req.repository)) {
+                gitEntitiesRepository.removeCollaborator(account, req.repository)
+                Future(collaboratorPageRedirect(req))
+              } else {
+                Future(collaboratorPageRedirect(req))
+              }
+            }
+            case _ =>
               Future(
-                collaboratorPageRedirect(req)
-                  .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+                collaboratorPageRedirect(req).flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
               )
           }
       )

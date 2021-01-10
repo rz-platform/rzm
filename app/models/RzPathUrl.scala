@@ -1,7 +1,8 @@
 package models
 
 import java.io.File
-import java.net.URLDecoder
+import java.net.{ URLDecoder, URLEncoder }
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
 case class DecodedPath(uri: String, cleared: Boolean) {
@@ -40,4 +41,13 @@ object DecodedPath {
 
     DecodedPath(p)
   }
+}
+
+object EncodedPath {
+  // TODO: LRU cache
+  def fromString(path: String): String =
+    path
+      .split("/")
+      .map(word => URLEncoder.encode(word, StandardCharsets.UTF_8))
+      .mkString("/")
 }

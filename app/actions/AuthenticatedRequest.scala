@@ -32,10 +32,10 @@ class AuthenticatedRequest @Inject() (
     val maybeFutureResult: Option[Future[Result]] = for {
       sessionId <- request.session.get(SessionName.toString)
     } yield {
-      accountService.findById(sessionId.toInt).flatMap {
-        case Some(account) =>
+      accountService.getById(sessionId) match {
+        case Right(account) =>
           block(new AccountRequest[A](request, account, messagesApi))
-        case None =>
+        case Left(_) =>
           Future.successful {
             Redirect(routes.AccountController.signin()).withNewSession
           }

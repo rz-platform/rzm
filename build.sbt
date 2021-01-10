@@ -9,17 +9,14 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
       guice,
-      jdbc,
-      evolutions,
-      "org.postgresql"                   % "postgresql"                   % "42.2.6",
-      "org.playframework.anorm"          %% "anorm"                       % "2.6.5",
       "org.scalatestplus.play"           %% "scalatestplus-play"          % "5.0.0" % Test,
       "org.eclipse.jgit"                 % "org.eclipse.jgit.http.server" % JgitVersion,
       "org.eclipse.jgit"                 % "org.eclipse.jgit.archive"     % JgitVersion,
       "commons-io"                       % "commons-io"                   % "2.6",
       "org.mindrot"                      % "jbcrypt"                      % "0.3m",
       "org.apache.tika"                  % "tika-core"                    % "1.22",
-      "com.googlecode.juniversalchardet" % "juniversalchardet"            % "1.0.3"
+      "com.googlecode.juniversalchardet" % "juniversalchardet"            % "1.0.3",
+      "net.debasishg"                    %% "redisclient"                 % "3.30"
     ),
     scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked", "-Xfatal-warnings"),
     javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror")

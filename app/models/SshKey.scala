@@ -1,16 +1,17 @@
 package models
 
-import anorm.{ Macro, ToParameterList }
+import repositories.{ ParsingError, RzError }
 
 import java.security.MessageDigest
-import java.time.LocalDateTime
 import java.util.Base64
 
 case class SshKey(
-  id: Int = 0,
   publicKey: String,
-  createdAt: LocalDateTime
+  createdAt: Long,
+  owner: Account
 ) {
+  val id: String = IdTable.sshKeyPrefix + MD5.fromString(publicKey)
+
   lazy val fingerprint: String = {
     val derFormat            = publicKey.split(" ")(1).trim
     val messageDigest        = MessageDigest.getInstance("MD5")
@@ -32,10 +33,23 @@ case class SshKey(
   }
 
   lazy val email: String = publicKey.split(" ")(2).trim
-}
-object SshKey {
-  implicit def toParameters: ToParameterList[SshKey] = Macro.toParameters[SshKey]
+
+  def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
+
+  def this(publicKey: String, owner: Account) = this(publicKey, DateTime.now, owner)
 }
 
-case class SshKeyData(publicKey: String)
-case class SshRemoveData(id: Int)
+object SshKey {
+  def id(key: String): String = IdTable.sshKeyPrefix + MD5.fromString(key)
+
+  def make(m: Map[String, String], account: Account): Either[RzError, SshKey] = {
+    val a = for {
+      publicKey <- m.get("key")
+      createdAt <- m.get("createdAt")
+    } yield SshKey(publicKey, DateTime.parseTimestamp(createdAt), account)
+    a match {
+      case Some(m) => Right(m)
+      case None    => Left(ParsingError)
+    }
+  }
+}

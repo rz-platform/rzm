@@ -5,12 +5,13 @@
   <li class="rz-menu-item">
     <div class="auth-user">
       <a href="@routes.AccountController.accountPage" class="rz-menu-link">
-        @if(request.account.hasPicture){
-        <img
-          src="@routes.AccountController.accountPicture(request.account.userName)"
-          alt="request.account.userName"
-          class="profile-picture"
-        />} @request.account.userName
+<!--        @if(request.account.picture){-->
+<!--        <img-->
+<!--          src="@routes.AccountController.accountPicture(request.account.userName)"-->
+<!--          alt="@request.account.userName"-->
+<!--          class="profile-picture"-->
+<!--        />} -->
+        @request.account.userName
       </a>
     </div>
   </li>

@@ -11,7 +11,7 @@
     @repositories.map { case (repository) => 
     <div class="repo-list-row">
       <a
-        href="@routes.GitEntitiesController.emptyTree(repository.owner.userName, repository.name, repository.defaultBranch)"
+        href="@routes.GitEntitiesController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
       >
         @repository.owner.userName / @repository.name
       </a>

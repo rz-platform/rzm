@@ -1,5 +1,7 @@
 package models
 
+import repositories.{ ParsingError, RzError }
+
 sealed trait AccessLevel {
   def role: Integer
 }
@@ -50,11 +52,30 @@ object AccessLevel {
 
 case class Collaborator(
   account: Account,
-  role: Int
+  role: AccessLevel,
+  createdAt: Long
 ) {
-  val accessLevel: Option[AccessLevel] = AccessLevel.fromRole(role)
+  def keyAccessLevel(repo: RzRepository): String =
+    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
+
+  def toMap: Map[String, String] = Map("role" -> role.role.toString, "createdAt" -> createdAt.toString)
+
+  def this(account: Account, accessLevel: AccessLevel) = this(account, accessLevel, DateTime.now)
 }
 
-case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
+object Collaborator {
+  def keyAccessLevel(account: Account, repo: RzRepository): String =
+    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
 
-case class RemoveCollaboratorData(email: String)
+  def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] = {
+    val a = for {
+      role        <- data.get("role")
+      accessLevel <- AccessLevel.fromRole(role.toInt)
+      createdAt   <- data.get("createdAt")
+    } yield Collaborator(account, accessLevel, createdAt.toInt)
+    a match {
+      case Some(a) => Right(a)
+      case None    => Left(ParsingError)
+    }
+  }
+}
