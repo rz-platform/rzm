@@ -1,52 +1,52 @@
 package models
 
-import anorm._
+import repositories.{ ParsingError, RzError }
 
-import java.time.LocalDateTime
-
-sealed trait Account {
-  def id: Int
-  def userName: String
-  def email: String
-}
-
-case class SimpleAccount(id: Int, userName: String, email: String, hasPicture: Boolean) extends Account
-
-object SimpleAccount {
-  implicit def toParameters: ToParameterList[SimpleAccount] = Macro.toParameters[SimpleAccount]
-}
-
-case class RichAccount(
-  id: Int,
+case class Account(
   userName: String,
-  fullName: String = "",
+  fullName: String,
   email: String,
-  password: String,
-  isAdmin: Boolean = false,
-  created: LocalDateTime,
-  hasPicture: Boolean,
-  description: String = ""
-) extends Account
+  created: Long,
+  picture: Option[String]
+) {
+  def id: String            = IdTable.accountPrefix + userName
+  def emailId: String       = IdTable.userEmailId + email
+  def passwordId: String    = IdTable.accountPasswordPrefix + userName
+  def sshKeysListId: String = IdTable.accountSshPrefix + userName
+  def projectListId: String = IdTable.accountAccessListPrefix + userName
 
-object RichAccount {
-  implicit def toParameters: ToParameterList[RichAccount] = Macro.toParameters[RichAccount]
+  // username is the key
+  def toMap =
+    Map(
+      "fullName" -> fullName,
+      "email"    -> email,
+      "created"  -> created.toString,
+      "picture"  -> picture
+    )
 
-  def fromScratch(userForm: AccountRegistrationData): RichAccount =
-    RichAccount(
-      0,
+  def this(userForm: AccountRegistrationData) =
+    this(
       userForm.userName,
       userForm.fullName.getOrElse(""),
       userForm.email,
-      HashedString.fromString(userForm.password).toString,
-      created = LocalDateTime.now(),
-      hasPicture = false
+      DateTime.now,
+      None
     )
 }
 
-case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
+object Account {
+  def id(username: String): String   = IdTable.accountPrefix + username
+  def emailId(email: String): String = IdTable.userEmailId + email
 
-case class AccountData(userName: String, fullName: Option[String], email: String, description: Option[String])
-
-case class PasswordData(oldPassword: String, newPassword: String)
-
-case class AccountLoginData(userName: String, password: String)
+  def make(key: String, data: Map[String, String]): Either[RzError, Account] = {
+    val a = for {
+      fullName <- data.get("fullName")
+      email    <- data.get("email")
+      created  <- data.get("created")
+    } yield Account(key.substring(3), fullName, email, DateTime.parseTimestamp(created), data.get("picture"))
+    a match {
+      case Some(a) => Right(a)
+      case None    => Left(ParsingError)
+    }
+  }
+}

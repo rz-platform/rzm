@@ -13,8 +13,9 @@ case (collaborator) => {
 @CSRF.formField
 <input type="hidden" name="email" value="@collaborator.account.email" />
 <div class="collaborator-row">
-  @collaborator.account.userName / @{collaborator.accessLevel match { case Some(EditAccess) => {
-  request.messages("repository.collaborator.accessLevel.write") } case Some(ViewAccess) => {
+  @collaborator.account.userName / @{collaborator.role match {
+    case EditAccess => {
+  request.messages("repository.collaborator.accessLevel.write") } case ViewAccess => {
   request.messages("repository.collaborator.accessLevel.read") } case _ => () }}
 
   <button class="rz-button" type="submit"> @request.messages("repository.collaborator.remove") </button>

@@ -41,7 +41,7 @@
 >
   <a
     class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }"
-    href="@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, file.pathWithoutRootEncoded)"
+    href="@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathWithoutRootEncoded)"
   >
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />

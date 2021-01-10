@@ -6,7 +6,7 @@
     @request.role match { case ViewAccess => {} case _ => {
     <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
       <a
-        href="@routes.GitEntitiesController.emptyTree(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch)"
+        href="@routes.GitEntitiesController.emptyTree(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
@@ -21,14 +21,14 @@
     } }
     <li class="rz-menu-item">
       <a
-        href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch)"
+        href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
     <li class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }">
       <a
-        href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, 1)"
+        href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, 1)"
         class="rz-menu-link"
         >@request.messages("repository.tree.commits")</a
       >

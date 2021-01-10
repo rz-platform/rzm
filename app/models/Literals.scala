@@ -4,6 +4,7 @@ import scala.util.matching.Regex
 
 sealed trait Literal {
   def value: String
+
   override def toString: String = value
 }
 
@@ -24,6 +25,7 @@ case object ForbiddenSymbols {
   private val generalForbiddenSymbols: List[String] = pathForbiddenSymbols :+ "/"
 
   def isPathValid(itemName: String): Boolean = pathForbiddenSymbols.exists(itemName contains _)
+
   def isNameValid(itemName: String): Boolean = generalForbiddenSymbols.exists(itemName contains _)
 
   override def toString: String = generalForbiddenSymbols.mkString("") // for testing purposes
@@ -54,7 +56,29 @@ case object RepositoryNameRegex {
 
 sealed trait RepositoryPage
 
-case object FileViewPage      extends RepositoryPage
+case object FileViewPage extends RepositoryPage
+
 case object CollaboratorsPage extends RepositoryPage
+
 case object CommitHistoryPage extends RepositoryPage
-case object FileUploadPage    extends RepositoryPage
+
+case object FileUploadPage extends RepositoryPage
+
+object IdTable {
+  /*
+  Always use two-letters
+   */
+
+  val accountPrefix           = "ai:" // account instance
+  val accountPasswordPrefix   = "ap:" // account password
+  val accountSshPrefix        = "as:" // account password
+  val accountAccessListPrefix = "al:" // account access list
+  val userEmailId             = "ae:" // account email
+
+  val rzRepoPrefix              = "ri:" // repository instance
+  val rzRepoCollaboratorsPrefix = "rc:" // repository collaborators
+
+  val collaboratorPrefix = "ci:" // collaborator instance
+
+  val sshKeyPrefix = "sk:" // ssh key
+}

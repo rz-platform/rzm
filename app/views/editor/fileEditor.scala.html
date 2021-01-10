@@ -51,12 +51,12 @@
 }
 @if(blob.content.viewType == "image"){
   <img
-    src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
+    src="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {
   <a
-    href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, request.repository.defaultBranch, path)"
+    href="@routes.GitEntitiesController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
   >
     @request.messages("repository.viewFile.cant")
   </a>

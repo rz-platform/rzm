@@ -1,201 +1,95 @@
 package repositories
 
-import anorm.SqlParser.get
-import anorm._
-import models.{ AccountData, RichAccount, SimpleAccount, SshKey }
-import play.api.db.DBApi
+import com.redis.RedisClient
+import models.{ Account, HashedString, SshKey }
 
-import java.time.LocalDateTime
 import javax.inject.{ Inject, Singleton }
-import scala.concurrent.Future
 
 @Singleton
-class AccountRepository @Inject() (dbapi: DBApi)(implicit ec: DatabaseExecutionContext) {
-  private val db     = dbapi.database("default")
+class AccountRepository @Inject() (r: Redis) {
   private val logger = play.api.Logger(this.getClass)
 
-  val simpleAccountParser: RowParser[SimpleAccount] = {
-    (get[Int]("account.id") ~ get[String]("account.username") ~ get[String]("account.email")
-      ~ get[Boolean]("account.has_picture")).map {
-      case id ~ userName ~ email ~ hasPicture => SimpleAccount(id, userName, email, hasPicture)
+  def getById(id: String): Either[RzError, Account] = r.clients.withClient { client =>
+    client.hgetall[String, String](id) match { // Account.id(
+      case Some(account) => Account.make(id, account)
+      case None          => Left(NotFoundInRepository)
     }
   }
 
-  private val richAccountParser = {
-    (get[Int]("account.id") ~
-      get[String]("account.username") ~
-      get[String]("account.full_name") ~
-      get[String]("account.email") ~
-      get[String]("account.password") ~
-      get[Boolean]("account.is_admin") ~
-      get[LocalDateTime]("account.created_at") ~
-      get[Boolean]("account.has_picture") ~
-      get[String]("account.description")).map {
-      case id ~ userName ~ fullName ~ email ~ password ~ isAdmin ~ registeredDate ~ hasPicture ~ description =>
-        RichAccount(
-          id,
-          userName,
-          fullName,
-          email,
-          password,
-          isAdmin,
-          registeredDate,
-          hasPicture,
-          description
-        )
+  def getByEmailId(emailId: String): Either[RzError, Account] = r.clients.withClient { client =>
+    client.get(Account.emailId(emailId)) match {
+      case Some(id: String) => getById(id)
+      case None             => Left(NotFoundInRepository)
     }
   }
 
-  val sshKeyParser: RowParser[SshKey] = {
-    (get[Int]("ssh_key.id") ~ get[String]("ssh_key.public_key") ~ get[LocalDateTime]("ssh_key.created_at")).map {
-      case id ~ publicKey ~ createdAt => SshKey(id, publicKey, createdAt)
+  def getByUsernameOrEmail(s: String): Either[RzError, Account] = // TODO: share one connect
+    getById(Account.id(s)) match {
+      case Right(account) => Right(account)
+      case Left(_)        => getByEmailId(Account.emailId(s))
+    }
+
+  def set(account: Account, password: HashedString): Option[List[Any]] =
+    r.clients.withClient(client =>
+      client.pipeline { f =>
+        f.hmset(account.id, account.toMap)
+        f.set(account.emailId, account.id)
+        f.set(account.passwordId, password.toString)
+      }
+    )
+
+  def setPassword(account: Account, hash: String): Boolean = r.clients.withClient { client =>
+    client.set(account.passwordId, hash)
+  }
+
+  def getPassword(account: Account): Either[RzError, String] = r.clients.withClient { client =>
+    client.get(account.passwordId) match {
+      case Some(s) => Right(s)
+      case None    => Left(NotFoundInRepository)
+    }
+  }
+
+  def setSshKey(account: Account, key: SshKey): Option[Long] = r.clients.withClient { client =>
+    client.hmset(key.id, key.toMap)
+    client.zadd(account.sshKeysListId, key.createdAt, key.id)
+  }
+
+  def deleteSshKey(account: Account, keyId: String): Option[Long] = r.clients.withClient { client =>
+    client.zrem(account.sshKeysListId, keyId)
+    client.del(keyId)
+  }
+
+  def removePicture(account: Account): Option[Long] = r.clients.withClient { client =>
+    client.hdel(account.id, "picture")
+  }
+
+  def setPicture(account: Account, filename: String): Boolean = r.clients.withClient { client =>
+    client.hset(account.id, "picture", filename)
+  }
+
+  private def getSshKey(id: String, account: Account, client: RedisClient): Option[SshKey] = client.hgetall(id) match {
+    case Some(m) =>
+      SshKey.make(m, account) match {
+        case Right(s) => Some(s)
+        case Left(_)  => None
+      }
+    case None => None
+  }
+
+  def listSshKeys(account: Account): List[SshKey] = r.clients.withClient { client =>
+    client.zrange(account.sshKeysListId) match {
+      case Some(l: List[String]) => l.flatMap(id => getSshKey(id, account, client))
+      case None                  => List()
     }
   }
 
   /**
-   * Retrieve a user from the id.
-   */
-  def findById(id: Int): Future[Option[SimpleAccount]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("select id, username, email, has_picture from account where id = {accountId}")
-          .on("accountId" -> id)
-          .as(simpleAccountParser.singleOpt)
-      }
-    }(ec)
-
-  /**
-   * Retrieve a simple account from login
-   */
-  def getByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[SimpleAccount]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("select id, username, email, has_picture from account where username={usernameOrEmail} or email={email}")
-          .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
-          .as(simpleAccountParser.singleOpt)
-      }
-    }(ec)
-
-  /**
-   * Retrieve a rich account from login
-   */
-  def getRichModelByUsernameOrEmail(usernameOrEmail: String, email: String = ""): Future[Option[RichAccount]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("select * from account where username={usernameOrEmail} or email={email}")
-          .on("usernameOrEmail" -> usernameOrEmail, "email" -> (if (email.isEmpty) usernameOrEmail else email))
-          .as(richAccountParser.singleOpt)
-      }
-    }(ec)
-
-  /**
-   * Retrieve a rich account from id
-   */
-  def getRichModelById(accountId: Int): Future[RichAccount] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL(" select * from account where id={accountId}")
-          .on("accountId" -> accountId)
-          .as(richAccountParser.single)
-      }
-    }(ec)
-
-  /**
-   * Insert a new user
-   *
-   */
-  def insert(account: RichAccount): Future[Option[Long]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("""
-        insert into account (username,full_name,email,password,is_admin, has_picture,description) values
-          ({userName}, {fullName}, {email}, {password}, {isAdmin}, {hasPicture},  {description})
-      """).bind(account).executeInsert()
-      }
-    }(ec)
-
-  def updatePassword(id: Int, newPasswordHash: String): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("""
-          update account
-          set password = {newPasswordHash}
-          where account.id = {id}
-      """).on("newPasswordHash" -> newPasswordHash, "id" -> id).executeUpdate()
-      }
-    }(ec)
-
-  def updateProfileInfo(id: Int, accountData: AccountData): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("""
-          update account
-          set full_name = {fullName},
-          email = {email},
-          description = {description}
-          where account.id = {id}
-      """).on(
-            "fullName"    -> accountData.fullName.getOrElse(""),
-            "email"       -> accountData.email,
-            "description" -> accountData.description.getOrElse(""),
-            "id"          -> id
-          )
-          .executeUpdate()
-      }
-    }(ec)
-
-  def insertSshKey(accountId: Int, key: String): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("insert into ssh_key (account_id, public_key) values ({accountId}, {publicKey})")
-          .on("accountId" -> accountId, "publicKey" -> key)
-          .executeUpdate()
-      }
-    }(ec)
-
-  def numberOfAccountSshKeys(accountId: Int): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("select count(id) as c from ssh_key where account_id = {accountId}")
-          .on("accountId" -> accountId)
-          .as(SqlParser.int("c").single)
-      }
-    }(ec)
-
-  def accountSshKeys(accountId: Int): Future[List[SshKey]] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("select * from ssh_key where account_id = {accountId}")
-          .on("accountId" -> accountId)
-          .as(sshKeyParser.*)
-      }
-    }(ec)
-
-  def deleteSshKeys(accountId: Int, keyId: Long): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("delete from ssh_key where id = {keyId} and account_id={accountId}")
-          .on("accountId" -> accountId, "keyId" -> keyId)
-          .executeUpdate()
-      }
-    }(ec)
-
-  def hasPicture(accountId: Int): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("update account set has_picture = true where id = {accountId}")
-          .on("accountId" -> accountId)
-          .executeUpdate()
-      }
-    }(ec)
-
-  def removePicture(accountId: Int): Future[Int] =
-    Future {
-      db.withConnection { implicit connection =>
-        SQL("update account set has_picture = false where id = {accountId}")
-          .on("accountId" -> accountId)
-          .executeUpdate()
-      }
-    }(ec)
-
+   * Number of Ssh keys on Account
+   * */
+  def cardinalitySshKey(account: Account): Either[RzError, Long] = r.clients.withClient { client =>
+    client.zcard(account.sshKeysListId) match {
+      case Some(s: Long) => Right(s)
+      case None          => Left(NotFoundInRepository)
+    }
+  }
 }

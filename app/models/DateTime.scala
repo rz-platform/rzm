@@ -1,7 +1,7 @@
 package models
 
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.{ Instant, LocalDateTime }
 
 object DateTime {
   val shortFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")
@@ -24,4 +24,13 @@ object DateTime {
     }
 
   def printFull(d: LocalDateTime): String = d.format(fullFormatter)
+
+  def now: Long = Instant.now().getEpochSecond
+
+  def parseTimestamp(t: String): Long =
+    try {
+      t.toLong
+    } catch {
+      case _: NumberFormatException => now
+    }
 }

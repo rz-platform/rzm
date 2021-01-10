@@ -417,7 +417,7 @@ class GitRepository @Inject() (config: Configuration) {
   private def getDefaultBranch(git: Git, repo: RzRepository, revstr: String): Option[(ObjectId, String)] = {
     val branchList = git.branchList.call.asScala.map(ref => ref.getName.stripPrefix("refs/heads/")).toList
     Seq(
-      Some(if (revstr.isEmpty) repo.defaultBranch else revstr),
+      Some(if (revstr.isEmpty) RzRepository.defaultBranch else revstr),
       branchList.headOption
     ).flatMap {
       case Some(rev) => Some((git.getRepository.resolve(rev), rev))
@@ -425,7 +425,7 @@ class GitRepository @Inject() (config: Configuration) {
     }.find(_._1 != null)
   }
 
-  def commitFiles(repo: RzRepository, branch: String, path: String, message: String, loginAccount: SimpleAccount)(
+  def commitFiles(repo: RzRepository, branch: String, path: String, message: String, loginAccount: Account)(
     f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
   ): ObjectId =
     lock(s"${repo.owner.userName}/${repo.name}") {
@@ -475,7 +475,7 @@ class GitRepository @Inject() (config: Configuration) {
     createFile(repo, "README.md", "Initial commit", repo.owner)
   }
 
-  def createFile(repo: RzRepository, fileName: String, commitName: String, account: SimpleAccount): Unit =
+  def createFile(repo: RzRepository, fileName: String, commitName: String, account: Account): Unit =
     Using.resource(Git.open(repositoryDir(repo))) { git =>
       val builder  = DirCache.newInCore.builder()
       val inserter = git.getRepository.newObjectInserter()
@@ -730,7 +730,7 @@ class GitRepository @Inject() (config: Configuration) {
   def commitUploadedFiles(
     repo: RzRepository,
     files: Seq[CommitFile],
-    account: SimpleAccount,
+    account: Account,
     rev: String,
     path: String,
     message: String

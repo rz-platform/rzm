@@ -6,10 +6,12 @@ import java.io.File
 import java.nio.file.Paths
 import javax.imageio.ImageIO
 
-case class Thumbnail(name: String)
+case class Thumbnail(name: String) {
+  def this(name: String, size: Int) = this(Thumbnail.thumbImageName(name, size))
+}
 
 object Thumbnail {
-  private val defaultExtension = "jpg"
+  private val extension = "jpg"
 
   private def cropImageToSquare(src: BufferedImage): BufferedImage = {
     val (width, height) = (src.getWidth, src.getHeight)
@@ -23,11 +25,9 @@ object Thumbnail {
     src.getSubimage(x, y, squareSide, squareSide)
   }
 
-  private def thumbImageName(name: String, size: Int): String = s"${name}_$size.$defaultExtension"
+  private def thumbImageName(name: String, size: Int): String = s"${name}_$size.$extension"
 
-  def apply(name: String, size: Int): Thumbnail = Thumbnail(thumbImageName(name, size))
-
-  def fromSource(
+  def make(
     inputImgFile: File,
     size: Int,
     destination: String,
@@ -43,7 +43,7 @@ object Thumbnail {
       null
     )
     val outputFile = Paths.get(destination, thumbImageName(destinationName, size)).toFile
-    ImageIO.write(img, defaultExtension, outputFile)
+    ImageIO.write(img, extension, outputFile)
     Thumbnail(destinationName)
   }
 }

@@ -29,7 +29,7 @@
 
 <div class="profile-block">
   @helper.form(action = routes.AccountController.uploadAccountPicture, Symbol("enctype") -> "multipart/form-data",
-  Symbol("class") -> "rz-form") { @CSRF.formField @if(request.account.hasPicture) {
+  Symbol("class") -> "rz-form") { @CSRF.formField @if(request.account.picture) {
   <p>
     <img src="@routes.AccountController.accountPicture(request.account.userName)" />
   </p>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="profile-block">
-  @if(request.account.hasPicture) { @helper.form(action = routes.AccountController.removeAccountPicture) {
+  @if(request.account.picture) { @helper.form(action = routes.AccountController.removeAccountPicture) {
   @CSRF.formField
   <input type="submit" value='@request.messages("profile.delete.picture")' class="rz-button rz-button-primary" />
   } }

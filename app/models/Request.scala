@@ -3,18 +3,18 @@ import play.api.i18n.MessagesApi
 import play.api.mvc._
 
 trait RequestWithAccount extends PreferredMessagesProvider with MessagesRequestHeader {
-  def account: SimpleAccount
+  def account: Account
 }
 
 trait AccountRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
-  def account: SimpleAccount
+  def account: Account
 }
-class AccountRequest[A](request: Request[A], val account: SimpleAccount, val messagesApi: MessagesApi)
+class AccountRequest[A](request: Request[A], val account: Account, val messagesApi: MessagesApi)
     extends WrappedRequest[A](request)
     with AccountRequestHeader
 
 trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
-  def account: SimpleAccount
+  def account: Account
   def repository: RzRepository
   def role: AccessLevel
 }
@@ -22,7 +22,7 @@ trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesReq
 class RepositoryRequest[A](
   request: AccountRequest[A],
   val repository: RzRepository,
-  val account: SimpleAccount,
+  val account: Account,
   val role: AccessLevel,
   val messagesApi: MessagesApi
 ) extends WrappedRequest[A](request)
