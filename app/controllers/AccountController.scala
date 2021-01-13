@@ -98,7 +98,7 @@ class AccountController @Inject() (
     }
   }
 
-  def saveAccout: Action[AnyContent] = Action.async { implicit request =>
+  def saveAccount: Action[AnyContent] = Action.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
     val cleanData    = clearAccountData(incomingData)
     signupForm
@@ -124,7 +124,7 @@ class AccountController @Inject() (
   }
 
   private def checkAccountPassword(userName: String, passwordHash: String): Either[RzError, Account] =
-    accountService.getById(Account.id(userName)) match {
+    accountService.getByUsernameOrEmail(userName) match {
       case Right(account: Account) =>
         accountService.getPassword(account) match {
           case Right(password) if HashedString(password).check(passwordHash) => Right(account)
@@ -179,12 +179,11 @@ class AccountController @Inject() (
   def editAccount: Action[AnyContent] = userAction.async { implicit request =>
     accountEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
-      accountData =>
+      (accountData: AccountData) =>
         isEmailAvailable(request.account.email, accountData.email).flatMap { available =>
           if (available) {
-//            accountService.updateProfileInfo(request.account.id, accountData).flatMap { _ =>
+            accountService.update(request.account.fromForm(accountData))
             Future(Ok(html.userProfile(accountEditForm.bindFromRequest, updatePasswordForm)))
-//            }
           } else {
             val formBuiltFromRequest = accountEditForm.bindFromRequest
             val newForm = accountEditForm.bindFromRequest.copy(
@@ -203,15 +202,14 @@ class AccountController @Inject() (
       formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(request.account), formWithErrors))),
       passwordData =>
         accountService.getPassword(request.account) match {
-          case Right(passwordHash: String) if (HashedString(passwordData.oldPassword).check(passwordHash)) => {
+          case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
             val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
             accountService.setPassword(request.account, newPasswordHash)
             Future(
               Redirect(routes.AccountController.accountPage())
                 .flashing("success" -> Messages("profile.flash.passupdated"))
             )
-          }
-          case _ => {
+          case _ =>
             val formBuiltFromRequest = updatePasswordForm.bindFromRequest
             val newForm = updatePasswordForm.bindFromRequest.copy(
               errors = formBuiltFromRequest.errors ++ Seq(
@@ -219,7 +217,6 @@ class AccountController @Inject() (
               )
             )
             Future(BadRequest(html.userProfile(filledAccountEditForm(request.account), newForm)))
-          }
         }
     )
   }
