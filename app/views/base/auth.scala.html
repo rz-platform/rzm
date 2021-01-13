@@ -1,16 +1,10 @@
-@(title:String,fluid:Boolean=false)(body:Html)(js:Html=Html(""))(implicit request:RequestWithAccount)
+@(title:String, fluid:Boolean=false)(body:Html)(js:Html=Html(""))(implicit request:RequestWithAccount)
 
 @headerHtml = {
 <ul class="rz-menu-list">
   <li class="rz-menu-item">
     <div class="auth-user">
       <a href="@routes.AccountController.accountPage" class="rz-menu-link">
-<!--        @if(request.account.picture){-->
-<!--        <img-->
-<!--          src="@routes.AccountController.accountPicture(request.account.userName)"-->
-<!--          alt="@request.account.userName"-->
-<!--          class="profile-picture"-->
-<!--        />} -->
         @request.account.userName
       </a>
     </div>

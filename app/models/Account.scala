@@ -15,14 +15,17 @@ case class Account(
   def sshKeysListId: String = IdTable.accountSshPrefix + userName
   def projectListId: String = IdTable.accountAccessListPrefix + userName
 
-  // username is the key
-  def toMap =
-    Map(
-      "fullName" -> fullName,
-      "email"    -> email,
-      "created"  -> created.toString,
-      "picture"  -> picture
-    )
+  def toMap: Map[String, String] = {
+  // take advantage of the iterable nature of Option
+    val picture = if(this.picture.nonEmpty) Some("picture" -> this.picture.get) else None
+    (Seq("fullName" -> fullName, "email" -> email, "created"  -> created.toString) ++ picture).toMap
+//    Map(
+//      "fullName" -> fullName,
+//      "email"    -> email,
+//      "created"  -> created.toString,
+//      "picture"  -> picture
+//    )
+  }
 
   def this(userForm: AccountRegistrationData) =
     this(
@@ -32,6 +35,9 @@ case class Account(
       DateTime.now,
       None
     )
+
+  def fromForm(userForm: AccountData): Account =
+    Account(userName, userForm.fullName.getOrElse(""), userForm.email, created, picture)
 }
 
 object Account {

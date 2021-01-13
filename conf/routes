@@ -14,7 +14,7 @@ POST     /signin              controllers.AccountController.authenticate
 
 # Sign up
 GET     /signup              controllers.AccountController.signup
-POST     /signup              controllers.AccountController.saveAccout
+POST     /signup              controllers.AccountController.saveAccount
 
 # Log out
 GET /logout controllers.AccountController.logout

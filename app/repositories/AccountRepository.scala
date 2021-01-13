@@ -17,7 +17,7 @@ class AccountRepository @Inject() (r: Redis) {
   }
 
   def getByEmailId(emailId: String): Either[RzError, Account] = r.clients.withClient { client =>
-    client.get(Account.emailId(emailId)) match {
+    client.get(emailId) match {
       case Some(id: String) => getById(id)
       case None             => Left(NotFoundInRepository)
     }
@@ -26,7 +26,7 @@ class AccountRepository @Inject() (r: Redis) {
   def getByUsernameOrEmail(s: String): Either[RzError, Account] = // TODO: share one connect
     getById(Account.id(s)) match {
       case Right(account) => Right(account)
-      case Left(_)        => getByEmailId(Account.emailId(s))
+      case _        => getByEmailId(Account.emailId(s))
     }
 
   def set(account: Account, password: HashedString): Option[List[Any]] =
@@ -37,6 +37,9 @@ class AccountRepository @Inject() (r: Redis) {
         f.set(account.passwordId, password.toString)
       }
     )
+
+  def update(account: Account): Boolean =
+    r.clients.withClient(client => client.hmset(account.id, account.toMap))
 
   def setPassword(account: Account, hash: String): Boolean = r.clients.withClient { client =>
     client.set(account.passwordId, hash)

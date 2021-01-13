@@ -66,7 +66,7 @@ class FunctionalGitEntitiesTest
           "mailAddress" -> s"$getRandomString@rzm.dev"
         )
     )
-    await(AccountController.saveAccout().apply(request))
+    await(AccountController.saveAccount().apply(request))
     defaultDatabase.withConnection { connection =>
       val rs = connection.prepareStatement(s"select id from account where username='$userName'").executeQuery()
       rs.next()
@@ -162,7 +162,7 @@ class FunctionalGitEntitiesTest
             )
         )
 
-        val result = await(AccountController.saveAccout().apply(request))
+        val result = await(AccountController.saveAccount().apply(request))
         result.header.status must equal(400)
       }
     }
@@ -185,7 +185,7 @@ class FunctionalGitEntitiesTest
             )
         )
 
-        val result = await(AccountController.saveAccout().apply(request))
+        val result = await(AccountController.saveAccount().apply(request))
         result.header.status must equal(303)
 
         defaultDatabase.withConnection { connection =>
