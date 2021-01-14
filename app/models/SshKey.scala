@@ -4,6 +4,7 @@ import repositories.{ ParsingError, RzError }
 
 import java.security.MessageDigest
 import java.util.Base64
+import java.time.LocalDateTime
 
 case class SshKey(
   publicKey: String,
@@ -33,6 +34,8 @@ case class SshKey(
   }
 
   lazy val email: String = publicKey.split(" ")(2).trim
+
+  lazy val createdAtDate: LocalDateTime = DateTime.fromTimeStamp(createdAt)
 
   def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
 

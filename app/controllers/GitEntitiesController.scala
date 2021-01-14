@@ -148,7 +148,10 @@ class GitEntitiesController @Inject() (
               gitEntitiesRepository.setRzRepo(repo, author)
               git.create(repo)
               Future(
-                Redirect(routes.GitEntitiesController.emptyTree(repo.owner.userName, repository.name, RzRepository.defaultBranch))
+                Redirect(
+                  routes.GitEntitiesController
+                    .emptyTree(repo.owner.userName, repository.name, RzRepository.defaultBranch)
+                )
               )
             case _ =>
               val formBuiltFromRequest = createRepositoryForm.bindFromRequest

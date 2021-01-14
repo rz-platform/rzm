@@ -7,11 +7,11 @@
 @header.notificationHeader() @sshKeys.map { key =>
 <div class="ssh-key-block">
   <div>
-    <span>@key.email</span>
-    <span>@key.fingerprint</span>
-    <span>@request.messages("profile.ssh.createdAt", key.createdAt)</span>
+    <div class="ssh-key-block-email">@key.email</div>
+    <div>@key.fingerprint</div>
+    <div>@request.messages("profile.ssh.createdAt") @print.date(key.createdAtDate)</div>
   </div>
-  <div>
+  <div class="ssh-key-block-remove-block">
     @form(routes.AccountController.deleteSshKey()) { @CSRF.formField
     <input type="hidden" name="id" value="@key.id" />
     <button class="rz-button" type="submit"> @request.messages("profile.ssh.remove") </button>
