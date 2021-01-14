@@ -1,5 +1,7 @@
 package models
 
+import java.util.TimeZone
+
 import java.time.format.DateTimeFormatter
 import java.time.{ Instant, LocalDateTime }
 
@@ -24,6 +26,10 @@ object DateTime {
     }
 
   def printFull(d: LocalDateTime): String = d.format(fullFormatter)
+
+  // from timestamp
+  def fromTimeStamp(t: Long): LocalDateTime =
+    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), TimeZone.getDefault().toZoneId());
 
   def now: Long = Instant.now().getEpochSecond
 

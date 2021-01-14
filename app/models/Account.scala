@@ -16,15 +16,9 @@ case class Account(
   def projectListId: String = IdTable.accountAccessListPrefix + userName
 
   def toMap: Map[String, String] = {
-  // take advantage of the iterable nature of Option
-    val picture = if(this.picture.nonEmpty) Some("picture" -> this.picture.get) else None
-    (Seq("fullName" -> fullName, "email" -> email, "created"  -> created.toString) ++ picture).toMap
-//    Map(
-//      "fullName" -> fullName,
-//      "email"    -> email,
-//      "created"  -> created.toString,
-//      "picture"  -> picture
-//    )
+    // take advantage of the iterable nature of Option
+    val picture = if (this.picture.nonEmpty) Some("picture" -> this.picture.get) else None
+    (Seq("fullName" -> fullName, "email" -> email, "created" -> created.toString) ++ picture).toMap
   }
 
   def this(userForm: AccountRegistrationData) =
