@@ -106,12 +106,13 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signup(formWithErrors))),
         (accountData: AccountRegistrationData) =>
-          accountService.getByUsernameOrEmail(accountData.userName) match { // TODO accountData.email
+          accountService.getByUsernameOrEmail(accountData.userName).flatMap { // TODO accountData.email
             case Left(NotFoundInRepository) =>
               val acc      = new Account(accountData)
               val password = HashedString.fromString(accountData.password)
-              accountService.set(acc, password)
-              Future(Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> acc.id))
+              accountService
+                .set(acc, password)
+                .map(_ => Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> acc.id))
             case _ =>
               val formBuiltFromRequest = signupForm.bindFromRequest
               val newForm = signupForm.bindFromRequest.copy(
@@ -123,14 +124,14 @@ class AccountController @Inject() (
       )
   }
 
-  private def checkAccountPassword(userName: String, passwordHash: String): Either[RzError, Account] =
-    accountService.getByUsernameOrEmail(userName) match {
+  private def checkAccountPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
+    accountService.getByUsernameOrEmail(userName).flatMap {
       case Right(account: Account) =>
-        accountService.getPassword(account) match {
+        accountService.getPassword(account).map {
           case Right(password) if HashedString(password).check(passwordHash) => Right(account)
           case _                                                             => Left(AccessDenied)
         }
-      case Left(e) => Left(e)
+      case Left(e) => Future(Left(e))
     }
 
   def authenticate: Action[AnyContent] = Action.async { implicit request: MessagesRequest[AnyContent] =>
@@ -141,17 +142,15 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signin(formWithErrors))),
         accountData =>
-          checkAccountPassword(accountData.userName, accountData.password) match {
+          checkAccountPassword(accountData.userName, accountData.password).map {
             case Right(account) =>
-              Future(
-                Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> account.id)
-              )
+              Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> account.id)
             case _ =>
               val formBuiltFromRequest = signinForm.bindFromRequest
               val newForm = signinForm.bindFromRequest.copy(
                 errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
               )
-              Future(BadRequest(html.signin(newForm)))
+              BadRequest(html.signin(newForm))
           }
       )
   }
@@ -162,7 +161,7 @@ class AccountController @Inject() (
     )
 
   def accountPage: Action[AnyContent] = userAction.async { implicit request =>
-    accountService.getById(request.account.id) match {
+    accountService.getById(request.account.id).flatMap {
       case Right(account) => Future(Ok(html.userProfile(filledAccountEditForm(account), updatePasswordForm)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }
@@ -170,21 +169,22 @@ class AccountController @Inject() (
 
   private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
     if (currentEmail != newEmail) {
-      accountService.getById(newEmail) match { // TODO
+      accountService.getById(newEmail).flatMap { // TODO
         case Right(_) => Future(false)
         case _        => Future(true)
       }
     } else Future(true)
 
-  def editAccount: Action[AnyContent] = userAction.async { implicit request =>
+  def editAccount: Action[AnyContent] = userAction.async { implicit req =>
     accountEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
       (accountData: AccountData) =>
-        isEmailAvailable(request.account.email, accountData.email).flatMap { available =>
-          if (available) {
-            accountService.update(request.account.fromForm(accountData))
-            Future(Ok(html.userProfile(accountEditForm.bindFromRequest, updatePasswordForm)))
-          } else {
+        isEmailAvailable(req.account.email, accountData.email).flatMap {
+          case true =>
+            accountService
+              .update(req.account.fromForm(accountData))
+              .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest, updatePasswordForm)))
+          case false =>
             val formBuiltFromRequest = accountEditForm.bindFromRequest
             val newForm = accountEditForm.bindFromRequest.copy(
               errors = formBuiltFromRequest.errors ++ Seq(
@@ -192,23 +192,23 @@ class AccountController @Inject() (
               )
             )
             Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
-          }
         }
     )
   }
 
-  def updatePassword(): Action[AnyContent] = userAction.async { implicit request: AccountRequest[AnyContent] =>
+  def updatePassword(): Action[AnyContent] = userAction.async { implicit req =>
     updatePasswordForm.bindFromRequest.fold(
-      formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(request.account), formWithErrors))),
+      formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), formWithErrors))),
       passwordData =>
-        accountService.getPassword(request.account) match {
+        accountService.getPassword(req.account).flatMap {
           case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
             val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
-            accountService.setPassword(request.account, newPasswordHash)
-            Future(
-              Redirect(routes.AccountController.accountPage())
-                .flashing("success" -> Messages("profile.flash.passupdated"))
-            )
+            accountService
+              .setPassword(req.account, newPasswordHash)
+              .map(_ =>
+                Redirect(routes.AccountController.accountPage())
+                  .flashing("success" -> Messages("profile.flash.passupdated"))
+              )
           case _ =>
             val formBuiltFromRequest = updatePasswordForm.bindFromRequest
             val newForm = updatePasswordForm.bindFromRequest.copy(
@@ -216,7 +216,7 @@ class AccountController @Inject() (
                 FormError("oldPassword", Messages("profile.error.passisincorrect"))
               )
             )
-            Future(BadRequest(html.userProfile(filledAccountEditForm(request.account), newForm)))
+            Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), newForm)))
         }
     )
   }
@@ -241,9 +241,11 @@ class AccountController @Inject() (
             if (picture.fileSize > maxStaticSize) {
               throw new ExceededMaxSize
             }
+            // TODO: Future
             val t = Thumbnail.make(picture.ref, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
-            accountService.setPicture(request.account, t.name)
-            Future(redirect.flashing("success" -> Messages("profile.picture.success")))
+            accountService
+              .setPicture(request.account, t.name)
+              .map(_ => redirect.flashing("success" -> Messages("profile.picture.success")))
           } catch {
             case _: WrongContentType => Future(redirect.flashing("error" -> Messages("profile.error.onlyimages")))
             case _: ExceededMaxSize  => Future(redirect.flashing("error" -> Messages("profile.error.imagetoobig")))
@@ -270,23 +272,26 @@ class AccountController @Inject() (
     }
   }
 
-  def keysPage(): Action[AnyContent] = userAction.async { implicit request =>
-    Future(Ok(html.sshKeys(accountService.listSshKeys(request.account), addSshKeyForm, deleteSshKeyForm)))
+  def keysPage(): Action[AnyContent] = userAction.async { implicit req =>
+    accountService.listSshKeys(req.account).map(list => Ok(html.sshKeys(list, addSshKeyForm, deleteSshKeyForm)))
   }
 
   def addSshKey(): Action[AnyContent] = userAction.async { implicit request =>
     addSshKeyForm.bindFromRequest.fold(
       formWithErrors =>
-        Future(Ok(html.sshKeys(accountService.listSshKeys(request.account), formWithErrors, deleteSshKeyForm))),
+        accountService.listSshKeys(request.account).map { list =>
+          Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
+        },
       sshKeyData =>
-        accountService.cardinalitySshKey(request.account) match {
+        accountService.cardinalitySshKey(request.account).flatMap {
           case Right(c: Long) if c < maximumNumberPerUser =>
             val key = new SshKey(sshKeyData.publicKey, request.account)
-            accountService.setSshKey(request.account, key)
-            Future(
-              Redirect(routes.AccountController.keysPage())
-                .flashing("success" -> Messages("profile.ssh.notification.added"))
-            )
+            accountService
+              .setSshKey(request.account, key)
+              .map(_ =>
+                Redirect(routes.AccountController.keysPage())
+                  .flashing("success" -> Messages("profile.ssh.notification.added"))
+              )
           case _ =>
             Future(
               Redirect(routes.AccountController.keysPage())
@@ -299,25 +304,29 @@ class AccountController @Inject() (
   def deleteSshKey(): Action[AnyContent] = userAction.async { implicit request =>
     deleteSshKeyForm.bindFromRequest.fold(
       formWithErrors =>
-        Future(Ok(html.sshKeys(accountService.listSshKeys(request.account), addSshKeyForm, formWithErrors))),
-      (sshKeyIdData: SshRemoveData) => {
-        accountService.deleteSshKey(request.account, sshKeyIdData.id) // TODO: check ownership
-        Future(
-          Redirect(routes.AccountController.keysPage())
-            .flashing("success" -> Messages("profile.ssh.notification.removed"))
-        )
-      }
+        accountService.listSshKeys(request.account).map { list =>
+          Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
+        },
+      (sshKeyIdData: SshRemoveData) =>
+        accountService
+          .deleteSshKey(request.account, sshKeyIdData.id)
+          .map(_ =>
+            Redirect(routes.AccountController.keysPage())
+              .flashing("success" -> Messages("profile.ssh.notification.removed"))
+          ) // TODO: check ownership
     )
   }
 
-  def removeAccountPicture(): Action[AnyContent] = userAction.async { implicit request =>
+  def removeAccountPicture(): Action[AnyContent] = userAction.async { implicit req =>
+    // TODO: put in Future
     val accountPicture =
-      new java.io.File(picturesDir.toString + "/" + new Thumbnail(request.account.userName, thumbSize))
+      new java.io.File(picturesDir.toString + "/" + new Thumbnail(req.account.userName, thumbSize))
     accountPicture.delete()
-    accountService.removePicture(request.account)
-    Future(
-      Redirect(routes.AccountController.accountPage())
-        .flashing("success" -> Messages("profile.picture.delete.success"))
-    )
+    accountService
+      .removePicture(req.account)
+      .map(_ =>
+        Redirect(routes.AccountController.accountPage())
+          .flashing("success" -> Messages("profile.picture.delete.success"))
+      )
   }
 }
