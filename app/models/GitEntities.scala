@@ -15,7 +15,7 @@ case class RzRepository(
 ) {
   def id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
 
-  def collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner + ":" + name
+  def collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
 
   def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/${name}.git"
 
