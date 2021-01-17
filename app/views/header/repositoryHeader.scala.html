@@ -3,7 +3,6 @@
 <div class="rz-menu rz-menu-horizontal">
   <span class="repository-name">@request.repository.owner.userName / @request.repository.name → </span>
   <ul class="rz-menu-list">
-    @request.role match { case ViewAccess => {} case _ => {
     <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
       <a
         href="@routes.GitEntitiesController.emptyTree(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
@@ -11,6 +10,8 @@
         >@request.messages("repository.tree.fileview")</a
       >
     </li>
+    @request.role match { 
+    case OwnerAccess => {
     <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a
         href="@routes.GitEntitiesController.collaboratorsPage(request.repository.owner.userName, request.repository.name)"
@@ -18,7 +19,9 @@
         >@request.messages("repository.tree.collaborators")</a
       >
     </li>
-    } }
+    }
+    case _ => {}
+    }
     <li class="rz-menu-item">
       <a
         href="@routes.GitEntitiesController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"

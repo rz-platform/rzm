@@ -12,14 +12,12 @@ class AccountRepository @Inject() (r: Redis)(implicit ec: ExecutionContext) {
 
   def getById(id: String, client: RedisClient): Either[RzError, Account] =
     client.hgetall[String, String](id) match {
-    case Some(account) => Account.make(id, account)
-    case None          => Left(NotFoundInRepository)
-  }
+      case Some(account) => Account.make(id, account)
+      case None          => Left(NotFoundInRepository)
+    }
 
   def getById(id: String): Future[Either[RzError, Account]] = Future {
-    r.clients.withClient { client =>
-      getById(id, client)
-    }
+    r.clients.withClient(client => getById(id, client))
   }
 
   def getByEmailId(emailId: String): Future[Either[RzError, Account]] = Future {
@@ -47,8 +45,16 @@ class AccountRepository @Inject() (r: Redis)(implicit ec: ExecutionContext) {
     )
   }
 
-  def update(account: Account): Future[Boolean] = Future {
-    r.clients.withClient(client => client.hmset(account.id, account.toMap))
+  def update(oldAccount: Account, account: Account): Future[Option[List[Any]]] = Future {
+    r.clients.withClient { client =>
+      client.pipeline { f =>
+        f.hmset(account.id, account.toMap)
+        if (oldAccount.email != account.email) {
+          f.del(oldAccount.emailId)
+          f.set(account.emailId, account.id)
+        }
+      }
+    }
   }
 
   def setPassword(account: Account, hash: String): Future[Boolean] = Future {
