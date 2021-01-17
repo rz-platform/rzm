@@ -182,7 +182,7 @@ class AccountController @Inject() (
         isEmailAvailable(req.account.email, accountData.email).flatMap {
           case true =>
             accountService
-              .update(req.account.fromForm(accountData))
+              .update(req.account, req.account.fromForm(accountData))
               .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest, updatePasswordForm)))
           case false =>
             val formBuiltFromRequest = accountEditForm.bindFromRequest

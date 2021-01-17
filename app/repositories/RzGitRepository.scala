@@ -76,8 +76,8 @@ class RzGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)
     Future {
       r.clients.withClient { client =>
         client.hgetall(Collaborator.keyAccessLevel(account, repo)) match {
-          case Some(_) => true
-          case None    => false
+          case Some(m) if m.nonEmpty => true
+          case _                     => false
         }
       }
     }

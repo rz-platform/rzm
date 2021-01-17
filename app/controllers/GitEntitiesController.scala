@@ -495,7 +495,7 @@ class GitEntitiesController @Inject() (
             )
           },
         (data: RemoveCollaboratorData) =>
-          accountRepository.getById(data.id).flatMap {
+          accountRepository.getByUsernameOrEmail(data.id).flatMap {
             case Right(account: Account) =>
               gitEntitiesRepository.removeCollaborator(account, req.repository).map(_ => collaboratorPageRedirect(req))
             case _ =>
