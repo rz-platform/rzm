@@ -3,18 +3,16 @@ package controllers
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Millis, Seconds, Span }
-import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Configuration
-import play.api.db.evolutions.Evolutions
-import play.api.db.{ DBApi, Database }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import repositories.{ AccountRepository, GitEntitiesRepository, GitRepository }
+import repositories.{AccountRepository, GitRepository, RzGitRepository}
 
 import scala.concurrent.Future
 
@@ -25,6 +23,7 @@ class FunctionalGitEntitiesTest
     with Injecting
     with PrivateMethodTester
     with ScalaFutures {
+
   implicit val defaultPatience: PatienceConfig =
     PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
@@ -35,49 +34,35 @@ class FunctionalGitEntitiesTest
   def getRandomString: String =
     java.util.UUID.randomUUID.toString.replace("-", "")
 
-  def databaseApi: DBApi                   = app.injector.instanceOf[DBApi]
   def config: Configuration                = app.injector.instanceOf[Configuration]
   def controller: GitEntitiesController    = app.injector.instanceOf[GitEntitiesController]
   def AccountController: AccountController = app.injector.instanceOf[AccountController]
 
   def accountRepository: AccountRepository         = app.injector.instanceOf[AccountRepository]
-  def gitEntitiesRepository: GitEntitiesRepository = app.injector.instanceOf[GitEntitiesRepository]
+  def gitEntitiesRepository: RzGitRepository = app.injector.instanceOf[RzGitRepository]
   def git: GitRepository                           = app.injector.instanceOf[GitRepository]
-
-  val defaultDatabase: Database = databaseApi.database("default")
-
-  val defaultBranch = RzRepository
 
   val sessionName: String = SessionName.toString
 
-  override def beforeAll(): Unit =
-    Evolutions.applyEvolutions(databaseApi.database("default"))
-
-  // override def afterAll(): Unit = Evolutions.cleanupEvolutions(databaseApi.database("default"))
-
-  def createAccount(): SimpleAccount = {
-    val userName = getRandomString
+  def createAccount(): Account = {
+    val data = AccountRegistrationData(getRandomString, Some(getRandomString), getRandomString, s"$getRandomString@rzm.dev")
     val request = addCSRFToken(
-      FakeRequest(routes.AccountController.saveAccout())
+      FakeRequest(routes.AccountController.saveAccount())
         .withFormUrlEncodedBody(
-          "userName"    -> userName,
-          "fullName"    -> getRandomString,
-          "password"    -> getRandomString,
-          "mailAddress" -> s"$getRandomString@rzm.dev"
+          "userName"    -> data.userName,
+          "fullName"    -> data.fullName.get,
+          "password"    -> data.password,
+          "mailAddress" -> data.email
         )
     )
     await(AccountController.saveAccount().apply(request))
-    defaultDatabase.withConnection { connection =>
-      val rs = connection.prepareStatement(s"select id from account where username='$userName'").executeQuery()
-      rs.next()
-      SimpleAccount(rs.getInt(1), userName, null, hasPicture = false)
-    }
+    new Account(data)
   }
 
   def createRepository(
     controller: GitEntitiesController,
     name: String,
-    owner: SimpleAccount
+    owner: Account
   ): (Result, RzRepository) = {
     val request = addCSRFToken(
       FakeRequest(routes.GitEntitiesController.saveRepository())
@@ -85,13 +70,13 @@ class FunctionalGitEntitiesTest
         .withSession((sessionName, owner.id.toString))
     )
     val result = await(controller.saveRepository().apply(request))
-    (result, RzRepository(0, owner, name, RzRepository.defaultBranchName, Some("")))
+    (result, new RzRepository(owner, name))
   }
 
   def addCollaborator(
     controller: GitEntitiesController,
     repositoryName: String,
-    owner: SimpleAccount,
+    owner: Account,
     collaboratorName: String,
     accessLevel: String
   ): Result = {
@@ -107,7 +92,7 @@ class FunctionalGitEntitiesTest
   def removeCollaborator(
     controller: GitEntitiesController,
     repositoryName: String,
-    owner: SimpleAccount,
+    owner: Account,
     collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
@@ -123,7 +108,7 @@ class FunctionalGitEntitiesTest
     controller: GitEntitiesController,
     name: String,
     repositoryName: String,
-    creator: SimpleAccount,
+    creator: Account,
     isFolder: Boolean,
     path: String
   ): Result = {
@@ -131,12 +116,12 @@ class FunctionalGitEntitiesTest
       FakeRequest()
         .withFormUrlEncodedBody(
           "name" -> name,
-          "rev"  -> RzRepository.defaultBranchName,
+          "rev"  -> RzRepository.defaultBranch,
           "path" -> path,
           "isFolder" -> (if (isFolder) "true"
                          else "false")
         )
-        .withSession((sessionName, creator.id.toString))
+        .withSession((sessionName, creator.id))
     )
 
     val result: Future[Result] = call(controller.addNewItem(creator.userName, repositoryName), newFileRequest)
@@ -153,7 +138,7 @@ class FunctionalGitEntitiesTest
         List("&", "!", "%", "киррилица", "with space", "^", "@", "--++", "::", "t)", "exceededlength" * 10)
       badUserNames.map { username =>
         val request = addCSRFToken(
-          FakeRequest(routes.AccountController.saveAccout())
+          FakeRequest(routes.AccountController.saveAccount())
             .withFormUrlEncodedBody(
               "userName"    -> username,
               "fullName"    -> getRandomString,
@@ -176,7 +161,7 @@ class FunctionalGitEntitiesTest
       )
       goodUserNames.map { username =>
         val request = addCSRFToken(
-          FakeRequest(routes.AccountController.saveAccout())
+          FakeRequest(routes.AccountController.saveAccount())
             .withFormUrlEncodedBody(
               "userName"    -> username,
               "fullName"    -> getRandomString,
@@ -188,14 +173,8 @@ class FunctionalGitEntitiesTest
         val result = await(AccountController.saveAccount().apply(request))
         result.header.status must equal(303)
 
-        defaultDatabase.withConnection { connection =>
-          val rs = connection
-            .prepareStatement(
-              s"select 1 from account where account.username='${username.toLowerCase}'"
-            )
-            .executeQuery()
-          rs.next() must equal(true)
-        }
+        val a = await(accountRepository.getById(Account.id(username.toLowerCase)))
+        a.isRight must equal(true)
       }
     }
   }
@@ -206,14 +185,10 @@ class FunctionalGitEntitiesTest
       val repoName = getRandomString
 
       val (result, _) = createRepository(controller, repoName, account)
-      result.header.headers(LOCATION) must equal(routes.GitEntitiesController.list().toString)
+      result.header.headers(LOCATION) must equal(routes.GitEntitiesController.emptyTree(account.userName, repoName, RzRepository.defaultBranch).toString)
 
-      defaultDatabase.withConnection { connection =>
-        val isRepoExist = connection
-          .prepareStatement(s"select 1 FROM repository WHERE name='$repoName'")
-          .executeQuery()
-        isRepoExist.next() must equal(true)
-      }
+      val r = await(gitEntitiesRepository.getByOwnerAndName(account.userName, repoName))
+      r.isRight must equal(true)
     }
 
     "Create file in repository" in {
@@ -371,16 +346,9 @@ class FunctionalGitEntitiesTest
       val result       = addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
 
       result.header.status must equal(303)
-      defaultDatabase.withConnection { connection =>
-        val collaboratorStatement = connection
-          .prepareStatement(
-            s"select 1 FROM collaborator WHERE account_id=${collaborator.id}" +
-              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${EditAccess.role}"
-          )
-          .executeQuery()
-        collaboratorStatement.next() must equal(true)
-      }
+      val r = await(gitEntitiesRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+      r.isRight must equal(true)
+      // TODO: check
     }
 
     "Add collaborator with wrong data" in {
@@ -389,16 +357,8 @@ class FunctionalGitEntitiesTest
       createRepository(controller, repoName, owner)
       val collaborator = createAccount()
       addCollaborator(controller, repoName, owner, "nonexistentusername", EditAccess.toString)
-
-      defaultDatabase.withConnection { connection =>
-        val isCollaboratorExist = connection
-          .prepareStatement(
-            s"select 1 FROM collaborator WHERE account_id=${collaborator.id} and " +
-              s"repository_id=(select id FROM repository WHERE name='$repoName')"
-          )
-          .executeQuery()
-        isCollaboratorExist.next() must equal(false)
-      }
+      val r = await(gitEntitiesRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+      r.isRight must equal(false)
     }
 
     "Add collaborator that already exists" in {
@@ -409,16 +369,6 @@ class FunctionalGitEntitiesTest
       val result       = addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
 
       result.header.status must equal(303)
-      defaultDatabase.withConnection { connection =>
-        val collaboratorStatement = connection
-          .prepareStatement(
-            s"select 1 FROM collaborator WHERE account_id=${collaborator.id}" +
-              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${EditAccess.role}"
-          )
-          .executeQuery()
-        collaboratorStatement.next() must equal(true)
-      }
 
       addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
       result.header.status must equal(303)
@@ -431,29 +381,12 @@ class FunctionalGitEntitiesTest
       val collaborator = createAccount()
 
       addCollaborator(controller, repoName, owner, collaborator.userName, EditAccess.toString)
-      defaultDatabase.withConnection { connection =>
-        val collaboratorStatement = connection
-          .prepareStatement(
-            s"select 1 FROM collaborator WHERE account_id=${collaborator.id}" +
-              s"and repository_id=(select id FROM repository WHERE name='$repoName')" +
-              s"and role=${EditAccess.role}"
-          )
-          .executeQuery()
-        collaboratorStatement.next() must equal(true)
-      }
 
       val result = removeCollaborator(controller, repoName, owner, collaborator.userName)
 
       result.header.status must equal(303)
-      defaultDatabase.withConnection { connection =>
-        val collaboratorStatement = connection
-          .prepareStatement(
-            s"select 1 FROM collaborator WHERE account_id=${collaborator.id}" +
-              s"and repository_id=(select id FROM repository WHERE name='$repoName')"
-          )
-          .executeQuery()
-        collaboratorStatement.next() must equal(false)
-      }
+      val r = await(gitEntitiesRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+      r.isRight must equal(false)
     }
 
     "Remove collaborator with non-existent userid" in {

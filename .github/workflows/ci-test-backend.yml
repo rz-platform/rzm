@@ -24,19 +24,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_DB: rzm
-          POSTGRES_PASSWORD: rzm
-          POSTGRES_USER: rzm
-        ports:
-          - 5432:5432
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 5s 5
 
     steps:
     - uses: actions/checkout@v2
