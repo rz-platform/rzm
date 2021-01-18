@@ -13,15 +13,18 @@ Fully-functional Git Server with authentication against RZM implemented in [rz-g
 
 ## Development
 
-This is Scala 2.13 application that uses Play and communicates with PostgreSQL using Anorm (https://playframework.github.io/anorm/).
+This is Scala 2.13 application.
 
 The front-end is implemented using Twirl template engine (https://github.com/playframework/twirl). CSS styles and separate per-page JS bundles are stored in [./frontend](./frontend).
+
+RZM uses Git on top of the file system as a data master. User accounts and repositories meta-data persists in Redis.
 
 ### Backend development
 
 
 * JDK 11+ required;
 * https://scala-sbt.org
+* Redis 5+
 
 Run app in live-reload mode (from repository root):
 
@@ -41,12 +44,9 @@ Testing suite:
 sbt test
 ```
 
-RZM requires Postgres database. You can find default credentials in [application.conf](https://github.com/rz-platform/rzm/blob/master/conf/application.conf) (db.default section).
-
-
 ### Frontend development
 
-Frontend guide can be found here: [./frontend/Readme.md](./frontend/Readme.md).
+Frontend guide can be found here: [./docs/frontend.md](./docs/frontend.md).
 
 In order to make navigation blazingly fast we use a turbolinks fork ([./frontend/turbolinks](./frontend/turbolinks/README.md)).
 
