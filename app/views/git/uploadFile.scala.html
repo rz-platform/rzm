@@ -9,7 +9,7 @@
   <p> @request.messages("repository.upload.messagePath", path) </p>
   } else {
   <p> @request.messages("repository.upload.messageRoot") </p>
-  } @form(routes.GitEntitiesController.upload(request.repository.owner.userName, request.repository.name,
+  } @form(routes.FileUploadController.upload(request.repository.owner.userName, request.repository.name,
   rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ @CSRF.formField
 
   <label for="single" class="rz-radio">

@@ -21,46 +21,46 @@ GET /logout controllers.AccountController.logout
 
 # Repositories list
 
-GET /repositories      controllers.GitEntitiesController.list
+GET /repositories      controllers.RzRepositoryController.list
 
 # Repositories creation
 
-GET /repositories/create controllers.GitEntitiesController.createRepository
-POST /repositories/create controllers.GitEntitiesController.saveRepository
+GET /repositories/create controllers.RzRepositoryController.createRepository
+POST /repositories/create controllers.RzRepositoryController.saveRepository
 
 # File view
 
 # Repository view
 
-GET /repositories/:account/:repository/tree/:rev controllers.GitEntitiesController.emptyTree(account:String, repository:String, rev: String)
-GET /repositories/:account/:repository/tree/:rev/*path controllers.GitEntitiesController.blob(account:String, repository:String, rev: String, path: String)
+GET /repositories/:account/:repository/tree/:rev controllers.FileTreeController.emptyTree(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/tree/:rev/*path controllers.FileTreeController.blob(account:String, repository:String, rev: String, path: String)
 
 # Raw view
 
-GET /repositories/:account/:repository/raw/:rev/*path controllers.GitEntitiesController.raw(account:String, repository:String, rev: String, path: String)
+GET /repositories/:account/:repository/raw/:rev/*path controllers.FileTreeController.raw(account:String, repository:String, rev: String, path: String)
 
 
 # File upload
 
-GET /repositories/:account/:repository/upload/:rev controllers.GitEntitiesController.uploadPage(account:String, repository:String, rev: String, path: String = "")
-GET /repositories/:account/:repository/upload/:rev/*path controllers.GitEntitiesController.uploadPage(account:String, repository:String, rev: String, path: String)
-POST /repositories/:account/:repository/upload/:rev controllers.GitEntitiesController.upload(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/upload/:rev controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String = "")
+GET /repositories/:account/:repository/upload/:rev/*path controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String)
+POST /repositories/:account/:repository/upload/:rev controllers.FileUploadController.upload(account:String, repository:String, rev: String)
 
 
 # Collaborators
 
-GET /repositories/:account/:repository/collaborators controllers.GitEntitiesController.collaboratorsPage(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators controllers.GitEntitiesController.addCollaborator(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators/remove controllers.GitEntitiesController.removeCollaborator(account:String, repository:String)
+GET /repositories/:account/:repository/collaborators controllers.CollaboratorsController.collaboratorsPage(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators controllers.CollaboratorsController.addCollaborator(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators/remove controllers.CollaboratorsController.removeCollaborator(account:String, repository:String)
 
 # Creation / Editing
 
-POST /repositories/:account/:repository/edit controllers.GitEntitiesController.edit(account:String, repository:String)
-POST /repositories/:account/:repository/createItem controllers.GitEntitiesController.addNewItem(account: String, repository: String)
+POST /repositories/:account/:repository/edit controllers.FileTreeController.edit(account:String, repository:String)
+POST /repositories/:account/:repository/createItem controllers.FileTreeController.addNewItem(account: String, repository: String)
 
 # Repository archive
 
-GET /repositories/:account/:repository/:rev/archive controllers.GitEntitiesController.downloadRepositoryArchive(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/:rev/archive controllers.RzRepositoryController.downloadRepositoryArchive(account:String, repository:String, rev: String)
 
 # Profile editing page
 
@@ -72,10 +72,10 @@ POST /profilePassword controllers.AccountController.updatePassword
 POST  /uploadProfilePage controllers.AccountController.uploadAccountPicture()
 
 # SSH Keys
-GET /profile/keys controllers.AccountController.keysPage
-POST /profile/keys/add controllers.AccountController.addSshKey
-POST /profile/keys/delete controllers.AccountController.deleteSshKey
+GET /profile/keys controllers.SshKeyController.keysPage
+POST /profile/keys/add controllers.SshKeyController.addSshKey
+POST /profile/keys/delete controllers.SshKeyController.deleteSshKey
 
 # Commit log
-GET /repositories/:account/:repository/commits/:rev controllers.GitEntitiesController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
-GET /repositories/:account/:repository/commits/:rev/:page controllers.GitEntitiesController.commitLog(account:String, repository:String, rev: String, page: Int)
+GET /repositories/:account/:repository/commits/:rev controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
+GET /repositories/:account/:repository/commits/:rev/:page controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int)

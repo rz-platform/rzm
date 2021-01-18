@@ -20,7 +20,7 @@
       </div>
       <div class="action-buttons">
         <a
-          href="@routes.GitEntitiesController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathWithoutRootUrlEncoded)"
+          href="@routes.FileUploadController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathWithoutRootUrlEncoded)"
         >
           <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
         </a>
@@ -41,7 +41,7 @@
 >
   <a
     class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }"
-    href="@routes.GitEntitiesController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathWithoutRootEncoded)"
+    href="@routes.FileTreeController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathWithoutRootEncoded)"
   >
     <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
       <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />
@@ -52,7 +52,7 @@
 } } } 
 
 @base.auth(breadcrumbs.fileName,true) {
-@form(routes.GitEntitiesController.addNewItem(request.repository.owner.userName,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
+@form(routes.FileTreeController.addNewItem(request.repository.owner.userName,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
 
 @CSRF.formField
 <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon" />
