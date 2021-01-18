@@ -14,7 +14,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * with only the secret key stored on the server.
  */
 @Singleton
-class AuthenticatedRequest @Inject() (
+class AuthenticatedAction @Inject() (
   accountService: AccountRepository,
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
