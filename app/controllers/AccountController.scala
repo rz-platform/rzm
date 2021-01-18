@@ -1,6 +1,6 @@
 package controllers
 
-import actions.AuthenticatedRequest
+import actions.AuthenticatedAction
 import models._
 import play.api.Configuration
 import play.api.data.Forms._
@@ -8,7 +8,7 @@ import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{ AccessDenied, AccountRepository, NotFoundInRepository, RzError }
+import repositories._
 import views._
 
 import java.io.{ File, IOException }
@@ -17,7 +17,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class AccountController @Inject() (
   accountService: AccountRepository,
-  userAction: AuthenticatedRequest,
+  userAction: AuthenticatedAction,
   config: Configuration,
   errorHandler: ErrorHandler,
   cc: MessagesControllerComponents
@@ -27,10 +27,9 @@ class AccountController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val picturesDir: File         = new File(config.get[String]("play.server.media.pictures_path"))
-  private val maxStaticSize: Int        = config.get[String]("play.server.media.max_size_bytes").toInt
-  private val thumbSize: Int            = config.get[String]("play.server.media.thumbnail_size").toInt
-  private val maximumNumberPerUser: Int = config.get[String]("play.server.ssh.maximumNumberPerUser").toInt
+  private val picturesDir: File  = new File(config.get[String]("play.server.media.pictures_path"))
+  private val maxStaticSize: Int = config.get[String]("play.server.media.max_size_bytes").toInt
+  private val thumbSize: Int     = config.get[String]("play.server.media.thumbnail_size").toInt
 
   if (!picturesDir.exists) {
     picturesDir.mkdirs()
@@ -49,19 +48,6 @@ class AccountController @Inject() (
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
   )
 
-  val addSshKeyForm: Form[SshKeyData] = Form(
-    mapping(
-      "publicKey" -> nonEmptyText.verifying(
-        pattern(PublicKeyRegex.toRegex)
-      )
-    )(SshKeyData.apply)(SshKeyData.unapply)
-  )
-  val deleteSshKeyForm: Form[SshRemoveData] = Form(
-    mapping(
-      "id" -> nonEmptyText
-    )(SshRemoveData.apply)(SshRemoveData.unapply)
-  )
-
   val accountEditForm: Form[AccountData] = Form(
     mapping(
       "userName"    -> nonEmptyText,
@@ -78,7 +64,7 @@ class AccountController @Inject() (
   )
 
   def index: Action[AnyContent] =
-    userAction.async(implicit request => Future(Redirect(routes.GitEntitiesController.list())))
+    userAction.async(implicit request => Future(Redirect(routes.RzRepositoryController.list())))
 
   def signin: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(signinForm))))
 
@@ -112,7 +98,7 @@ class AccountController @Inject() (
               val password = HashedString.fromString(accountData.password)
               accountService
                 .set(acc, password)
-                .map(_ => Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> acc.id))
+                .map(_ => Redirect(routes.RzRepositoryController.list()).withSession(SessionName.toString -> acc.id))
             case _ =>
               val formBuiltFromRequest = signupForm.bindFromRequest
               val newForm = signupForm.bindFromRequest.copy(
@@ -144,7 +130,7 @@ class AccountController @Inject() (
         accountData =>
           checkAccountPassword(accountData.userName, accountData.password).map {
             case Right(account) =>
-              Redirect(routes.GitEntitiesController.list()).withSession(SessionName.toString -> account.id)
+              Redirect(routes.RzRepositoryController.list()).withSession(SessionName.toString -> account.id)
             case _ =>
               val formBuiltFromRequest = signinForm.bindFromRequest
               val newForm = signinForm.bindFromRequest.copy(
@@ -223,10 +209,6 @@ class AccountController @Inject() (
 
   val allowedContentTypes = List("image/jpeg", "image/png")
 
-  trait FileUploadException
-  class WrongContentType extends Exception with FileUploadException
-  class ExceededMaxSize  extends Exception with FileUploadException
-
   def uploadAccountPicture: Action[MultipartFormData[play.api.libs.Files.TemporaryFile]] =
     userAction(parse.multipartFormData).async { implicit request =>
       val redirect = Redirect(routes.AccountController.accountPage())
@@ -270,51 +252,6 @@ class AccountController @Inject() (
     } else {
       NotFound
     }
-  }
-
-  def keysPage(): Action[AnyContent] = userAction.async { implicit req =>
-    accountService.listSshKeys(req.account).map(list => Ok(html.sshKeys(list, addSshKeyForm, deleteSshKeyForm)))
-  }
-
-  def addSshKey(): Action[AnyContent] = userAction.async { implicit request =>
-    addSshKeyForm.bindFromRequest.fold(
-      formWithErrors =>
-        accountService.listSshKeys(request.account).map { list =>
-          Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
-        },
-      sshKeyData =>
-        accountService.cardinalitySshKey(request.account).flatMap {
-          case Right(c: Long) if c < maximumNumberPerUser =>
-            val key = new SshKey(sshKeyData.publicKey, request.account)
-            accountService
-              .setSshKey(request.account, key)
-              .map(_ =>
-                Redirect(routes.AccountController.keysPage())
-                  .flashing("success" -> Messages("profile.ssh.notification.added"))
-              )
-          case _ =>
-            Future(
-              Redirect(routes.AccountController.keysPage())
-                .flashing("error" -> Messages("profile.ssh.notification.toomuch"))
-            )
-        }
-    )
-  }
-
-  def deleteSshKey(): Action[AnyContent] = userAction.async { implicit request =>
-    deleteSshKeyForm.bindFromRequest.fold(
-      formWithErrors =>
-        accountService.listSshKeys(request.account).map { list =>
-          Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
-        },
-      (sshKeyIdData: SshRemoveData) =>
-        accountService
-          .deleteSshKey(request.account, sshKeyIdData.id)
-          .map(_ =>
-            Redirect(routes.AccountController.keysPage())
-              .flashing("success" -> Messages("profile.ssh.notification.removed"))
-          ) // TODO: check ownership
-    )
   }
 
   def removeAccountPicture(): Action[AnyContent] = userAction.async { implicit req =>

@@ -18,14 +18,14 @@
 @if(hasNext) {
   <a
     class="button"
-    href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)"
+    href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)"
     >@request.messages("repository.commitLog.nextPage")</a
   >
   } 
   @if(page > 1) {
   <a
     class="button"
-    href="@routes.GitEntitiesController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)"
+    href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)"
   >
     @request.messages("repository.commitLog.previousPage")
   </a>
