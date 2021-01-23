@@ -4,7 +4,7 @@ import models.{ Account, ForbiddenSymbols, RepositoryGitData, RzRepository }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ await, call }
+import play.api.test.Helpers.{ await, call, defaultAwaitTimeout, writeableOf_AnyContentAsFormUrlEncoded }
 
 import scala.concurrent.Future
 
@@ -13,7 +13,6 @@ class FileTreeControllerTest extends GenericControllerTest {
     git.fileList(repository, path = path).getOrElse(RepositoryGitData(List(), None))
 
   def createNewItem(
-    controller: FileTreeController,
     name: String,
     repositoryName: String,
     creator: Account,
@@ -32,7 +31,7 @@ class FileTreeControllerTest extends GenericControllerTest {
         .withSession((sessionName, creator.id))
     )
 
-    val result: Future[Result] = call(controller.addNewItem(creator.userName, repositoryName), newFileRequest)
+    val result: Future[Result] = call(fileTreeController.addNewItem(creator.userName, repositoryName), newFileRequest)
 
     await(result)
   }
@@ -42,9 +41,9 @@ class FileTreeControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     val fileName = getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
+    createNewItem(fileName, repoName, account, isFolder = false, ".")
 
     val listRootFiles = listFileInRepo(r, ".")
 
@@ -56,9 +55,9 @@ class FileTreeControllerTest extends GenericControllerTest {
     val repoName   = getRandomString
     val folderName = getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
+    createNewItem(folderName, repoName, account, isFolder = true, ".")
 
     val rootFileList = listFileInRepo(r, ".")
 
@@ -74,9 +73,9 @@ class FileTreeControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     val fileName = getRandomString + ForbiddenSymbols.toString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    val result = createNewItem(controller, fileName, repoName, account, isFolder = false, ".")
+    val result = createNewItem(fileName, repoName, account, isFolder = false, ".")
     result.header.status must equal(303)
     val folderFileList = listFileInRepo(r, ".")
     folderFileList.files.exists(_.name contains fileName) must equal(false)
@@ -88,9 +87,9 @@ class FileTreeControllerTest extends GenericControllerTest {
     val repoName   = getRandomString
     val folderName = getRandomString + ForbiddenSymbols.toString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    val result = createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
+    val result = createNewItem(folderName, repoName, account, isFolder = true, ".")
     result.header.status must equal(303)
     val folderFileList = listFileInRepo(r, ".")
     folderFileList.files.exists(_.name contains folderName) must equal(false)
@@ -103,10 +102,10 @@ class FileTreeControllerTest extends GenericControllerTest {
     val folderName          = getRandomString
     val fileInSubfolderName = getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-    createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
+    createNewItem(folderName, repoName, account, isFolder = true, ".")
+    createNewItem(fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
     val folderFileList = listFileInRepo(r, folderName)
     folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
@@ -119,10 +118,10 @@ class FileTreeControllerTest extends GenericControllerTest {
     val folderName            = getRandomString
     val folderInSubfolderName = getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-    createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
+    createNewItem(folderName, repoName, account, isFolder = true, ".")
+    createNewItem(folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
     val folderFileList = listFileInRepo(r, folderName)
     folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
@@ -135,10 +134,10 @@ class FileTreeControllerTest extends GenericControllerTest {
     val folderName            = getRandomString + " " + getRandomString
     val folderInSubfolderName = getRandomString + " " + getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-    createNewItem(controller, folderInSubfolderName, repoName, account, isFolder = true, folderName)
+    createNewItem(folderName, repoName, account, isFolder = true, ".")
+    createNewItem(folderInSubfolderName, repoName, account, isFolder = true, folderName)
 
     val folderFileList = listFileInRepo(r, folderName)
     folderFileList.files.exists(_.name contains folderInSubfolderName) must equal(true)
@@ -151,10 +150,10 @@ class FileTreeControllerTest extends GenericControllerTest {
     val folderName          = getRandomString + " " + getRandomString
     val fileInSubfolderName = getRandomString + " " + getRandomString
 
-    val (_, r) = createRepository(controller, repoName, account)
+    val (_, r) = createRepository(repoName, account)
 
-    createNewItem(controller, folderName, repoName, account, isFolder = true, ".")
-    createNewItem(controller, fileInSubfolderName, repoName, account, isFolder = false, folderName)
+    createNewItem(folderName, repoName, account, isFolder = true, ".")
+    createNewItem(fileInSubfolderName, repoName, account, isFolder = false, folderName)
 
     val folderFileList = listFileInRepo(r, folderName)
     folderFileList.files.exists(_.name contains fileInSubfolderName) must equal(true)
@@ -165,8 +164,8 @@ class FileTreeControllerTest extends GenericControllerTest {
     nonAsciiNames.map { name =>
       val account  = createAccount()
       val repoName = getRandomString
-      val (_, r)   = createRepository(controller, repoName, account)
-      createNewItem(controller, name, repoName, account, isFolder = false, ".")
+      val (_, r)   = createRepository(repoName, account)
+      createNewItem(name, repoName, account, isFolder = false, ".")
       val folderFileList = listFileInRepo(r, ".")
       folderFileList.files.exists(_.name contains name) must equal(true)
     }
@@ -177,8 +176,8 @@ class FileTreeControllerTest extends GenericControllerTest {
     nonAsciiNames.map { name =>
       val account  = createAccount()
       val repoName = getRandomString
-      val (_, r)   = createRepository(controller, repoName, account)
-      createNewItem(controller, name, repoName, account, isFolder = true, ".")
+      val (_, r)   = createRepository(repoName, account)
+      createNewItem(name, repoName, account, isFolder = true, ".")
       val folderFileList = listFileInRepo(r, ".")
       folderFileList.files.exists(_.name contains name) must equal(true)
     }

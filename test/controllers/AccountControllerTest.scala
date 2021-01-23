@@ -1,10 +1,9 @@
 package controllers
 
 import models.Account
-import org.scalatest.time.{ Millis, Seconds, Span }
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
-import play.api.test.Helpers.await
+import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 
 class AccountControllerTest extends GenericControllerTest {
 
