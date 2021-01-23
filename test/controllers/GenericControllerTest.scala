@@ -12,7 +12,7 @@ import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 import play.api.test.{ FakeRequest, Injecting }
 import play.api.{ Configuration, Logger }
-import repositories.{ AccountRepository, GitRepository, RzGitRepository }
+import repositories.{ AccountRepository, GitRepository, RzMetaGitRepository }
 
 class GenericControllerTest
     extends PlaySpec
@@ -37,7 +37,7 @@ class GenericControllerTest
   def fileTreeController: FileTreeController           = app.injector.instanceOf[FileTreeController]
 
   def accountRepository: AccountRepository = app.injector.instanceOf[AccountRepository]
-  def rzGitRepository: RzGitRepository     = app.injector.instanceOf[RzGitRepository]
+  def rzGitRepository: RzMetaGitRepository     = app.injector.instanceOf[RzMetaGitRepository]
 
   def gitEntitiesController: RzRepositoryController = app.injector.instanceOf[RzRepositoryController]
   def git: GitRepository                            = app.injector.instanceOf[GitRepository]

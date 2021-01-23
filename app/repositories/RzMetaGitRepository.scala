@@ -7,7 +7,7 @@ import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class RzGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)(implicit ec: ExecutionContext) {
+class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)(implicit ec: ExecutionContext) {
   def setRzRepo(repo: RzRepository, author: Collaborator): Future[Option[List[Any]]] = Future {
     r.clients.withClient { client =>
       client.pipeline { f: client.PipelineClient =>

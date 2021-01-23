@@ -16,8 +16,8 @@ import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class AccountController @Inject() (
-  accountService: AccountRepository,
-  userAction: AuthenticatedAction,
+  accountRepository: AccountRepository,
+  authAction: AuthenticatedAction,
   config: Configuration,
   errorHandler: ErrorHandler,
   cc: MessagesControllerComponents
@@ -64,7 +64,7 @@ class AccountController @Inject() (
   )
 
   def index: Action[AnyContent] =
-    userAction.async(implicit request => Future(Redirect(routes.RzRepositoryController.list())))
+    authAction.async(implicit request => Future(Redirect(routes.RzRepositoryController.list())))
 
   def signin: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(signinForm))))
 
@@ -92,11 +92,11 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signup(formWithErrors))),
         (accountData: AccountRegistrationData) =>
-          accountService.getByUsernameOrEmail(accountData.userName).flatMap { // TODO accountData.email
+          accountRepository.getByUsernameOrEmail(accountData.userName).flatMap { // TODO accountData.email
             case Left(NotFoundInRepository) =>
               val acc      = new Account(accountData)
               val password = HashedString.fromString(accountData.password)
-              accountService
+              accountRepository
                 .set(acc, password)
                 .map(_ => Redirect(routes.RzRepositoryController.list()).withSession(SessionName.toString -> acc.id))
             case _ =>
@@ -111,9 +111,9 @@ class AccountController @Inject() (
   }
 
   private def checkAccountPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountService.getByUsernameOrEmail(userName).flatMap {
+    accountRepository.getByUsernameOrEmail(userName).flatMap {
       case Right(account: Account) =>
-        accountService.getPassword(account).map {
+        accountRepository.getPassword(account).map {
           case Right(password) if HashedString(password).check(passwordHash) => Right(account)
           case _                                                             => Left(AccessDenied)
         }
@@ -146,8 +146,8 @@ class AccountController @Inject() (
       AccountData(account.userName, Some(account.fullName), account.email)
     )
 
-  def accountPage: Action[AnyContent] = userAction.async { implicit request =>
-    accountService.getById(request.account.id).flatMap {
+  def accountPage: Action[AnyContent] = authAction.async { implicit request =>
+    accountRepository.getById(request.account.id).flatMap {
       case Right(account) => Future(Ok(html.userProfile(filledAccountEditForm(account), updatePasswordForm)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }
@@ -155,19 +155,19 @@ class AccountController @Inject() (
 
   private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
     if (currentEmail != newEmail) {
-      accountService.getById(newEmail).flatMap { // TODO
+      accountRepository.getById(newEmail).flatMap { // TODO
         case Right(_) => Future(false)
         case _        => Future(true)
       }
     } else Future(true)
 
-  def editAccount: Action[AnyContent] = userAction.async { implicit req =>
+  def editAccount: Action[AnyContent] = authAction.async { implicit req =>
     accountEditForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
       (accountData: AccountData) =>
         isEmailAvailable(req.account.email, accountData.email).flatMap {
           case true =>
-            accountService
+            accountRepository
               .update(req.account, req.account.fromForm(accountData))
               .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest, updatePasswordForm)))
           case false =>
@@ -182,14 +182,14 @@ class AccountController @Inject() (
     )
   }
 
-  def updatePassword(): Action[AnyContent] = userAction.async { implicit req =>
+  def updatePassword(): Action[AnyContent] = authAction.async { implicit req =>
     updatePasswordForm.bindFromRequest.fold(
       formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), formWithErrors))),
       passwordData =>
-        accountService.getPassword(req.account).flatMap {
+        accountRepository.getPassword(req.account).flatMap {
           case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
             val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
-            accountService
+            accountRepository
               .setPassword(req.account, newPasswordHash)
               .map(_ =>
                 Redirect(routes.AccountController.accountPage())
@@ -210,7 +210,7 @@ class AccountController @Inject() (
   val allowedContentTypes = List("image/jpeg", "image/png")
 
   def uploadAccountPicture: Action[MultipartFormData[play.api.libs.Files.TemporaryFile]] =
-    userAction(parse.multipartFormData).async { implicit request =>
+    authAction(parse.multipartFormData).async { implicit request =>
       val redirect = Redirect(routes.AccountController.accountPage())
       request.body
         .file("picture")
@@ -225,7 +225,7 @@ class AccountController @Inject() (
             }
             // TODO: Future
             val t = Thumbnail.make(picture.ref, thumbSize, picturesDir.getAbsolutePath, request.account.userName)
-            accountService
+            accountRepository
               .setPicture(request.account, t.name)
               .map(_ => redirect.flashing("success" -> Messages("profile.picture.success")))
           } catch {
@@ -254,12 +254,12 @@ class AccountController @Inject() (
     }
   }
 
-  def removeAccountPicture(): Action[AnyContent] = userAction.async { implicit req =>
+  def removeAccountPicture(): Action[AnyContent] = authAction.async { implicit req =>
     // TODO: put in Future
     val accountPicture =
       new java.io.File(picturesDir.toString + "/" + new Thumbnail(req.account.userName, thumbSize))
     accountPicture.delete()
-    accountService
+    accountRepository
       .removePicture(req.account)
       .map(_ =>
         Redirect(routes.AccountController.accountPage())

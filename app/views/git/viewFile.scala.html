@@ -1,4 +1,4 @@
-@(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String,breadcrumbs:FileTreeBreadcrumbs, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader) 
+@(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String, breadcrumbs: FilePath, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
 @printNode(node: FileNode) = {
@@ -51,7 +51,7 @@
 </div>
 } } } 
 
-@base.auth(breadcrumbs.fileName,true) {
+@base.auth(breadcrumbs.last.getOrElse(request.repository.name), true) {
 @form(routes.FileTreeController.addNewItem(request.repository.owner.userName,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
 
 @CSRF.formField
@@ -68,12 +68,13 @@
 
   <div class="rz-editor-content">
     @header.repositoryHeader(FileViewPage)
-    @{(blob, breadcrumbs) match { 
-      case (content:Blob,contentB:Breadcrumbs) => {
+    @{(blob, breadcrumbs) match {
+      case (content:Blob, contentB:FilePath) => {
         editor.fileEditor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
       }
       case (EmptyRepository, _) => {""}
-      case _=> {""} }}
+      case _=> {""}
+    }}
   </div>
 </div>
 }{

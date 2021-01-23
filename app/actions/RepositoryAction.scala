@@ -4,7 +4,7 @@ import controllers.ErrorHandler
 import models._
 import play.api.i18n.MessagesApi
 import play.api.mvc.{ ActionRefiner, Result }
-import repositories.{ AccessDenied, NotFoundInRepository, RzError, RzGitRepository }
+import repositories.{ AccessDenied, NotFoundInRepository, RzError, RzMetaGitRepository }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -12,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class RepositoryAction @Inject() (
   messagesApi: MessagesApi,
-  gitEntitiesRepository: RzGitRepository,
+  gitEntitiesRepository: RzMetaGitRepository,
   errorHandler: ErrorHandler
 )(implicit val ec: ExecutionContext) {
   def on(
