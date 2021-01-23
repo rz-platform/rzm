@@ -8,7 +8,7 @@ import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
 import play.api.http.HttpEntity
-import play.api.i18n.{ Messages, MessagesApi }
+import play.api.i18n.Messages
 import play.api.mvc._
 import repositories._
 import views._
@@ -18,12 +18,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class FileTreeController @Inject() (
   git: GitRepository,
-  gitEntitiesRepository: RzGitRepository,
-  authenticatedAction: AuthenticatedAction,
   errorHandler: ErrorHandler,
-  messagesApi: MessagesApi,
-  cc: MessagesControllerComponents,
-  repositoryAction: RepositoryAction
+  authAction: AuthenticatedAction,
+  repoAction: RepositoryAction,
+  cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
@@ -65,7 +63,7 @@ class FileTreeController @Inject() (
   )
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
       val raw = git.getRawFile(req.repository, rev, DecodedPath(path).toString)
 
       raw match {
@@ -82,7 +80,7 @@ class FileTreeController @Inject() (
     }
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, ViewAccess)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)) { implicit req =>
       // TODO
       val fileTree = git.fileTree(req.repository, rev)
       Ok(
@@ -91,7 +89,7 @@ class FileTreeController @Inject() (
           EmptyBlob,
           "",
           rev,
-          EmptyBreadcrumbs(req.repository.name),
+          FilePath(Array()),
           fileTree,
           addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
         )
@@ -99,7 +97,7 @@ class FileTreeController @Inject() (
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
       val blobInfo = git.blobFile(req.repository, DecodedPath(path).toString, rev)
       val fileTree = git.fileTree(req.repository, rev)
 
@@ -119,7 +117,7 @@ class FileTreeController @Inject() (
                 blob,
                 DecodedPath(path).toString,
                 rev,
-                Breadcrumbs(path, isFile = true),
+                new FilePath(path),
                 fileTree,
                 addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
               )
@@ -190,7 +188,7 @@ class FileTreeController @Inject() (
   }
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, EditAccess)).async { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       editorForm
         .bindFromRequest(cleanData)
@@ -212,7 +210,7 @@ class FileTreeController @Inject() (
                             blob,
                             EncodedPath.fromString(path),
                             rev,
-                            Breadcrumbs(path),
+                            new FilePath(path),
                             fileTree,
                             addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
                           )
@@ -228,7 +226,7 @@ class FileTreeController @Inject() (
     }
 
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, EditAccess)) { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       addNewItemForm
         .bindFromRequest(cleanData)

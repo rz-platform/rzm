@@ -1,4 +1,4 @@
-@(editorForm: Form[EditedItem], blob:Blob,path:String, rev: String, breadcrumbs:Breadcrumbs, fileTree: FileTree,newItemForm:Form[NewItem])(implicit request: RepositoryRequestHeader) 
+@(editorForm: Form[EditedItem], blob:Blob,path:String, rev: String, breadcrumbs: FilePath, fileTree: FileTree,newItemForm:Form[NewItem])(implicit request: RepositoryRequestHeader)
 @import views.html.helper._
 @import print.date
 
@@ -10,7 +10,7 @@
     <span class="breadcrumbs-repo-name">@request.repository.name</span>
     <span class="breadcrumbs-divider">/</span>
 
-    @for(breadcrumb <- breadcrumbs.breadcrumbs){
+    @for(breadcrumb <- breadcrumbs.path){
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
     } 

@@ -5,13 +5,11 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.{ FileIO, Sink }
 import akka.util.ByteString
 import models.{ RepositoryRequest, _ }
-import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data._
-import play.api.i18n.{ Messages, MessagesApi }
+import play.api.i18n.Messages
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
-import play.api.mvc.Results._
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
 import repositories._
@@ -24,12 +22,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class FileUploadController @Inject() (
   git: GitRepository,
-  gitEntitiesRepository: RzGitRepository,
-  accountRepository: AccountRepository,
-  authenticatedAction: AuthenticatedAction,
-  errorHandler: ErrorHandler,
-  config: Configuration,
-  messagesApi: MessagesApi,
+  authAction: AuthenticatedAction,
   cc: MessagesControllerComponents,
   repositoryAction: RepositoryAction
 )(implicit ec: ExecutionContext)
@@ -41,8 +34,8 @@ class FileUploadController @Inject() (
   )
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authenticatedAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)).async {
-      implicit request => Future(Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString)))
+    authAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)).async { implicit request =>
+      Future(Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString)))
     }
 
   /**
@@ -69,7 +62,7 @@ class FileUploadController @Inject() (
    *
    */
   def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
-    authenticatedAction(parse.multipartFormData(handleFilePartAsFile))
+    authAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryAction.on(accountName, repositoryName, EditAccess)) {
         implicit req: RepositoryRequest[MultipartFormData[File]] =>
           uploadFileForm.bindFromRequest.fold(
@@ -101,5 +94,4 @@ class FileUploadController @Inject() (
             }
           )
       }
-
 }

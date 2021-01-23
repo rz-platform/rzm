@@ -16,7 +16,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class SshKeyController @Inject() (
   accountService: AccountRepository,
-  userAction: AuthenticatedAction,
+  authAction: AuthenticatedAction,
   config: Configuration,
   cc: MessagesControllerComponents
 )(
@@ -37,11 +37,11 @@ class SshKeyController @Inject() (
     )(SshRemoveData.apply)(SshRemoveData.unapply)
   )
 
-  def keysPage(): Action[AnyContent] = userAction.async { implicit req =>
+  def keysPage(): Action[AnyContent] = authAction.async { implicit req =>
     accountService.listSshKeys(req.account).map(list => Ok(html.sshKeys(list, addSshKeyForm, deleteSshKeyForm)))
   }
 
-  def addSshKey(): Action[AnyContent] = userAction.async { implicit request =>
+  def addSshKey(): Action[AnyContent] = authAction.async { implicit request =>
     addSshKeyForm.bindFromRequest.fold(
       formWithErrors =>
         accountService.listSshKeys(request.account).map { list =>
@@ -66,7 +66,7 @@ class SshKeyController @Inject() (
     )
   }
 
-  def deleteSshKey(): Action[AnyContent] = userAction.async { implicit request =>
+  def deleteSshKey(): Action[AnyContent] = authAction.async { implicit request =>
     deleteSshKeyForm.bindFromRequest.fold(
       formWithErrors =>
         accountService.listSshKeys(request.account).map { list =>
