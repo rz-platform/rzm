@@ -15,7 +15,7 @@ case class FilePath(components: Array[PathComponent]) {
 
 object FilePath {
   def splitIntoComponents(path: String): Array[PathComponent] = {
-    val split = DecodedPath(path).toString.split("/")
+    val split = RzPathUrl.make(path).uri.split("/")
     split.filter(x => x != ".").zipWithIndex.map {
       case (name, index) => PathComponent(name, split.slice(0, index + 1).mkString("/"))
     }

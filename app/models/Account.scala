@@ -38,15 +38,13 @@ object Account {
   def id(username: String): String   = IdTable.accountPrefix + username
   def emailId(email: String): String = IdTable.userEmailId + email
 
-  def make(key: String, data: Map[String, String]): Either[RzError, Account] = {
-    val a = for {
+  def make(key: String, data: Map[String, String]): Either[RzError, Account] =
+    (for {
       fullName <- data.get("fullName")
       email    <- data.get("email")
       created  <- data.get("created")
-    } yield Account(key.substring(3), fullName, email, DateTime.parseTimestamp(created), data.get("picture"))
-    a match {
+    } yield Account(key.substring(3), fullName, email, DateTime.parseTimestamp(created), data.get("picture"))) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
-  }
 }
