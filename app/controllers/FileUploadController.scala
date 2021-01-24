@@ -35,7 +35,7 @@ class FileUploadController @Inject() (
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)).async { implicit request =>
-      Future(Ok(html.git.uploadFile(uploadFileForm, rev, DecodedPath(path).toString)))
+      Future(Ok(html.git.uploadFile(uploadFileForm, rev, RzPathUrl.make(path).uri)))
     }
 
   /**
@@ -77,7 +77,7 @@ class FileUploadController @Inject() (
             (data: UploadFileForm) => {
               val files: Seq[CommitFile] = req.body.files.map { filePart =>
                 val filename = filePart.filename
-                val filePath = DecodedPath(data.path, filename, isFolder = false).toString
+                val filePath = RzPathUrl.make(data.path, filename, isFolder = false).uri
                 CommitFile(filename, name = filePath, filePart.ref)
               }
               git.commitUploadedFiles(

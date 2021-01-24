@@ -67,15 +67,13 @@ object Collaborator {
   def keyAccessLevel(account: Account, repo: RzRepository): String =
     IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
 
-  def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] = {
-    val a = for {
+  def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
+    (for {
       role        <- data.get("role")
       accessLevel <- AccessLevel.fromRole(role.toInt)
       createdAt   <- data.get("createdAt")
-    } yield Collaborator(account, accessLevel, createdAt.toInt)
-    a match {
+    } yield Collaborator(account, accessLevel, createdAt.toInt)) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
-  }
 }

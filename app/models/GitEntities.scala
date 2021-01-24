@@ -36,8 +36,8 @@ object RzRepository {
     (s(1), s(2))
   }
 
-  def make(name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] = {
-    val a = for {
+  def make(name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
+    (for {
       createdAt <- data.get("createdAt")
       updatedAt <- data.get("updatedAt")
     } yield RzRepository(
@@ -46,12 +46,10 @@ object RzRepository {
       data.get("entrypoint"),
       DateTime.parseTimestamp(createdAt),
       DateTime.parseTimestamp(updatedAt)
-    )
-    a match {
+    )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
-  }
 }
 
 /**

@@ -64,7 +64,7 @@ class FileTreeController @Inject() (
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
-      val raw = git.getRawFile(req.repository, rev, DecodedPath(path).toString)
+      val raw = git.getRawFile(req.repository, rev, RzPathUrl.make(path).uri)
 
       raw match {
         case Some(rawFile) =>
@@ -98,9 +98,9 @@ class FileTreeController @Inject() (
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
-      val blobInfo = git.blobFile(req.repository, DecodedPath(path).toString, rev)
+      val rzPath   = RzPathUrl.make(path)
+      val blobInfo = git.blobFile(req.repository, rzPath.uri, rev)
       val fileTree = git.fileTree(req.repository, rev)
-
       blobInfo match {
         case Some(blob) =>
           Future.successful {
@@ -110,12 +110,12 @@ class FileTreeController @Inject() (
                   EditedItem(
                     blob.content.content.getOrElse(""),
                     rev,
-                    DecodedPath(path).toString,
-                    DecodedPath(path).nameWithoutPath
+                    path,
+                    rzPath.nameWithoutPath
                   )
                 ),
                 blob,
-                DecodedPath(path).toString,
+                rzPath.uri,
                 rev,
                 new FilePath(path),
                 fileTree,
@@ -132,48 +132,43 @@ class FileTreeController @Inject() (
     accountName: String,
     repositoryName: String
   )(req: RepositoryRequest[AnyContent]): Future[Result] = {
-    val oldPath = DecodedPath(editedFile.path).toString
-    val newPath = DecodedPath(
-      DecodedPath(editedFile.path).pathWithoutFilename,
-      editedFile.name,
-      isFolder = false
-    ).toString
+    val oldPath = RzPathUrl.make(editedFile.path)
+    val newPath = RzPathUrl.make(oldPath.pathWithoutFilename, editedFile.name, isFolder = false)
 
     val content = if (editedFile.content.nonEmpty) editedFile.content.getBytes() else Array.emptyByteArray
 
-    git
-      .commitFiles(
-        req.repository,
-        editedFile.rev,
-        DecodedPath(editedFile.path).pathWithoutFilename,
-        req.messages("repository.viewFile.commitMessage", DecodedPath(editedFile.path).nameWithoutPath),
-        req.account
-      ) {
-        case (git_, headTip, builder, inserter) =>
-          val permission = git
-            .processTree(git_, headTip) { (path, tree) =>
-              // Add all entries except the editing file
-              if (!newPath.contains(path) && !oldPath.contains(path)) {
-                builder.add(git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
-              }
-              // Retrieve permission if file exists to keep it
-              oldPath.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
+    git.commitFiles(
+      req.repository,
+      editedFile.rev,
+      oldPath.pathWithoutFilename,
+      req.messages("repository.viewFile.commitMessage", oldPath.nameWithoutPath),
+      req.account
+    ) {
+      case (git_, headTip, builder, inserter) =>
+        val permission = git
+          .processTree(git_, headTip) { (path, tree) =>
+            // Add all entries except the editing file
+            if (!newPath.uri.contains(path) && !oldPath.uri.contains(path)) {
+              builder.add(git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
             }
-            .flatten
-            .headOption
+            // Retrieve permission if file exists to keep it
+            oldPath.uri.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
+          }
+          .flatten
+          .headOption
 
-          builder.add(
-            git.createDirCacheEntry(
-              newPath,
-              permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
-              inserter.insert(Constants.OBJ_BLOB, content)
-            )
+        builder.add(
+          git.createDirCacheEntry(
+            newPath.uri,
+            permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
+            inserter.insert(Constants.OBJ_BLOB, content)
           )
-          builder.finish()
-      }
+        )
+        builder.finish()
+    }
     Future(
       Redirect(
-        routes.FileTreeController.blob(accountName, repositoryName, editedFile.rev, EncodedPath.fromString(newPath))
+        routes.FileTreeController.blob(accountName, repositoryName, editedFile.rev, newPath.encoded)
       )
     )
   }
@@ -181,8 +176,8 @@ class FileTreeController @Inject() (
   private def cleanItemData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
     form.map {
-      case (key, values) if key == "name" => (key, values.map(DecodedPath(_).toString.trim))
-      case (key, values) if key == "path" => (key, values.map(DecodedPath(_).toString.trim))
+      case (key, values) if key == "name" => (key, values.map(RzPathUrl.make(_).uri.trim))
+      case (key, values) if key == "path" => (key, values.map(RzPathUrl.make(_).uri.trim))
       case (key, values)                  => (key, values)
     }
   }
@@ -199,7 +194,8 @@ class FileTreeController @Inject() (
             path match {
               case Some(path) =>
                 val fileTree = git.fileTree(req.repository, rev)
-                val blob     = git.blobFile(req.repository, DecodedPath(path).toString, rev)
+                val rzpath = RzPathUrl.make(path)
+                val blob     = git.blobFile(req.repository, rzpath.uri, rev)
                 blob match {
                   case Some(blob) =>
                     Future(
@@ -208,7 +204,7 @@ class FileTreeController @Inject() (
                           .viewFile(
                             formWithErrors,
                             blob,
-                            EncodedPath.fromString(path),
+                            rzpath.encoded,
                             rev,
                             new FilePath(path),
                             fileTree,
@@ -240,11 +236,11 @@ class FileTreeController @Inject() (
               )
             ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
           (newItem: NewItem) => {
-            val fName = DecodedPath(newItem.path, newItem.name, newItem.isFolder).toString
+            val fName = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
             git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
               case (git_, headTip, builder, inserter) =>
                 git.processTree(git_, headTip) { (path, tree) =>
-                  if (!fName.contains(path)) {
+                  if (!fName.uri.contains(path)) {
                     builder.add(
                       git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
                     )
@@ -253,7 +249,7 @@ class FileTreeController @Inject() (
                 val emptyArray = Array.empty[Byte]
                 builder.add(
                   git.createDirCacheEntry(
-                    fName,
+                    fName.uri,
                     FileMode.REGULAR_FILE,
                     inserter.insert(Constants.OBJ_BLOB, emptyArray)
                   )
@@ -261,7 +257,7 @@ class FileTreeController @Inject() (
                 builder.finish()
             }
             Redirect(
-              routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, EncodedPath.fromString(fName))
+              routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, fName.uri)
             )
           }
         )

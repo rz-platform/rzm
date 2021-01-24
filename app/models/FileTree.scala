@@ -10,7 +10,7 @@ class FileNode(nodeValue: String, path: String, parent: String) {
   val incrementalPath: String = path
   val pathWithoutRoot: String = path.replaceFirst("./", "")
 
-  val pathWithoutRootUrlEncoded: String = EncodedPath.fromString(pathWithoutRoot)
+  val pathWithoutRootUrlEncoded: String = RzPathUrl.encodeUri(pathWithoutRoot)
 
   val hash: String       = pathWithoutRoot.hashCode.toString
   val parentHash: String = parent
@@ -18,8 +18,6 @@ class FileNode(nodeValue: String, path: String, parent: String) {
   val isRoot: Boolean = data == FileRoot.toString
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
-
-  val pathWithoutRootEncoded: String = EncodedPath.fromString(pathWithoutRoot)
 
   private def realDepth: Int = pathWithoutRoot.count(_ == '/')
   def depth: Int             = if (isRoot) 0 else if (realDepth < MaxDepthInFileTree.toInt) realDepth else MaxDepthInFileTree.toInt
