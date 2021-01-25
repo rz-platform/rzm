@@ -29,7 +29,7 @@ object RzPathUrl {
 
   def make(path: String): RzPathUrl = RzPathUrl(decode(path))
 
-  def make(name: String, path: String, isFolder: Boolean): RzPathUrl = {
+  def make(path: String, name: String, isFolder: Boolean): RzPathUrl = {
     val p = decode(path) match {
       case "." if isFolder  => Paths.get(decode(name), ".gitkeep").toString
       case "." if !isFolder => decode(name)
