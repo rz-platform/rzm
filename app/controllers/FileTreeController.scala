@@ -237,6 +237,7 @@ class FileTreeController @Inject() (
             ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
           (newItem: NewItem) => {
             val fName = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
+
             git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
               case (git_, headTip, builder, inserter) =>
                 git.processTree(git_, headTip) { (path, tree) =>
