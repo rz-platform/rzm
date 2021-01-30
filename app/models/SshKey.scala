@@ -46,11 +46,10 @@ object SshKey {
   def id(key: String): String = IdTable.sshKeyPrefix + MD5.fromString(key)
 
   def make(m: Map[String, String], account: Account): Either[RzError, SshKey] = {
-    val a = for {
+    (for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
-    } yield SshKey(publicKey, DateTime.parseTimestamp(createdAt), account)
-    a match {
+    } yield SshKey(publicKey, DateTime.parseTimestamp(createdAt), account)) match {
       case Some(m) => Right(m)
       case None    => Left(ParsingError)
     }
