@@ -45,7 +45,7 @@ case class SshKey(
 object SshKey {
   def id(key: String): String = IdTable.sshKeyPrefix + MD5.fromString(key)
 
-  def make(m: Map[String, String], account: Account): Either[RzError, SshKey] = {
+  def make(m: Map[String, String], account: Account): Either[RzError, SshKey] =
     (for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
@@ -53,5 +53,4 @@ object SshKey {
       case Some(m) => Right(m)
       case None    => Left(ParsingError)
     }
-  }
 }
