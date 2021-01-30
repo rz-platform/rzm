@@ -240,7 +240,7 @@ class GitRepository @Inject() (config: Configuration) {
     }
 
   def fileTree(repo: RzRepository, revstr: String): FileTree = {
-    val fileTree = new FileTree(new FileNode(".", ".", ""))
+    val fileTree = new FileTree(FileNode(".", "."))
 
     Using.resource(Git.open(repositoryDir(repo))) { git =>
       getDefaultBranch(git, repo, revstr).map {

@@ -84,7 +84,7 @@ class FileTreeController @Inject() (
       // TODO
       val fileTree = git.fileTree(req.repository, rev)
       Ok(
-        html.git.viewFile(
+        html.git.fileTree(
           editorForm,
           EmptyBlob,
           "",
@@ -105,7 +105,7 @@ class FileTreeController @Inject() (
         case Some(blob) =>
           Future.successful {
             Ok(
-              html.git.viewFile(
+              html.git.fileTree(
                 editorForm.fill(
                   EditedItem(
                     blob.content.content.getOrElse(""),
@@ -194,14 +194,14 @@ class FileTreeController @Inject() (
             path match {
               case Some(path) =>
                 val fileTree = git.fileTree(req.repository, rev)
-                val rzpath = RzPathUrl.make(path)
+                val rzpath   = RzPathUrl.make(path)
                 val blob     = git.blobFile(req.repository, rzpath.uri, rev)
                 blob match {
                   case Some(blob) =>
                     Future(
                       BadRequest(
                         html.git
-                          .viewFile(
+                          .fileTree(
                             formWithErrors,
                             blob,
                             rzpath.encoded,

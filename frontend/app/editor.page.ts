@@ -175,19 +175,34 @@ function toggleIsFolder(value: boolean): void {
 
 /** File tree hide and show buttons */
 
-function toggleSubTree(el: HTMLElement) {
+function changeTogglerIcon(target: HTMLElement, src: String, isDown: Boolean) {
+  if (isDown) {
+    target.setAttribute('src', src.replace('down', 'next'));
+  } else {
+    target.setAttribute('src', src.replace('next', 'down'));
+  }
+}
+
+function toggleSubTree(el: HTMLElement, isDown: Boolean) {
   const menuItems = document.getElementsByClassName('rz-menu-item');
   const hash = el.getAttribute('hash');
   if (hash) {
     for (let i = 0; i < menuItems.length; i++) {
       const item = menuItems[i];
       if (item.getAttribute('parent') === hash) {
-        if (!item.classList.contains('hidden')) {
+        if (isDown) {
           item.classList.add('hidden');
         } else {
           item.classList.remove('hidden');
         }
-        toggleSubTree(<HTMLElement>item);
+        const icon = document.getElementById('icon-' + hash);
+        if (icon) {
+          const src = icon.getAttribute('src');
+          if (src) {
+            changeTogglerIcon(icon, src, isDown);
+          }
+        }
+        toggleSubTree(<HTMLElement>item, isDown);
       }
     }
   }
@@ -205,17 +220,17 @@ function clickHandler(event: MouseEvent) {
       toggleIsFolder(true);
     }
     if (target.classList.contains('file-tree-show')) {
-      const el = event.target as HTMLElement;
-      const parent = parentByLevel(el, 4);
-      if (el && parent) {
-        const src = el.getAttribute('src');
+      const target = event.target as HTMLElement;
+      const parent = parentByLevel(target, 4);
+      if (target && parent) {
+        const src = target.getAttribute('src');
         if (src && src.indexOf('down') > -1) {
-          el.setAttribute('src', src.replace('down', 'next'));
-          toggleSubTree(parent);
+          changeTogglerIcon(target, src, true);
+          toggleSubTree(parent, true);
         }
         if (src && src.indexOf('down') == -1) {
-          el.setAttribute('src', src.replace('next', 'down'));
-          toggleSubTree(parent);
+          changeTogglerIcon(target, src, false);
+          toggleSubTree(parent, false);
         }
       }
     }
