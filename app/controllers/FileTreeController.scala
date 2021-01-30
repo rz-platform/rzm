@@ -258,7 +258,7 @@ class FileTreeController @Inject() (
                 builder.finish()
             }
             Redirect(
-              routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, fName.uri)
+              routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, fName.encoded)
             )
           }
         )

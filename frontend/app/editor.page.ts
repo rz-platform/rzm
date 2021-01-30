@@ -175,7 +175,7 @@ function toggleIsFolder(value: boolean): void {
 
 /** File tree hide and show buttons */
 
-function changeTogglerIcon(target: HTMLElement, src: String, isDown: Boolean) {
+function changeTogglerIcon(target: HTMLElement, src: string, isDown: boolean) {
   if (isDown) {
     target.setAttribute('src', src.replace('down', 'next'));
   } else {
@@ -183,7 +183,7 @@ function changeTogglerIcon(target: HTMLElement, src: String, isDown: Boolean) {
   }
 }
 
-function toggleSubTree(el: HTMLElement, isDown: Boolean) {
+function toggleSubTree(el: HTMLElement, isDown: boolean) {
   const menuItems = document.getElementsByClassName('rz-menu-item');
   const hash = el.getAttribute('hash');
   if (hash) {
