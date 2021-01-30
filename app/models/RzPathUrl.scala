@@ -5,7 +5,6 @@ import java.net.{ URLDecoder, URLEncoder }
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
-
 case class RzPathUrl(uri: String) {
   lazy val nameWithoutPath: String = new File(uri).getName
 

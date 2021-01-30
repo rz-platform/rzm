@@ -1,0 +1,92 @@
+@(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String, breadcrumbs: FilePath, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
+
+@import views.html.helper._
+@printNode(node: FileNode, parentHash: String) = {
+  <div
+    class="rz-menu-item @if(node.isRoot) { menu-item-divided }"
+    depth="@node.depth"
+    path="@node.pathAsUrl"
+    hash="@node.hash"
+    parent="@parentHash"
+  >
+    <div class="rz-menu-link">
+      <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
+        <div class="rz-menu-file-tree-depth-@node.depth-content">
+        @if(!node.isRoot) { 
+          @if(node.files.length > 0) {
+          <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon file-tree-show" id="icon-@node.hash" />
+          } else {
+          <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon" />
+          } 
+        } 
+        @if(node.isRoot) { @request.repository.name } else { @node.data }
+        </div>
+        <div class="action-buttons">
+          <a
+            href="@routes.FileUploadController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+          >
+            <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
+          </a>
+          <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon add-file-button file-tree-icon" />
+          <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon add-folder-button file-tree-icon" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @for(folder<-node.folders){
+    @printNode(folder, node.hash)
+  }
+
+  @for(file <- node.files) {
+    @if(!(ExcludedFileNames contains file.data)) {
+      <div
+        data-turbolinks="true"
+        class="rz-menu-item"
+        depth="@file.depth"
+        parent="@node.hash"
+        @if(file.pathWithoutRoot.equals(path)) { id="rz-menu-file-tree-chosen" }
+      >
+        <a
+          class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }"
+          href="@routes.FileTreeController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
+        >
+          <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
+            <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />
+            @file.data
+          </div>
+        </a>
+      </div>
+    }
+  }
+} 
+
+@base.auth(breadcrumbs.last.getOrElse(request.repository.name), true) {
+@form(routes.FileTreeController.addNewItem(request.repository.owner.userName,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
+
+@CSRF.formField
+<img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon" />
+<img src='@routes.Assets.at("images/document.svg")' class="svg-icon" id="file-icon" />
+@inputText(newItemForm("path"),Symbol("id") -> "new-item-form-path") @inputText(newItemForm("rev"))
+@checkbox(newItemForm("isFolder"),Symbol("id")->"new-item-form-is-folder") @inputText(newItemForm("name"),Symbol("id")
+-> "new-item-form-name") }
+
+<div class="rz-sidebar">
+  <div class="rz-sidebar-filetree" id="rz-sidebar-filetree">
+    <div class="rz-menu-file-tree"> @printNode(fileTree.root, fileTree.root.hash) </div>
+  </div>
+
+  <div class="rz-editor-content">
+    @header.repositoryHeader(FileViewPage)
+    @{(blob, breadcrumbs) match {
+      case (content:Blob, contentB:FilePath) => {
+        editor.fileEditor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
+      }
+      case (EmptyRepository, _) => {""}
+      case _=> {""}
+    }}
+  </div>
+</div>
+}{
+<script src='@routes.Assets.at("dist/editor.bundle.js")' type="text/javascript" defer></script>
+}

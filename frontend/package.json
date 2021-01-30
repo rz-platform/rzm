@@ -4,7 +4,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
-    "watch": "webpack --watch",
+    "watch": "webpack --watch --mode=development",
     "prettier": "prettier --write './{app,stylesheets}/**/*.{js,ts,scss}'",
     "check": "npm run build && npm run check:types && npm run check:prettier && npm run check:lint && npm run check:stylelint",
     "check:types": "tsc -p tsconfig.typecheck.json --noEmit",

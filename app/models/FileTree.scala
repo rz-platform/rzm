@@ -2,28 +2,27 @@ package models
 
 import scala.collection.mutable.ArrayBuffer
 
-class FileNode(nodeValue: String, path: String, parent: String) {
+case class FileNode(data: String, incrementalPath: String) {
   val folders = new ArrayBuffer[FileNode]()
   val files   = new ArrayBuffer[FileNode]()
 
-  val data: String            = nodeValue
-  val incrementalPath: String = path
-  val pathWithoutRoot: String = path.replaceFirst("./", "")
+  val pathWithoutRoot: String = incrementalPath.replaceFirst("./", "")
 
-  val pathWithoutRootUrlEncoded: String = RzPathUrl.encodeUri(pathWithoutRoot)
+  val pathAsUrl: String = RzPathUrl.encodeUri(pathWithoutRoot)
 
-  val hash: String       = pathWithoutRoot.hashCode.toString
-  val parentHash: String = parent
+  val hash: String = incrementalPath.hashCode.toString
 
   val isRoot: Boolean = data == FileRoot.toString
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
   private def realDepth: Int = pathWithoutRoot.count(_ == '/')
-  def depth: Int             = if (isRoot) 0 else if (realDepth < MaxDepthInFileTree.toInt) realDepth else MaxDepthInFileTree.toInt
+
+  def depth: Int = if (isRoot) 0 else if (realDepth < MaxDepthInFileTree.toInt) realDepth else MaxDepthInFileTree.toInt
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
-    val currentChild = new FileNode(list.head, currentPath + "/" + list(0), hash)
+    val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
+
     if (list.length == 1) {
       files += currentChild
     } else {
@@ -48,23 +47,8 @@ class FileNode(nodeValue: String, path: String, parent: String) {
 /**
  * Represent filesystem (files/dir) from list of paths
  *
- * @param r node
+ * @param root node
  */
-class FileTree(r: FileNode) {
-  var commonRoot: FileNode = _
-  val root: FileNode       = r
-
+case class FileTree(root: FileNode) {
   def addElement(elementValue: String): Unit = root.addElement(root.incrementalPath, elementValue.split("/"))
-
-  def getCommonRoot: FileNode =
-    if (commonRoot != null)
-      commonRoot
-    else {
-      var current = root
-      while (current.files.length <= 0) {
-        current = current.folders(0)
-      }
-      commonRoot = current
-      commonRoot
-    }
 }
