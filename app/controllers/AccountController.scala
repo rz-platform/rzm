@@ -35,10 +35,6 @@ class AccountController @Inject() (
     picturesDir.mkdirs()
   }
 
-  val signinForm: Form[AccountLoginData] = Form(
-    mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
-  )
-
   val signupForm: Form[AccountRegistrationData] = Form(
     mapping(
       "userName"    -> text(maxLength = 36).verifying(pattern(AccountNameRegex.toRegex)),
@@ -63,16 +59,7 @@ class AccountController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def index: Action[AnyContent] =
-    authAction.async(implicit request => Future(Redirect(routes.RzRepositoryController.list())))
-
-  def signin: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(signinForm))))
-
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm))))
-
-  def logout: Action[AnyContent] = Action.async { implicit request =>
-    Future(Redirect(routes.AccountController.signin()).withNewSession.flashing("success" -> Messages("logout")))
-  }
 
   private def clearAccountData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
@@ -106,37 +93,6 @@ class AccountController @Inject() (
                   formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
               )
               Future(BadRequest(html.signup(newForm)))
-          }
-      )
-  }
-
-  private def checkAccountPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountRepository.getByUsernameOrEmail(userName).flatMap {
-      case Right(account: Account) =>
-        accountRepository.getPassword(account).map {
-          case Right(password) if HashedString(password).check(passwordHash) => Right(account)
-          case _                                                             => Left(AccessDenied)
-        }
-      case Left(e) => Future(Left(e))
-    }
-
-  def authenticate: Action[AnyContent] = Action.async { implicit request: MessagesRequest[AnyContent] =>
-    val incomingData = request.body.asFormUrlEncoded
-    val cleanData    = clearAccountData(incomingData)
-    signinForm
-      .bindFromRequest(cleanData)
-      .fold(
-        formWithErrors => Future(BadRequest(html.signin(formWithErrors))),
-        accountData =>
-          checkAccountPassword(accountData.userName, accountData.password).map {
-            case Right(account) =>
-              Redirect(routes.RzRepositoryController.list()).withSession(SessionName.toString -> account.id)
-            case _ =>
-              val formBuiltFromRequest = signinForm.bindFromRequest
-              val newForm = signinForm.bindFromRequest.copy(
-                errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
-              )
-              BadRequest(html.signin(newForm))
           }
       )
   }

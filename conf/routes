@@ -3,21 +3,21 @@
 # ~~~~
 
 # Default path
-GET     /                           controllers.AccountController.index
+GET     /                           controllers.AuthController.index
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Login
-GET     /signin              controllers.AccountController.signin
-POST     /signin              controllers.AccountController.authenticate
+GET     /signin              controllers.AuthController.loginPage
+POST     /signin              controllers.AuthController.login
 
 # Sign up
 GET     /signup              controllers.AccountController.signup
 POST     /signup              controllers.AccountController.saveAccount
 
 # Log out
-GET /logout controllers.AccountController.logout
+GET /logout controllers.AuthController.logout
 
 # Repositories list
 
