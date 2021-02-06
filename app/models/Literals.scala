@@ -2,18 +2,24 @@ package models
 
 import scala.util.matching.Regex
 
-sealed trait Literal {
+trait Literal {
   def value: String
 
   override def toString: String = value
 }
 
+case object Auth {
+  val SESSION_ID = "sessionId"
+
+  val USER_INFO_COOKIE_NAME = "userInfo"
+}
+
 case object FileRoot extends Literal {
-  override def value = "."
+  override val value = "."
 }
 
 case object GitKeep extends Literal {
-  override def value = ".gitkeep"
+  override val value = ".gitkeep"
 }
 
 case object SessionName extends Literal {

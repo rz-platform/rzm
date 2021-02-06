@@ -5,7 +5,7 @@
 <div class="rz-auth">
   <h1> @request.messages("signin.head") </h1>
   @header.notificationHeader() 
-  @form(routes.AccountController.authenticate(), Symbol("class") -> "rz-form") {
+  @form(routes.AuthController.login(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
   @inputText(signinForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "")
   @inputPassword(signinForm("password"), Symbol("_label") -> "Password", Symbol("_help") -> "")

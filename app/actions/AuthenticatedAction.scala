@@ -1,10 +1,11 @@
 package actions
 
 import controllers.routes
-import models.{ AccountRequest, SessionName }
+import encryption.UserInfoCookieBakerFactory
+import models.{ Account, AccountRequest, Auth, UserInfo }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
-import repositories.AccountRepository
+import repositories.{ AccountRepository, SessionRepository }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -16,6 +17,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton
 class AuthenticatedAction @Inject() (
   accountService: AccountRepository,
+  factory: UserInfoCookieBakerFactory,
+  sessionRepository: SessionRepository,
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
 )(implicit val executionContext: ExecutionContext)
@@ -24,28 +27,47 @@ class AuthenticatedAction @Inject() (
 
   override def parser: BodyParser[AnyContent] = playBodyParsers.anyContent
 
+  def discardingSession(result: Result): Result =
+    result.withNewSession.discardingCookies(DiscardingCookie(Auth.USER_INFO_COOKIE_NAME))
+
+  def redirect: Future[Result] = Future.successful {
+    discardingSession {
+      Redirect(routes.AuthController.loginPage())
+    }
+  }
+
+  private def getAccountByCookie(user: Option[UserInfo]): Future[Option[Account]] = user match {
+    case Some(info) =>
+      accountService.getByUsernameOrEmail(info.username).map {
+        case Right(account: Account) => Some(account)
+        case _                       => None
+      }
+    case _ => Future(None)
+  }
+
   override def invokeBlock[A](
     request: Request[A],
     block: AccountRequest[A] => Future[Result]
   ): Future[Result] = {
-    // deal with the options first, then move to the futures
     val maybeFutureResult: Option[Future[Result]] = for {
-      sessionId <- request.session.get(SessionName.toString)
+      sessionId      <- request.session.get(Auth.SESSION_ID)
+      userInfoCookie <- request.cookies.get(Auth.USER_INFO_COOKIE_NAME)
     } yield {
-      accountService.getById(sessionId).flatMap {
-        case Right(account) =>
-          block(new AccountRequest[A](request, account, messagesApi))
-        case Left(_) =>
-          Future.successful {
-            Redirect(routes.AccountController.signin()).withNewSession
+      sessionRepository.lookup(sessionId).flatMap {
+        case Some(secretKey) =>
+          val cookieBaker = factory.createCookieBaker(secretKey)
+
+          getAccountByCookie(cookieBaker.decodeFromCookie(Some(userInfoCookie))).flatMap {
+            case Some(account: Any) => block(new AccountRequest[A](request, account, messagesApi))
+            case _                  => redirect
           }
+        case None =>
+          // We've got a user with a client session id, but no server-side state.
+          // Let's redirect them back to the home page without any session cookie stuff.
+          redirect
       }
     }
 
-    maybeFutureResult.getOrElse {
-      Future.successful {
-        Redirect(routes.AccountController.signin()).withNewSession
-      }
-    }
+    maybeFutureResult.getOrElse(redirect)
   }
 }

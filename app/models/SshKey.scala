@@ -3,8 +3,8 @@ package models
 import repositories.{ ParsingError, RzError }
 
 import java.security.MessageDigest
-import java.util.Base64
 import java.time.LocalDateTime
+import java.util.Base64
 
 case class SshKey(
   publicKey: String,

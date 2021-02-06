@@ -1,9 +1,8 @@
 package models
 
-import java.util.TimeZone
-
 import java.time.format.DateTimeFormatter
 import java.time.{ Instant, LocalDateTime }
+import java.util.TimeZone
 
 object DateTime {
   val shortFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")

@@ -1,5 +1,6 @@
 package models
 
+import play.api.libs.json.{ Format, Json }
 import repositories.{ ParsingError, RzError }
 
 case class Account(
@@ -47,4 +48,11 @@ object Account {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
+}
+
+case class UserInfo(username: String)
+
+object UserInfo {
+  // Use a JSON format to automatically convert between case class and JsObject
+  implicit val format: Format[UserInfo] = Json.format[UserInfo]
 }
