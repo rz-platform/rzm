@@ -10,10 +10,10 @@ class RzRepositoryTest extends GenericControllerTest {
 
     val (result, _) = createRepository(repoName, account)
     result.header.headers(LOCATION) must equal(
-      routes.FileTreeController.emptyTree(account.userName, repoName, RzRepository.defaultBranch).toString
+      routes.FileTreeController.emptyTree(account.a.userName, repoName, RzRepository.defaultBranch).toString
     )
 
-    val r = await(rzGitRepository.getByOwnerAndName(account.userName, repoName))
+    val r = await(rzGitRepository.getByOwnerAndName(account.a.userName, repoName))
     r.isRight must equal(true)
   }
 }

@@ -23,16 +23,6 @@ class AuthController @Inject() (
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
-  private def createSession(userInfo: UserInfo): Future[(String, Cookie)] = {
-    // create a user info cookie with this specific secret key
-    val secretKey      = encryptionService.newSecretKey
-    val cookieBaker    = factory.createCookieBaker(secretKey)
-    val userInfoCookie = cookieBaker.encodeAsCookie(Some(userInfo))
-
-    // Tie the secret key to a session id, and store the encrypted data in client side cookie
-    sessionRepository.create(secretKey).map(sessionId => (sessionId, userInfoCookie))
-  }
-
   def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(form))))
 
   val form: Form[AccountLoginData] = Form(
@@ -52,21 +42,10 @@ class AuthController @Inject() (
       case Left(e) => Future(Left(e))
     }
 
-  def login = Action.async { implicit req =>
-    val proceed: Account => Future[Result] = { acc: Account =>
-      val userInfo = UserInfo(acc.userName)
-      createSession(userInfo).map {
-        case (sessionId, encryptedCookie) =>
-          val session = req.session + (Auth.SESSION_ID -> sessionId)
-          Redirect(routes.RzRepositoryController.list())
-            .withSession(session)
-            .withCookies(encryptedCookie)
-      }
-    }
-
+  def login: Action[AnyContent] = Action.async { implicit req =>
     val successFunc: AccountLoginData => Future[Result] = { accountData: AccountLoginData =>
       checkPassword(accountData.userName, accountData.password).flatMap {
-        case Right(account) => proceed(account)
+        case Right(account) => authAction.authorize(account, req.session)
         case _ =>
           val formBuiltFromRequest = form.bindFromRequest
           val newForm = form.bindFromRequest.copy(
@@ -84,9 +63,6 @@ class AuthController @Inject() (
 
     form.bindFromRequest().fold(errorFunc, successFunc)
   }
-
-//  def discardingSession(result: Result): Result =
-//    result.withNewSession.discardingCookies(DiscardingCookie(Auth.USER_INFO_COOKIE_NAME))
 
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
     // When we delete the session id, removing the session id is enough to render the

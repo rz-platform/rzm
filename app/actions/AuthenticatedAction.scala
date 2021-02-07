@@ -1,7 +1,7 @@
 package actions
 
 import controllers.routes
-import encryption.UserInfoCookieBakerFactory
+import encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 import models.{ Account, AccountRequest, Auth, UserInfo }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
@@ -18,6 +18,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class AuthenticatedAction @Inject() (
   accountService: AccountRepository,
   factory: UserInfoCookieBakerFactory,
+  encryptionService: EncryptionService,
   sessionRepository: SessionRepository,
   playBodyParsers: PlayBodyParsers,
   messagesApi: MessagesApi
@@ -26,6 +27,27 @@ class AuthenticatedAction @Inject() (
     with Results {
 
   override def parser: BodyParser[AnyContent] = playBodyParsers.anyContent
+
+  def createSession(userInfo: UserInfo): Future[(String, Cookie)] = {
+    // create a user info cookie with this specific secret key
+    val secretKey      = encryptionService.newSecretKey
+    val cookieBaker    = factory.createCookieBaker(secretKey)
+    val userInfoCookie = cookieBaker.encodeAsCookie(Some(userInfo))
+
+    // Tie the secret key to a session id, and store the encrypted data in client side cookie
+    sessionRepository.create(secretKey).map(sessionId => (sessionId, userInfoCookie))
+  }
+
+  def authorize(account: Account, s: Session): Future[Result] = {
+    val userInfo = UserInfo(account.userName)
+    createSession(userInfo).map {
+      case (sessionId, encryptedCookie) =>
+        val session: Session = s + (Auth.SESSION_ID -> sessionId)
+        Redirect(routes.RzRepositoryController.list())
+          .withSession(session)
+          .withCookies(encryptedCookie)
+    }
+  }
 
   def discardingSession(result: Result): Result =
     result.withNewSession.discardingCookies(DiscardingCookie(Auth.USER_INFO_COOKIE_NAME))

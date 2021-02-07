@@ -1,18 +1,21 @@
 package controllers
 
+import actions.AuthenticatedAction
 import akka.actor.ActorSystem
-import models.{ Account, AccountRegistrationData, RzRepository, SessionName }
+import models._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Millis, Seconds, Span }
 import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.Result
+import play.api.mvc.{ Cookie, Result }
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 import play.api.test.{ FakeRequest, Injecting }
 import play.api.{ Configuration, Logger }
 import repositories.{ AccountRepository, GitRepository, RzMetaGitRepository }
+
+case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
 class GenericControllerTest
     extends PlaySpec
@@ -37,14 +40,16 @@ class GenericControllerTest
   def fileTreeController: FileTreeController           = app.injector.instanceOf[FileTreeController]
 
   def accountRepository: AccountRepository = app.injector.instanceOf[AccountRepository]
-  def rzGitRepository: RzMetaGitRepository     = app.injector.instanceOf[RzMetaGitRepository]
+  def rzGitRepository: RzMetaGitRepository = app.injector.instanceOf[RzMetaGitRepository]
 
   def gitEntitiesController: RzRepositoryController = app.injector.instanceOf[RzRepositoryController]
   def git: GitRepository                            = app.injector.instanceOf[GitRepository]
 
+  def authAction: AuthenticatedAction = app.injector.instanceOf[AuthenticatedAction]
+
   val sessionName: String = SessionName.toString
 
-  def createAccount(): Account = {
+  def createAccount(): AuthorizedAccount = {
     val data =
       AccountRegistrationData(getRandomString, Some(getRandomString), getRandomString, s"$getRandomString@rzm.dev")
     val request = addCSRFToken(
@@ -57,20 +62,24 @@ class GenericControllerTest
         )
     )
     await(accountController.saveAccount().apply(request))
-    new Account(data)
+
+    val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
+    val session             = (Auth.SESSION_ID -> sessionId)
+    AuthorizedAccount(new Account(data), session, cookie)
   }
 
   def createRepository(
     name: String,
-    owner: Account
+    owner: AuthorizedAccount
   ): (Result, RzRepository) = {
     val request = addCSRFToken(
       FakeRequest(routes.RzRepositoryController.saveRepository())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
-        .withSession((sessionName, owner.id))
+        .withSession(owner.s)
+        .withCookies(owner.c)
     )
     val result = await(gitEntitiesController.saveRepository().apply(request))
-    (result, new RzRepository(owner, name))
+    (result, new RzRepository(owner.a, name))
   }
 
 }
