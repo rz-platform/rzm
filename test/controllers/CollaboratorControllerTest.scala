@@ -1,6 +1,6 @@
 package controllers
 
-import models.{ Account, EditAccess, RzRepository }
+import models.{ EditAccess, RzRepository }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -9,31 +9,33 @@ import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 class CollaboratorControllerTest extends GenericControllerTest {
   def addCollaborator(
     repositoryName: String,
-    owner: Account,
+    owner: AuthorizedAccount,
     collaboratorName: String,
     accessLevel: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.CollaboratorsController.addCollaborator(owner.userName, repositoryName))
+      FakeRequest(routes.CollaboratorsController.addCollaborator(owner.a.userName, repositoryName))
         .withFormUrlEncodedBody("emailOrLogin" -> collaboratorName, "accessLevel" -> accessLevel)
-        .withSession((sessionName, owner.id))
+        .withSession(owner.s)
+        .withCookies(owner.c)
     )
 
-    await(collaboratorsController.addCollaborator(owner.userName, repositoryName).apply(request))
+    await(collaboratorsController.addCollaborator(owner.a.userName, repositoryName).apply(request))
   }
 
   def removeCollaborator(
     repositoryName: String,
-    owner: Account,
+    owner: AuthorizedAccount,
     collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.CollaboratorsController.removeCollaborator(owner.userName, repositoryName))
+      FakeRequest(routes.CollaboratorsController.removeCollaborator(owner.a.userName, repositoryName))
         .withFormUrlEncodedBody("email" -> collaboratorName)
-        .withSession((sessionName, owner.id))
+        .withSession(owner.s)
+        .withCookies(owner.c)
     )
 
-    await(collaboratorsController.removeCollaborator(owner.userName, repositoryName).apply(request))
+    await(collaboratorsController.removeCollaborator(owner.a.userName, repositoryName).apply(request))
   }
 
   "Add collaborator successfully" in {
@@ -41,10 +43,10 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.userName, EditAccess.toString)
+    val result       = addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
     r.isRight must equal(true)
     // TODO: check
   }
@@ -55,7 +57,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     createRepository(repoName, owner)
     val collaborator = createAccount()
     addCollaborator(repoName, owner, "nonexistentusername", EditAccess.toString)
-    val r = await(rzGitRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
     r.isRight must equal(false)
   }
 
@@ -64,11 +66,11 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.userName, EditAccess.toString)
+    val result       = addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
 
     result.header.status must equal(303)
 
-    addCollaborator(repoName, owner, collaborator.userName, EditAccess.toString)
+    addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
     result.header.status must equal(303)
   }
 
@@ -78,12 +80,12 @@ class CollaboratorControllerTest extends GenericControllerTest {
     createRepository(repoName, owner)
     val collaborator = createAccount()
 
-    addCollaborator(repoName, owner, collaborator.userName, EditAccess.toString)
+    addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
 
-    val result = removeCollaborator(repoName, owner, collaborator.userName)
+    val result = removeCollaborator(repoName, owner, collaborator.a.userName)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator, new RzRepository(owner, repoName)))
+    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
     r.isRight must equal(false)
   }
 
@@ -102,7 +104,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     createRepository(repoName, owner)
     val collaborator = createAccount()
 
-    val result = removeCollaborator(repoName, owner, collaborator.userName)
+    val result = removeCollaborator(repoName, owner, collaborator.a.userName)
     result.header.status must equal(303)
   }
 }

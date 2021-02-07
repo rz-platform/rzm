@@ -85,7 +85,7 @@ class AccountController @Inject() (
               val password = HashedString.fromString(accountData.password)
               accountRepository
                 .set(acc, password)
-                .map(_ => Redirect(routes.RzRepositoryController.list()).withSession(SessionName.toString -> acc.id))
+                .flatMap(_ => authAction.authorize(acc, request.session))
             case _ =>
               val formBuiltFromRequest = signupForm.bindFromRequest
               val newForm = signupForm.bindFromRequest.copy(

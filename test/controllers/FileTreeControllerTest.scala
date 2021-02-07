@@ -1,6 +1,6 @@
 package controllers
 
-import models.{ Account, ForbiddenSymbols, RepositoryGitData, RzRepository }
+import models.{ ForbiddenSymbols, RepositoryGitData, RzRepository }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -15,7 +15,7 @@ class FileTreeControllerTest extends GenericControllerTest {
   def createNewItem(
     name: String,
     repositoryName: String,
-    creator: Account,
+    creator: AuthorizedAccount,
     isFolder: Boolean,
     path: String
   ): Result = {
@@ -28,10 +28,11 @@ class FileTreeControllerTest extends GenericControllerTest {
           "isFolder" -> (if (isFolder) "true"
                          else "false")
         )
-        .withSession((sessionName, creator.id))
+        .withSession(creator.s)
+        .withCookies(creator.c)
     )
 
-    val result: Future[Result] = call(fileTreeController.addNewItem(creator.userName, repositoryName), newFileRequest)
+    val result: Future[Result] = call(fileTreeController.addNewItem(creator.a.userName, repositoryName), newFileRequest)
 
     await(result)
   }
