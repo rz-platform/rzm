@@ -70,6 +70,8 @@ case object CommitHistoryPage extends RepositoryPage
 
 case object FileUploadPage extends RepositoryPage
 
+case object ConstructorPage extends RepositoryPage
+
 object IdTable {
   /*
   Always use two-letters

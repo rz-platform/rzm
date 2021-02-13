@@ -1,0 +1,11 @@
+@(templateList: Array[Template])(implicit request: RepositoryRequestHeader)
+
+@base.auth(request.messages("repository.constructor.title")){
+@header.repositoryHeader(ConstructorPage)
+
+@templateList.map {template =>
+  <p>
+    @template.name
+   </p>
+}
+}()

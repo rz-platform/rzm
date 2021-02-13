@@ -15,10 +15,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthController @Inject() (
   accountRepository: AccountRepository,
-  encryptionService: EncryptionService,
   sessionRepository: SessionRepository,
   authAction: AuthenticatedAction,
-  factory: UserInfoCookieBakerFactory,
   cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {

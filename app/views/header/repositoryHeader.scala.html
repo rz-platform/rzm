@@ -36,6 +36,13 @@
         >@request.messages("repository.tree.commits")</a
       >
     </li>
+    <li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
+      <a
+        href="@routes.TemplateController.list(request.repository.owner.userName, request.repository.name)"
+        class="rz-menu-link"
+        >@request.messages("repository.tree.constructor")</a
+      >
+    </li>
     <li class="rz-menu-item cloneby">
         <input type="radio" id="showHttp" name="radios" checked> 
         <label for="showHttp" class="cloneLabel">HTTPS</label>
