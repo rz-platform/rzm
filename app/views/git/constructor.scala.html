@@ -3,9 +3,17 @@
 @base.auth(request.messages("repository.constructor.title")){
 @header.repositoryHeader(ConstructorPage)
 
-@templateList.map {template =>
-  <p>
-    @template.name
-   </p>
+@templateList.zipWithIndex.map { case (template, i) =>
+  <div class="wrap-collabsible">
+    <input id="collapsible-@{i}" class="toggle" type="checkbox">
+    <label for="collapsible-@{i}" class="lbl-toggle">@template.name</label>
+    <div class="collapsible-content">
+      <div class="content-inner">
+        @template.description.map { text =>
+          <p> @{text} </p>
+        }
+      </div>
+    </div>
+  </div>
 }
 }()
