@@ -19,32 +19,36 @@ class TemplateRepository @Inject() (config: Configuration) {
   private def readTxt(filename: File): Try[List[String]] =
     Using(Source.fromFile(filename))(source => (for (line <- source.getLines) yield line).toList)
 
-  private def parseJson(text: String): Try[JsValue] = Try(Json.parse(text))
+  private def parseJson(text: String): Try[JsArray] = Try(Json.parse(text).as[JsArray])
 
-  private def parseFields(js: JsValue): Either[RzError, List[Field]] = {}
+  private def parseField(obj: JsValue): Option[Field] =
+    (obj \ "type").getOrElse(JsString("")).as[String] match {
+      case Numeric.t  => Some(obj.as[Numeric])
+      case Choice.t   => Some(obj.as[Choice])
+      case Checkbox.t => Some(obj.as[Checkbox])
+      case _          => None
+    }
 
-  private def buildFields(absolutePath: String) = readTxt(Paths.get(absolutePath, "schema.json").toFile) match {
-    case Success(l) =>
-      parseJson(l.mkString) match {
-        case Success(value) =>
-          parseFields(value) match {
-            case Right(v) => v
-            case Left(e) =>
-              logger.error(e.toString)
-              List()
-          }
-        case Failure(_) => List[Field]()
-      }
-    case Failure(_) => List[Field]()
-  }
+  private def parseFields(js: JsArray): List[Field] = js.value.map(obj => parseField(obj)).toList.flatten
+
+  private def buildFields(absolutePath: String): List[Field] =
+    readTxt(Paths.get(absolutePath, "schema.json").toFile) match {
+      case Success(l) =>
+        parseJson(l.mkString) match {
+          case Success(value) => parseFields(value)
+          case Failure(_)     => List[Field]()
+        }
+      case Failure(_) => List[Field]()
+    }
 
   private def buildTemplate(path: File): Template = {
-    val name = path.getName.split('-').map(_.capitalize).mkString(" ")
-    val description: List[String] = readTxt(Paths.get(path.getAbsolutePath, "readme.txt").toFile) match {
+    val name         = path.getName.split('-').map(_.capitalize).mkString(" ")
+    val absolutePath = path.getAbsolutePath
+    val description: List[String] = readTxt(Paths.get(absolutePath, "readme.txt").toFile) match {
       case Success(l) => l
       case Failure(_) => List()
     }
-    val fields = buildFields(path.getAbsolutePath)
+    val fields = buildFields(absolutePath)
     Template(name, description, fields)
   }
 

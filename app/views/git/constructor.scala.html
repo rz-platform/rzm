@@ -1,17 +1,57 @@
 @(templateList: Array[Template])(implicit request: RepositoryRequestHeader)
+@import models._
+
+@renderNumeric(n: Numeric) = {
+  <label for="@n.name">@n.label</label>
+  <input id="@n.name" name="@n.name" type="number" value="42" min="@n.min" max="@n.max" />
+}
+
+@renderCheckbox(c: Checkbox) = {
+  <label for="@c.name" class="rz-checkbox">
+    <input type="checkbox" id="@c.name" /> 
+      @c.label
+  </label>
+}
+
+@renderSelect(s: Choice) = {
+  <label for="@s.name">@s.label</label>
+  <select name="@s.name" id="@s.name">
+    @s.choices.map { c =>
+      <option>@c</option>
+    }
+  </select>
+}
+
+@renderField(field: Field) = {
+  @{field match {
+    case n: Numeric => renderNumeric(n)
+    case c: Checkbox => renderCheckbox(c)
+    case s: Choice => renderSelect(s)
+  }}
+}
 
 @base.auth(request.messages("repository.constructor.title")){
 @header.repositoryHeader(ConstructorPage)
 
 @templateList.zipWithIndex.map { case (template, i) =>
   <div class="wrap-collabsible">
-    <input id="collapsible-@{i}" class="toggle" type="checkbox">
+    <input id="collapsible-@{i}" name="collapsible" class="toggle" type="radio">
     <label for="collapsible-@{i}" class="lbl-toggle">@template.name</label>
     <div class="collapsible-content">
       <div class="content-inner">
         @template.description.map { text =>
           <p> @{text} </p>
         }
+        <form class="rz-form rz-form-stacked">
+          <fieldset>
+            @template.fields.map { field =>
+              <div class="rz-control-group"> @renderField(field) </div>
+            }
+            <div class="rz-controls">
+                <button type="submit" class="rz-button rz-button-primary">Submit</button>
+            </div>
+          </fieldset>
+        </form>
       </div>
     </div>
   </div>

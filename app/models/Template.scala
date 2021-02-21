@@ -1,13 +1,54 @@
 package models
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+
 sealed trait Field {
   def name: String
+  def label: String
+  def description: Option[String]
+
 }
 
-case class Numeric(name: String, min: Int, max: Int) extends Field
+case class Numeric(name: String, label: String, description: Option[String], min: Int, max: Int, default: Int)
+    extends Field
+object Numeric {
+  val t = "numeric"
 
-case class Choice(name: String, choices: List[String]) extends Field
+  implicit val reads: Reads[Numeric] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "label").read[String] and
+      (JsPath \ "description").readNullable[String] and
+      (JsPath \ "min").read[Int] and
+      (JsPath \ "max").read[Int] and
+      (JsPath \ "default").read[Int]
+  )(Numeric.apply _)
+}
 
-case class Checkbox(name: String) extends Field
+case class Choice(name: String, label: String, description: Option[String], choices: List[String], default: String)
+    extends Field
+object Choice {
+  val t = "select"
+
+  implicit val reads: Reads[Choice] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "label").read[String] and
+      (JsPath \ "description").readNullable[String] and
+      (JsPath \ "choices").read[List[String]] and
+      (JsPath \ "default").read[String]
+  )(Choice.apply _)
+}
+
+case class Checkbox(name: String, label: String, description: Option[String], default: Boolean) extends Field
+object Checkbox {
+  val t = "checkbox"
+
+  implicit val reads: Reads[Checkbox] = (
+    (JsPath \ "name").read[String] and
+      (JsPath \ "label").read[String] and
+      (JsPath \ "description").readNullable[String] and
+      (JsPath \ "default").read[Boolean]
+  )(Checkbox.apply _)
+}
 
 case class Template(name: String, description: List[String], fields: List[Field])

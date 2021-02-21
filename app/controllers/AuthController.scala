@@ -1,7 +1,6 @@
 package controllers
 
 import actions.AuthenticatedAction
-import encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 import models._
 import play.api.data.Forms._
 import play.api.data._

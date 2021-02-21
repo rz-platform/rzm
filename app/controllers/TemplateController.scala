@@ -1,18 +1,14 @@
 package controllers
 
 import actions.{ AuthenticatedAction, RepositoryAction }
-import play.api.Configuration
-import play.api.mvc.MessagesControllerComponents
-import repositories.{ AccountRepository, TemplateRepository }
-
-import java.io.{ File, IOException }
-import play.api.mvc._
-
-import scala.concurrent.{ ExecutionContext, Future }
 import models._
+import play.api.Configuration
+import play.api.mvc._
+import repositories.TemplateRepository
 import views.html
 
 import javax.inject.Inject
+import scala.concurrent.{ ExecutionContext, Future }
 
 class TemplateController @Inject() (
   authAction: AuthenticatedAction,
