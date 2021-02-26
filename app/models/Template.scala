@@ -51,4 +51,10 @@ object Checkbox {
   )(Checkbox.apply _)
 }
 
-case class Template(name: String, description: List[String], fields: List[Field])
+case class Template(
+  name: String,
+  description: List[String],
+  entrypoint: Option[String],
+  example: Option[String],
+  fields: List[Field]
+)
