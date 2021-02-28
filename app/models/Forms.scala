@@ -4,13 +4,6 @@ import org.eclipse.jgit.revwalk.RevCommit
 
 import java.io.File
 
-/*
- When objects are used as data structures it is a design smell; (c) Uncle Bob
- http://blog.cleancoder.com/uncle-bob/2014/11/24/FPvsOO.html
-
- If you know how to get rid of those contact me
- */
-
 // Forms related to auth
 
 case class AccountRegistrationData(userName: String, fullName: Option[String], password: String, email: String)
@@ -42,3 +35,7 @@ case class SshRemoveData(id: String)
 case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
 
 case class RemoveCollaboratorData(id: String)
+
+// Templates
+
+case class TemplateData(tplName: String)

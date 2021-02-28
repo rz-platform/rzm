@@ -7,7 +7,6 @@ sealed trait Field {
   def name: String
   def label: String
   def description: Option[String]
-
 }
 
 case class Numeric(name: String, label: String, description: Option[String], min: Int, max: Int, default: Int)
@@ -54,6 +53,7 @@ object Checkbox {
 case class Template(
   name: String,
   description: List[String],
+  path: File,
   entrypoint: Option[String],
   example: Option[String],
   fields: List[Field]

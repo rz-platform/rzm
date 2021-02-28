@@ -24,6 +24,26 @@ class TemplateRepository @Inject() (config: Configuration) {
       Array[Template]()
     }
 
+  private def buildTemplate(path: File): Template = {
+    val name         = path.getName.split('-').map(_.capitalize).mkString(" ")
+    val absolutePath = path.getAbsolutePath
+    val description: List[String] = readTxt(Paths.get(absolutePath, "readme.txt").toFile) match {
+      case Success(l) => l
+      case Failure(_) => List()
+    }
+    val js = readJson(absolutePath)
+    val fields = js match {
+      case Right(v) => parseFields(v)
+      case Left(_)  => List()
+    }
+    val entypoint = js match {
+      case Right(v) => parseEntrypoint(v)
+      case Left(_)  => None
+    }
+    val exampleFile = getExampleFile(entypoint)
+    Template(name, description, path, entypoint, exampleFile, fields)
+  }
+
   private def readTxt(filename: File): Try[List[String]] =
     Using(Source.fromFile(filename))(source => (for (line <- source.getLines) yield line).toList)
 
@@ -59,26 +79,6 @@ class TemplateRepository @Inject() (config: Configuration) {
   private def getExampleFile(entrypoint: Option[String]): Option[String] = entrypoint match {
     case Some(e) => Some(s"${e.replaceFirst("[.][^.]+$", "")}.pdf")
     case _       => None
-  }
-
-  private def buildTemplate(path: File): Template = {
-    val name         = path.getName.split('-').map(_.capitalize).mkString(" ")
-    val absolutePath = path.getAbsolutePath
-    val description: List[String] = readTxt(Paths.get(absolutePath, "readme.txt").toFile) match {
-      case Success(l) => l
-      case Failure(_) => List()
-    }
-    val js = readJson(absolutePath)
-    val fields = js match {
-      case Right(v) => parseFields(v)
-      case Left(_)  => List()
-    }
-    val entypoint = js match {
-      case Right(v) => parseEntrypoint(v)
-      case Left(_)  => None
-    }
-    val exampleFile = getExampleFile(entypoint)
-    Template(name, description, entypoint, exampleFile, fields)
   }
 
   private def filterTemplates(f: File): Boolean =
