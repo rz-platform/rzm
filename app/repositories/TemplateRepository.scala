@@ -7,6 +7,7 @@ import play.api.libs.json._
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.{ Inject, Singleton }
+import scala.collection.SortedMap
 import scala.io.Source
 import scala.util.{ Failure, Success, Try, Using }
 
@@ -16,12 +17,17 @@ class TemplateRepository @Inject() (config: Configuration) {
 
   private val templatesDir = new File(config.get[String]("play.server.templates.dir"))
 
-  def list: Array[Template] =
+  def get(name: String): Option[Template] = list.get(name)
+
+  def list: SortedMap[String, Template] =
     if (templatesDir.exists && templatesDir.isDirectory) {
-      templatesDir.listFiles.filter(filterTemplates).map(file => buildTemplate(file)).sortBy(t => t.name)
+      val l: Array[Template] =
+        templatesDir.listFiles.filter(filterTemplates).map(file => buildTemplate(file)).sortBy(t => t.name)
+      val t: Array[(String, Template)] = l.map(t => Tuple2(t.name, t))
+      SortedMap.from(l.map(t => Tuple2(t.name, t)))
     } else {
       logger.warn("Template folder does not exist")
-      Array[Template]()
+      SortedMap[String, Template]()
     }
 
   private def buildTemplate(path: File): Template = {
@@ -41,6 +47,7 @@ class TemplateRepository @Inject() (config: Configuration) {
       case Left(_)  => None
     }
     val exampleFile = getExampleFile(entypoint)
+
     Template(name, description, path, entypoint, exampleFile, fields)
   }
 
@@ -48,14 +55,16 @@ class TemplateRepository @Inject() (config: Configuration) {
     Using(Source.fromFile(filename))(source => (for (line <- source.getLines) yield line).toList)
 
   private def parseFields(js: JsValue): List[Field] =
-    (js \ "fields").getOrElse(JsArray()).as[JsArray].value.map(obj => parseField(obj)).toList.flatten
+    (js \ "fields").getOrElse(JsArray()).as[JsArray].value.map(obj => parseField(obj)).toList.collect {
+      case Success(f) => f
+    }
 
-  private def parseField(obj: JsValue): Option[Field] =
+  private def parseField(obj: JsValue): Try[Field] =
     (obj \ "type").getOrElse(JsString("")).as[String] match {
-      case Numeric.t  => Some(obj.as[Numeric])
-      case Choice.t   => Some(obj.as[Choice])
-      case Checkbox.t => Some(obj.as[Checkbox])
-      case _          => None
+      case Numeric.t  => Try(obj.as[Numeric])
+      case Choice.t   => Try(obj.as[Choice])
+      case Checkbox.t => Try(obj.as[Checkbox])
+      case _          => Failure(JsonParseError)
     }
 
   private def parseEntrypoint(js: JsValue): Option[String] =

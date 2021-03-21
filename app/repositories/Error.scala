@@ -1,6 +1,6 @@
 package repositories
 
-sealed trait RzError
+sealed trait RzError extends Throwable
 
 case object NotFoundInRepository extends RzError
 case object ParsingError         extends RzError

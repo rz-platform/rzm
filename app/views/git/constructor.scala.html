@@ -1,9 +1,10 @@
-@(templateList: Array[Template])(implicit request: RepositoryRequestHeader)
+@(templateMap: scala.collection.SortedMap[String, Template])(implicit req: RepositoryRequestHeader)
 @import models._
+@import views.html.helper._
 
 @renderNumeric(n: Numeric) = {
   <label for="@n.name">@n.label</label>
-  <input id="@n.name" name="@n.name" type="number" value="42" min="@n.min" max="@n.max" required />
+  <input id="@n.name" name="@n.name" type="number" value="@n.default" min="@n.min" max="@n.max" required />
 }
 
 @renderCheckbox(c: Checkbox) = {
@@ -30,29 +31,31 @@
   }}
 }
 
-@base.auth(request.messages("repository.constructor.title")){
+@base.auth(req.messages("repository.constructor.title")){
 @header.repositoryHeader(ConstructorPage)
 
 <div class="template-page">
   <div class="rz-menu rz-menu-scrollable custom-restricted">
     <ul class="rz-menu-list">
       <li class="rz-menu-item">
-      @templateList.map { template =>
-        <a id="@template.name" class="rz-menu-link" href="#">@template.name</a>
+      @templateMap.map { case(key, template) =>
+        <a id="@key" class="rz-menu-link" href="#">@key</a>
       }
       </li>
     </ul>
   </div>
 
   <div class="template-description">
-  @templateList.map { template =>
+  @templateMap.map { case(key, template) =>
     <div class="template-description-content">
         @template.description.map { text =>
           <p> @{text} </p>
         }
         <p>@template.entrypoint</p>
-        <form class="rz-form rz-form-stacked">
+        @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked") {
+          @CSRF.formField
           <fieldset>
+            <input type="hidden" name="name" value="@key" />
             @template.fields.map { field =>
               <div class="rz-control-group"> @renderField(field) </div>
             }
@@ -60,7 +63,7 @@
                 <button type="submit" class="rz-button rz-button-primary">Submit</button>
             </div>
           </fieldset>
-        </form>
+        }
     </div>
   }
   </div>

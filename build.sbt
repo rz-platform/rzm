@@ -4,7 +4,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(
     name := "rzm",
-    version := "2.8.x",
+    version := "2.8.7",
     maintainer := "eugenebosyakov@gmail.com",
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(

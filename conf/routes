@@ -42,7 +42,7 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.FileTreeContro
 # Constructor
 
 GET /repositories/:account/:repository/constructor controllers.TemplateController.list(account:String, repository:String)
-
+POST /repositories/:account/:repository/constructor/build controllers.TemplateController.build(account:String, repository:String)
 
 # File upload
 

@@ -38,4 +38,4 @@ case class RemoveCollaboratorData(id: String)
 
 // Templates
 
-case class TemplateData(tplName: String)
+case class TemplateData(name: String)

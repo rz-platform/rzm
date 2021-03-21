@@ -3,6 +3,8 @@ package models
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
+import java.io.File
+
 sealed trait Field {
   def name: String
   def label: String

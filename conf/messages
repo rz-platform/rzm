@@ -129,3 +129,4 @@ repository.commitLog.nextPage=Next page
 repository.commitLog.previousPage=Previous page
 
 repository.constructor.title = Template Constructor
+repository.constructor.commit.message = "Initial commit. {0}"
