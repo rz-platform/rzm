@@ -1,5 +1,10 @@
 package models
 
+import java.io.File
+
+import java.nio.file.Path
+import java.nio.file.Paths
+
 case class PathComponent(name: String, path: String)
 
 case class FilePath(components: Array[PathComponent]) {
@@ -14,6 +19,21 @@ case class FilePath(components: Array[PathComponent]) {
 }
 
 object FilePath {
+  def recursiveList(f: File): Array[File] = {
+    val these = f.listFiles
+    these ++ these.filter(_.isDirectory).flatMap(recursiveList)
+  }
+
+  def relativize(pathAbsolute: Path, path: String): String = {
+    val pathBase: Path = Paths.get(path)
+    val r = pathAbsolute.relativize(pathBase).getParent()
+    if (r != null) {
+      r.toString
+    } else {
+      "."
+    }
+  }
+
   def splitIntoComponents(path: String): Array[PathComponent] = {
     val split = RzPathUrl.make(path).uri.split("/")
     split.filter(x => x != ".").zipWithIndex.map {

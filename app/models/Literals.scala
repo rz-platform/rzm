@@ -1,5 +1,7 @@
 package models
 
+import java.io.File
+
 import scala.util.matching.Regex
 
 trait Literal {
@@ -42,6 +44,28 @@ object ExcludedFileNames {
 
   def contains(name: String): Boolean = excluded.contains(name)
 }
+
+object TemplateExcluded {
+  val excludedExt = List("pdf")
+  val excluded = List("schema.json")
+
+  private def extension(name: String) = {
+    val i = name.lastIndexOf('.')
+    if (i > 0) { name.substring(i+1) } else { "" }
+  }
+
+  def filter(file: File): Boolean = {
+    val name = file.getName
+    val ext = extension(name)
+    file match {
+      case _ if file.isDirectory => false
+      case _ if excludedExt.contains(ext) => false
+      case _ if excluded.contains(name) => false
+      case _ => true
+    }
+  }
+}
+
 
 case object MaxDepthInFileTree {
   val toInt = 4

@@ -10,6 +10,8 @@ import play.api.mvc._
 import repositories.{ GitRepository, TemplateRepository }
 import views.html
 
+import java.io.File
+
 import javax.inject.Inject
 import scala.collection.immutable.Map
 import scala.concurrent.{ ExecutionContext, Future }
@@ -39,10 +41,10 @@ class TemplateController @Inject() (
   private def renderTemplate(ctx: Map[String, Seq[String]], tpl: Template)(
     implicit req: RepositoryRequest[AnyContent]
   ) = Future {
-    val files = tpl.path.listFiles
-      .filter(_.isDirectory)
+    val files = FilePath.recursiveList(tpl.path)
+      .filter(TemplateExcluded.filter(_))
       .map { f =>
-        val filePath = RzPathUrl.make(".", f.getName, isFolder = false).uri
+        val filePath = RzPathUrl.make(FilePath.relativize(tpl.path.toPath, f.getAbsolutePath), f.getName, isFolder = false).uri
         CommitFile(f.getName, filePath, f)
       }
       .toSeq

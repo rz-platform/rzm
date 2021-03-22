@@ -15,14 +15,15 @@ import scala.util.{ Failure, Success, Try, Using }
 class TemplateRepository @Inject() (config: Configuration) {
   private val logger = play.api.Logger(this.getClass)
 
-  private val templatesDir = new File(config.get[String]("play.server.templates.dir"))
+  // templates directory root
+  val dir = new File(config.get[String]("play.server.templates.dir"))
 
   def get(name: String): Option[Template] = list.get(name)
 
   def list: SortedMap[String, Template] =
-    if (templatesDir.exists && templatesDir.isDirectory) {
+    if (dir.exists && dir.isDirectory) {
       val l: Array[Template] =
-        templatesDir.listFiles.filter(filterTemplates).map(file => buildTemplate(file)).sortBy(t => t.name)
+        dir.listFiles.filter(filterTemplates).map(file => buildTemplate(file)).sortBy(t => t.name)
       val t: Array[(String, Template)] = l.map(t => Tuple2(t.name, t))
       SortedMap.from(l.map(t => Tuple2(t.name, t)))
     } else {
