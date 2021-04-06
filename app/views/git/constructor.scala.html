@@ -9,7 +9,7 @@
 
 @renderCheckbox(c: Checkbox) = {
   <label for="@c.name" class="rz-checkbox">
-    <input type="checkbox" id="@c.name" /> 
+    <input type="checkbox" id="@c.name" name="@c.name" /> 
       @c.label
   </label>
 }

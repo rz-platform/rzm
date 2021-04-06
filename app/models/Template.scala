@@ -59,4 +59,9 @@ case class Template(
   entrypoint: Option[String],
   example: Option[String],
   fields: List[Field]
-)
+) {
+  def files =
+    FilePath
+      .recursiveList(path)
+      .filter(TemplateExcluded.filter)
+}

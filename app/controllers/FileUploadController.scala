@@ -75,12 +75,8 @@ class FileUploadController @Inject() (
                 )
               ),
             (data: UploadFileForm) => {
-              val files: Seq[CommitFile] = req.body.files.map { filePart =>
-                val filename = filePart.filename
-                val filePath = RzPathUrl.make(data.path, filename, isFolder = false).uri
-                CommitFile(filename, name = filePath, filePart.ref)
-              }
-              git.commitUploadedFiles(
+              val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
+              git.commitFiles(
                 req.repository,
                 files,
                 req.account,

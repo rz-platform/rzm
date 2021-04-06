@@ -35,7 +35,7 @@ case class SshKey(
 
   lazy val email: String = publicKey.split(" ")(2).trim
 
-  lazy val createdAtDate: LocalDateTime = DateTime.fromTimeStamp(createdAt)
+  lazy val createdAtDate: LocalDateTime = DateTime.fromTimestamp(createdAt)
 
   def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
 

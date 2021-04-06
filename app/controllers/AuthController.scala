@@ -64,7 +64,7 @@ class AuthController @Inject() (
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
     // When we delete the session id, removing the session id is enough to render the
     // user info cookie unusable.
-    req.session.get(Auth.SESSION_ID).foreach(sessionId => sessionRepository.delete(sessionId))
+    req.session.get(Auth.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
 
     authAction.discardingSession {
       Redirect(routes.AuthController.index())
