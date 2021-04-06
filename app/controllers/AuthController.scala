@@ -1,7 +1,6 @@
 package controllers
 
 import actions.AuthenticatedAction
-import encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 import models._
 import play.api.data.Forms._
 import play.api.data._
@@ -15,10 +14,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthController @Inject() (
   accountRepository: AccountRepository,
-  encryptionService: EncryptionService,
   sessionRepository: SessionRepository,
   authAction: AuthenticatedAction,
-  factory: UserInfoCookieBakerFactory,
   cc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
@@ -67,7 +64,7 @@ class AuthController @Inject() (
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
     // When we delete the session id, removing the session id is enough to render the
     // user info cookie unusable.
-    req.session.get(Auth.SESSION_ID).foreach(sessionId => sessionRepository.delete(sessionId))
+    req.session.get(Auth.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
 
     authAction.discardingSession {
       Redirect(routes.AuthController.index())

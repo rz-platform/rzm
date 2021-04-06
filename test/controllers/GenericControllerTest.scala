@@ -47,7 +47,7 @@ class GenericControllerTest
 
   def authAction: AuthenticatedAction = app.injector.instanceOf[AuthenticatedAction]
 
-  val sessionName: String = SessionName.toString
+  val sessionName: String = Auth.sessionName
 
   def createAccount(): AuthorizedAccount = {
     val data =
@@ -64,7 +64,7 @@ class GenericControllerTest
     await(accountController.saveAccount().apply(request))
 
     val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
-    val session             = (Auth.SESSION_ID -> sessionId)
+    val session             = (Auth.sessionId -> sessionId)
     AuthorizedAccount(new Account(data), session, cookie)
   }
 

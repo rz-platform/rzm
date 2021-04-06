@@ -42,7 +42,7 @@ class AuthenticatedAction @Inject() (
     val userInfo = UserInfo(account.userName)
     createSession(userInfo).map {
       case (sessionId, encryptedCookie) =>
-        val session: Session = s + (Auth.SESSION_ID -> sessionId)
+        val session: Session = s + (Auth.sessionId -> sessionId)
         Redirect(routes.RzRepositoryController.list())
           .withSession(session)
           .withCookies(encryptedCookie)
@@ -50,7 +50,7 @@ class AuthenticatedAction @Inject() (
   }
 
   def discardingSession(result: Result): Result =
-    result.withNewSession.discardingCookies(DiscardingCookie(Auth.USER_INFO_COOKIE_NAME))
+    result.withNewSession.discardingCookies(DiscardingCookie(Auth.userInfoCookie))
 
   def redirect: Future[Result] = Future.successful {
     discardingSession {
@@ -72,8 +72,8 @@ class AuthenticatedAction @Inject() (
     block: AccountRequest[A] => Future[Result]
   ): Future[Result] = {
     val maybeFutureResult: Option[Future[Result]] = for {
-      sessionId      <- request.session.get(Auth.SESSION_ID)
-      userInfoCookie <- request.cookies.get(Auth.USER_INFO_COOKIE_NAME)
+      sessionId      <- request.session.get(Auth.sessionId)
+      userInfoCookie <- request.cookies.get(Auth.userInfoCookie)
     } yield {
       sessionRepository.lookup(sessionId).flatMap {
         case Some(secretKey) =>

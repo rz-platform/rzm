@@ -1,7 +1,7 @@
 package controllers
 
 import actions.AuthenticatedAction
-import models.{ PublicKeyRegex, SshKey, SshKeyData, SshRemoveData }
+import models.{ RzRegex, SshKey, SshKeyData, SshRemoveData }
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText }
@@ -27,7 +27,7 @@ class SshKeyController @Inject() (
   val addSshKeyForm: Form[SshKeyData] = Form(
     mapping(
       "publicKey" -> nonEmptyText.verifying(
-        pattern(PublicKeyRegex.toRegex)
+        pattern(RzRegex.publicKey)
       )
     )(SshKeyData.apply)(SshKeyData.unapply)
   )

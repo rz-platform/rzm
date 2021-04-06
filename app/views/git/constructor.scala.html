@@ -1,0 +1,72 @@
+@(templateMap: scala.collection.SortedMap[String, Template])(implicit req: RepositoryRequestHeader)
+@import models._
+@import views.html.helper._
+
+@renderNumeric(n: Numeric) = {
+  <label for="@n.name">@n.label</label>
+  <input id="@n.name" name="@n.name" type="number" value="@n.default" min="@n.min" max="@n.max" required />
+}
+
+@renderCheckbox(c: Checkbox) = {
+  <label for="@c.name" class="rz-checkbox">
+    <input type="checkbox" id="@c.name" name="@c.name" /> 
+      @c.label
+  </label>
+}
+
+@renderSelect(s: Choice) = {
+  <label for="@s.name">@s.label</label>
+  <select name="@s.name" id="@s.name">
+    @s.choices.map { c =>
+      <option>@c</option>
+    }
+  </select>
+}
+
+@renderField(field: Field) = {
+  @{field match {
+    case n: Numeric => renderNumeric(n)
+    case c: Checkbox => renderCheckbox(c)
+    case s: Choice => renderSelect(s)
+  }}
+}
+
+@base.auth(req.messages("repository.constructor.title")){
+@header.repositoryHeader(ConstructorPage)
+
+<div class="template-page">
+  <div class="rz-menu rz-menu-scrollable custom-restricted">
+    <ul class="rz-menu-list">
+      <li class="rz-menu-item">
+      @templateMap.map { case(key, template) =>
+        <a id="@key" class="rz-menu-link" href="#">@key</a>
+      }
+      </li>
+    </ul>
+  </div>
+
+  <div class="template-description">
+  @templateMap.map { case(key, template) =>
+    <div class="template-description-content">
+        @template.description.map { text =>
+          <p> @{text} </p>
+        }
+        <p>@template.entrypoint</p>
+        @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked") {
+          @CSRF.formField
+          <fieldset>
+            <input type="hidden" name="name" value="@key" />
+            @template.fields.map { field =>
+              <div class="rz-control-group"> @renderField(field) </div>
+            }
+            <div class="rz-controls">
+                <button type="submit" class="rz-button rz-button-primary">Submit</button>
+            </div>
+          </fieldset>
+        }
+    </div>
+  }
+  </div>
+</div>
+
+}()

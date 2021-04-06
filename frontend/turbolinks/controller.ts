@@ -18,8 +18,6 @@ export type VisitProperties = { restorationIdentifier: string, restorationData: 
 
 export class Controller {
   static supported = !!(
-    window.history.pushState &&
-    window.requestAnimationFrame &&
     window.addEventListener
   )
 

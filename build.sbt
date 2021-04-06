@@ -4,7 +4,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(
     name := "rzm",
-    version := "2.8.x",
+    version := "2.8.7",
     maintainer := "eugenebosyakov@gmail.com",
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
@@ -17,7 +17,8 @@ lazy val root = (project in file("."))
       "org.apache.tika"                  % "tika-core"                    % "1.22",
       "com.googlecode.juniversalchardet" % "juniversalchardet"            % "1.0.3",
       "net.debasishg"                    %% "redisclient"                 % "3.30",
-      "org.abstractj.kalium"             % "kalium"                       % "0.8.0"
+      "org.abstractj.kalium"             % "kalium"                       % "0.8.0",
+      "com.github.jknack"                % "handlebars"                   % "4.2.0"
     ),
     scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked", "-Xfatal-warnings"),
     javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror")

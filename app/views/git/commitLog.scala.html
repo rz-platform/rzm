@@ -1,5 +1,4 @@
 @(commitLog: Seq[CommitInfo], rev:String, hasNext:Boolean, page:Int)(implicit request: RepositoryRequestHeader)
-@import print.date
 
 @base.auth(request.messages("repository.commitLog.title")){
 @header.repositoryHeader(CommitHistoryPage)
@@ -12,7 +11,7 @@
     <span class="info">by</span>
     @commitInfo.authorName
     <span class="info">on</span>
-    <span class="info">@date(commitInfo.commitTime)</span>
+    <span class="info">@print.date(commitInfo.commitTime)</span>
   </p>
 }
 @if(hasNext) {

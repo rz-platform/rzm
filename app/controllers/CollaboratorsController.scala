@@ -3,6 +3,7 @@ package controllers
 import actions.{ AuthenticatedAction, RepositoryAction }
 import models._
 import play.api.data.Form
+import play.api.data.FormBinding.Implicits.formBinding
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc.Results._

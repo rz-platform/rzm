@@ -39,7 +39,7 @@
   }
 
   @for(file <- node.files) {
-    @if(!(ExcludedFileNames contains file.data)) {
+    @if(!(FileTree.excluded contains file.data)) {
       <div
         data-turbolinks="true"
         class="rz-menu-item"

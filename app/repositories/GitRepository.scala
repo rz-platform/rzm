@@ -4,8 +4,8 @@ import models._
 import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.apache.commons.compress.archivers.{ ArchiveEntry, ArchiveOutputStream }
 import org.apache.commons.compress.utils.{ IOUtils => CompressIOUtils }
+import org.apache.commons.io.IOUtils
 import org.apache.commons.io.input.BOMInputStream
-import org.apache.commons.io.{ FileUtils, IOUtils }
 import org.apache.tika.Tika
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder, DirCacheEntry }
@@ -425,7 +425,7 @@ class GitRepository @Inject() (config: Configuration) {
     }.find(_._1 != null)
   }
 
-  def commitFiles(repo: RzRepository, branch: String, path: String, message: String, loginAccount: Account)(
+  def commitFiles(repo: RzRepository, branch: String, path: String, message: String, account: Account)(
     f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
   ): ObjectId =
     lock(s"${repo.owner.userName}/${repo.name}") {
@@ -443,8 +443,8 @@ class GitRepository @Inject() (config: Configuration) {
           headTip,
           builder.getDirCache.writeTree(inserter),
           headName,
-          loginAccount.userName,
-          loginAccount.email,
+          account.userName,
+          account.email,
           message
         )
 
@@ -727,7 +727,7 @@ class GitRepository @Inject() (config: Configuration) {
     tempFile
   }
 
-  def commitUploadedFiles(
+  def commitFiles(
     repo: RzRepository,
     files: Seq[CommitFile],
     account: Account,
@@ -746,7 +746,7 @@ class GitRepository @Inject() (config: Configuration) {
         }
 
         files.foreach { file =>
-          val bytes = FileUtils.readFileToByteArray(file.file)
+          val bytes: Array[Byte] = file.content
           builder.add(createDirCacheEntry(file.name, FileMode.REGULAR_FILE, inserter.insert(Constants.OBJ_BLOB, bytes)))
           builder.finish()
         }

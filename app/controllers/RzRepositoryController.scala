@@ -25,7 +25,7 @@ class RzRepositoryController @Inject() (
 
   val createRepositoryForm: Form[RepositoryData] = Form(
     mapping(
-      "name"        -> nonEmptyText(minLength = 1, maxLength = 36).verifying(pattern(RepositoryNameRegex.toRegex)),
+      "name"        -> nonEmptyText(minLength = 1, maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
       "description" -> optional(text(maxLength = 255))
     )(RepositoryData.apply)(RepositoryData.unapply)
   )

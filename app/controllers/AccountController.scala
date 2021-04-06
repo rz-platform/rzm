@@ -37,7 +37,7 @@ class AccountController @Inject() (
 
   val signupForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName"    -> text(maxLength = 36).verifying(pattern(AccountNameRegex.toRegex)),
+      "userName"    -> text(maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
       "mailAddress" -> email
