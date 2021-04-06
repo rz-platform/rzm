@@ -12,13 +12,13 @@ case class FileNode(data: String, incrementalPath: String) {
 
   val hash: String = incrementalPath.hashCode.toString
 
-  val isRoot: Boolean = data == FileRoot.toString
+  val isRoot: Boolean = data == FileNames.root
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
   private def realDepth: Int = pathWithoutRoot.count(_ == '/')
 
-  def depth: Int = if (isRoot) 0 else if (realDepth < MaxDepthInFileTree.toInt) realDepth else MaxDepthInFileTree.toInt
+  def depth: Int = if (isRoot) 0 else if (realDepth < FileTree.maxDepth) realDepth else FileTree.maxDepth
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
     val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
@@ -41,7 +41,6 @@ case class FileNode(data: String, incrementalPath: String) {
     val cmpObj = obj.asInstanceOf[FileNode]
     incrementalPath == cmpObj.incrementalPath && data == cmpObj.data
   }
-
 }
 
 /**
@@ -51,4 +50,9 @@ case class FileNode(data: String, incrementalPath: String) {
  */
 case class FileTree(root: FileNode) {
   def addElement(elementValue: String): Unit = root.addElement(root.incrementalPath, elementValue.split("/"))
+}
+
+object FileTree {
+  val excluded: Array[String] = Array(FileNames.keep, FileNames.root)
+  val maxDepth                = 4
 }

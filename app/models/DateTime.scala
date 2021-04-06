@@ -26,9 +26,8 @@ object DateTime {
 
   def printFull(d: LocalDateTime): String = d.format(fullFormatter)
 
-  // from timestamp
-  def fromTimeStamp(t: Long): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), TimeZone.getDefault().toZoneId());
+  def fromTimestamp(t: Long): LocalDateTime =
+    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), TimeZone.getDefault.toZoneId);
 
   def now: Long = Instant.now().getEpochSecond
 

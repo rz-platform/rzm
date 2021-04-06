@@ -8,24 +8,26 @@ import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories.{ GitRepository, TemplateRepository }
+import templates.TemplateRenderer
 import views.html
-
-import java.io.File
 
 import javax.inject.Inject
 import scala.collection.immutable.Map
 import scala.concurrent.{ ExecutionContext, Future }
-
 class TemplateController @Inject() (
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
   config: Configuration,
   templateRepository: TemplateRepository,
   git: GitRepository,
-  cc: MessagesControllerComponents
+  cc: MessagesControllerComponents,
+  renderer: TemplateRenderer
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)
+
+  // TODO: fix
+  //  renderer.compile(templateRepository.list.values)
 
   val createForm: Form[TemplateData] = Form(
     mapping(
@@ -38,17 +40,15 @@ class TemplateController @Inject() (
       Future(Ok(html.git.constructor(templateRepository.list)))
     }
 
+  def flattenMap(context: Map[String, Seq[String]]): Map[String, String] = context.map {
+    case (key: String, values: Seq[String]) => (key, values.mkString(""))
+  }
+
   private def renderTemplate(ctx: Map[String, Seq[String]], tpl: Template)(
     implicit req: RepositoryRequest[AnyContent]
-  ) = Future {
-    val files = FilePath.recursiveList(tpl.path)
-      .filter(TemplateExcluded.filter(_))
-      .map { f =>
-        val filePath = RzPathUrl.make(FilePath.relativize(tpl.path.toPath, f.getAbsolutePath), f.getName, isFolder = false).uri
-        CommitFile(f.getName, filePath, f)
-      }
-      .toSeq
-    git.commitUploadedFiles(
+  ): Future[_] = Future {
+    val files = renderer.render(tpl, flattenMap(ctx))
+    git.commitFiles(
       req.repository,
       files,
       req.account,
@@ -61,23 +61,19 @@ class TemplateController @Inject() (
   def build(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
       val badRequest = Future(BadRequest(html.git.constructor(templateRepository.list)))
+      val success = Redirect(
+        routes.FileTreeController
+          .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
+      )
 
       val ctx: Map[String, Seq[String]] = req.body.asFormUrlEncoded.getOrElse(Map())
       createForm.bindFromRequest.fold(
         _ => badRequest,
-        data => {
-          Messages("repository.constructor.commit.message", data.name)
+        data =>
           templateRepository.get(data.name) match {
-            case Some(tpl) =>
-              renderTemplate(ctx, tpl)(req).map { _ =>
-                Redirect(
-                  routes.FileTreeController
-                    .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
-                )
-              }
-            case _ => badRequest
+            case Some(tpl) => renderTemplate(ctx, tpl)(req).map(_ => success)
+            case _         => badRequest
           }
-        }
       )
     }
 }
