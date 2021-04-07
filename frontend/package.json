@@ -38,6 +38,14 @@
     "webpack-cli": "^4.1.0"
   },
   "dependencies": {
-    "codemirror": "^5.50.2"
+    "@codemirror/view": "^0.18.4",
+    "@codemirror/state": "^0.18.4",
+    "@codemirror/matchbrackets": "^0.18",
+    "@codemirror/highlight": "^0.18",
+    "@codemirror/language": "^0.18",
+    "@codemirror/commands": "^0.18",
+    "@codemirror/history": "^0.18",
+    "@codemirror/legacy-modes": "^0.18",
+    "@codemirror/stream-parser": "^0.18"
   }
 }
