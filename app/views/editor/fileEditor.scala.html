@@ -46,7 +46,7 @@
 
 @if(blob.content.viewType == "text"){
   <div class="code-wrap">
-    <textarea class="editor" id="code" name="content">@blob.content.content.getOrElse("")</textarea>
+    <textarea class="editor" id="code" name="content" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>
 }
 @if(blob.content.viewType == "image"){
