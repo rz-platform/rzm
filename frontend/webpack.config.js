@@ -5,7 +5,7 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 module.exports = {
     entry: {
-        editor: './app/editor.page.ts',
+        fileview: './app/fileview.page.ts',
         turbo: './app/turbolinks.ts',
         upload: './app/upload.page.ts',
         main: './stylesheets/main.scss',
