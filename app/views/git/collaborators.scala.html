@@ -26,11 +26,11 @@ case (collaborator) => {
 <h2>Add member</h2>
 @form(routes.CollaboratorsController.addCollaborator(request.repository.owner.userName, request.repository.name),Symbol("class") -> "rz-form") { 
 @CSRF.formField 
-@inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"), Symbol("_help") -> "")
+@inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"), Symbol("_help") -> "", Symbol("autofocus") -> "")
 @select(field = addCollaboratorForm("accessLevel"), options = Seq(
 	ViewAccess.toString -> request.messages("repository.collaborator.accessLevel.read"), 
 	EditAccess.toString -> request.messages("repository.collaborator.accessLevel.write")), 
-	Symbol("_label") -> request.messages("repository.collaborator.accessLevel") )
+	Symbol("_label") -> request.messages("repository.collaborator.accessLevel"), Symbol("_help") -> "")
 <div class="actions">
   <input type="submit" value='@request.messages("repository.collaborator.button")' class="rz-button" />
 </div>

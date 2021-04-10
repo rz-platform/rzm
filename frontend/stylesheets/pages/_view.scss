@@ -88,7 +88,8 @@
     height: 100%;
     position: relative;
   }
-  textarea.editor {
+  textarea.editor,
+  textarea.editor:focus {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -100,6 +101,8 @@
     font-family: 'Fira Code', monospace;
     white-space: pre-wrap;
     word-wrap: break-word;
+    outline: none;
+    border: 0;
   }
   .rz-menu-file-tree {
     position: absolute;

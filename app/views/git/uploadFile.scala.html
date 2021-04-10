@@ -9,19 +9,20 @@
   <p> @request.messages("repository.upload.messagePath", path) </p>
   } else {
   <p> @request.messages("repository.upload.messageRoot") </p>
-  } @form(routes.FileUploadController.upload(request.repository.owner.userName, request.repository.name,
-  rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ @CSRF.formField
+  } 
+  @form(routes.FileUploadController.upload(request.repository.owner.userName, request.repository.name,
+  rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ 
+  @CSRF.formField
 
   <label for="single" class="rz-radio">
-    <input type="radio" id="single" name="input-type" value="single" checked />
+    <input type="radio" name="inputtype" id="single" name="input-type" value="single" checked />
     @request.messages("repository.upload.singleFile")
   </label>
 
   <label for="directory" class="rz-radio">
-    <input type="radio" id="directory" name="input-type" value="directory" />
+    <input type="radio" name="inputtype" id="directory" name="input-type" value="directory" />
     @request.messages("repository.upload.completeDirectory")
   </label>
-
   <input type="file" id="filepicker" name="fileList" multiple accept="image/*,text/*" />
   <ul id="listing"></ul>
 
