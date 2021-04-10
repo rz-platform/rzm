@@ -3,14 +3,6 @@
   padding-left: 10px;
 }
 
-input[type='radio'] {
-  display: none;
-}
-
-input[type='radio']:checked + label {
-  color: #000;
-}
-
 .cloneLabel {
   cursor: pointer;
 }
@@ -29,6 +21,14 @@ input[id='showSsh']:checked ~ #gitHttpUrl {
 
 .cloneby {
   color: $base-gray-color;
+
+  input[type='radio'] {
+    display: none;
+  }
+
+  input[type='radio']:checked + label {
+    color: #000;
+  }
 }
 
 #gitHttpUrl,
