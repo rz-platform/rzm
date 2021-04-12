@@ -19,6 +19,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class FileTreeController @Inject() (
   git: GitRepository,
   errorHandler: ErrorHandler,
+  metaGitRepository: RzMetaGitRepository,
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
   cc: MessagesControllerComponents
@@ -81,19 +82,25 @@ class FileTreeController @Inject() (
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)) { implicit req =>
-      // TODO
       val fileTree = git.fileTree(req.repository, rev)
-      Ok(
-        html.git.fileTree(
-          editorForm,
-          EmptyBlob,
-          "",
-          rev,
-          FilePath(Array()),
-          fileTree,
-          addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
-        )
-      )
+      req.repository.lastOpenedFile match {
+        case Some(path) =>
+          Redirect(
+            routes.FileTreeController.blob(accountName, repositoryName, rev, path)
+          )
+        case _ =>
+          Ok(
+            html.git.fileTree(
+              editorForm,
+              EmptyBlob,
+              "",
+              rev,
+              FilePath(Array()),
+              fileTree,
+              addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+            )
+          )
+      }
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
@@ -103,6 +110,7 @@ class FileTreeController @Inject() (
       val fileTree = git.fileTree(req.repository, rev)
       blobInfo match {
         case Some(blob) =>
+          metaGitRepository.setRzRepoLastFile(req.repository, path)
           Future.successful {
             Ok(
               html.git.fileTree(

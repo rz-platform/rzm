@@ -54,8 +54,9 @@ class RzRepositoryController @Inject() (
             case Left(NotFoundInRepository) =>
               val repo   = new RzRepository(req.account, repository.name)
               val author = new Collaborator(req.account, OwnerAccess)
-              metaGitRepository.setRzRepo(repo, author)
-              git.create(repo)
+              val conf   = RzRepositoryConfig.makeDefault(repo, None, None, None)
+              metaGitRepository.setRzRepo(repo, author, conf)
+              git.initRepo(repo)
               Future(
                 Redirect(
                   routes.FileTreeController

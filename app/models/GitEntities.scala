@@ -9,19 +9,20 @@ import java.time.{ LocalDateTime, ZoneId }
 case class RzRepository(
   owner: Account,
   name: String,
-  entrypoint: Option[String],
+  lastOpenedFile: Option[String],
   createdAt: Long,
   updatedAt: Long
 ) {
-  def id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
+  val id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
 
-  def collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
+  val collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
+  val configurationId: String     = IdTable.rzRepoConfPrefix + owner.userName + ":" + name
 
   def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/${name}.git"
 
   def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
 
-  def toMap = Map("entrypoint" -> entrypoint, "createdAt" -> createdAt, "updatedAt" -> updatedAt)
+  val toMap = Map("lastOpened" -> lastOpenedFile, "createdAt" -> createdAt, "updatedAt" -> updatedAt)
 
   def this(owner: Account, name: String) = this(owner, name, None, DateTime.now, DateTime.now)
 }
@@ -43,9 +44,46 @@ object RzRepository {
     } yield RzRepository(
       owner,
       name,
-      data.get("entrypoint"),
+      data.get("lastOpened"),
       DateTime.parseTimestamp(createdAt),
       DateTime.parseTimestamp(updatedAt)
+    )) match {
+      case Some(a) => Right(a)
+      case None    => Left(ParsingError)
+    }
+}
+
+case class RzRepositoryConfig(
+  repo: RzRepository,
+  entrypoint: Option[String],
+  compiler: RzCompiler,
+  bibliography: RzBib
+) {
+  val id: String = repo.configurationId
+  val toMap      = Map("compiler" -> compiler.id, "bibliography" -> bibliography.id, "entrypoint" -> entrypoint)
+}
+
+object RzRepositoryConfig {
+  def makeDefault(
+    repository: RzRepository,
+    entrypoint: Option[String],
+    compiler: Option[RzCompiler],
+    bibliography: Option[RzBib]
+  ): RzRepositoryConfig =
+    RzRepositoryConfig(repository, entrypoint, compiler.getOrElse(PdfLatex), bibliography.getOrElse(BibLatex))
+
+  def make(repository: RzRepository, data: Map[String, String]): Either[RzError, RzRepositoryConfig] =
+    (for {
+      compilerId     <- data.get("compiler")
+      bibliographyId <- data.get("bibliography")
+
+      compiler <- RzCompiler.make(compilerId)
+      bib      <- RzBib.make(bibliographyId)
+    } yield RzRepositoryConfig(
+      repository,
+      data.get("entrypoint"),
+      compiler,
+      bib
     )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)

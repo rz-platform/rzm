@@ -68,6 +68,7 @@ object IdTable {
   val userEmailId             = "ae:" // account email
 
   val rzRepoPrefix              = "ri:" // repository instance
+  val rzRepoConfPrefix          = "rg:" // repository configuration
   val rzRepoCollaboratorsPrefix = "rc:" // repository collaborators
 
   val collaboratorPrefix = "ci:" // collaborator instance
