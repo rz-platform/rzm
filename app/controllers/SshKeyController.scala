@@ -42,7 +42,7 @@ class SshKeyController @Inject() (
   }
 
   def addSshKey(): Action[AnyContent] = authAction.async { implicit request =>
-    addSshKeyForm.bindFromRequest.fold(
+    addSshKeyForm.bindFromRequest().fold(
       formWithErrors =>
         accountService.listSshKeys(request.account).map { list =>
           Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
@@ -67,7 +67,7 @@ class SshKeyController @Inject() (
   }
 
   def deleteSshKey(): Action[AnyContent] = authAction.async { implicit request =>
-    deleteSshKeyForm.bindFromRequest.fold(
+    deleteSshKeyForm.bindFromRequest().fold(
       formWithErrors =>
         accountService.listSshKeys(request.account).map { list =>
           Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))

@@ -63,8 +63,8 @@ class RzRepositoryController @Inject() (
                 )
               )
             case _ =>
-              val formBuiltFromRequest = createRepositoryForm.bindFromRequest
-              val newForm = createRepositoryForm.bindFromRequest.copy(
+              val formBuiltFromRequest = createRepositoryForm.bindFromRequest()
+              val newForm = createRepositoryForm.bindFromRequest().copy(
                 errors = formBuiltFromRequest.errors ++ Seq(
                   FormError("name", Messages("repository.create.error.alreadyexists"))
                 )

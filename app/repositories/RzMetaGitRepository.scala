@@ -12,7 +12,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     r.clients.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.hmset(repo.id, repo.toMap)
-        f.zadd(repo.owner.projectListId, repo.createdAt, repo.id)
+        f.zadd(repo.owner.projectListId, repo.createdAt.toDouble, repo.id)
 
         f.hmset(author.keyAccessLevel(repo), author.toMap)
       }
@@ -54,8 +54,8 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
   def addCollaborator(c: Collaborator, repo: RzRepository): Future[Option[List[Any]]] = Future {
     r.clients.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
-        f.zadd(repo.collaboratorsListId, c.createdAt, c.account.id)
-        f.zadd(c.account.projectListId, c.createdAt, repo.id)
+        f.zadd(repo.collaboratorsListId, c.createdAt.toDouble, c.account.id)
+        f.zadd(c.account.projectListId, c.createdAt.toDouble, repo.id)
         f.hmset(c.keyAccessLevel(repo), c.toMap)
       }
     }

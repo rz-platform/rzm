@@ -67,7 +67,7 @@ class TemplateController @Inject() (
       )
 
       val ctx: Map[String, Seq[String]] = req.body.asFormUrlEncoded.getOrElse(Map())
-      createForm.bindFromRequest.fold(
+      createForm.bindFromRequest().fold(
         _ => badRequest,
         data =>
           templateRepository.get(data.name) match {

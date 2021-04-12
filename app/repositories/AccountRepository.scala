@@ -74,7 +74,7 @@ class AccountRepository @Inject() (r: Redis)(implicit ec: ExecutionContext) {
     r.clients.withClient { client =>
       client.pipeline { f =>
         f.hmset(key.id, key.toMap)
-        f.zadd(account.sshKeysListId, key.createdAt, key.id)
+        f.zadd(account.sshKeysListId, key.createdAt.toDouble, key.id)
       }
     }
   }

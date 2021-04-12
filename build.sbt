@@ -4,9 +4,9 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(
     name := "rzm",
-    version := "2.8.7",
+    version := "2.8.8",
     maintainer := "eugenebosyakov@gmail.com",
-    scalaVersion := "2.13.1",
+    scalaVersion := "2.13.5",
     libraryDependencies ++= Seq(
       guice,
       "org.scalatestplus.play"           %% "scalatestplus-play"          % "5.0.0" % Test,

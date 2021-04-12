@@ -44,8 +44,8 @@ class AuthController @Inject() (
       checkPassword(accountData.userName, accountData.password).flatMap {
         case Right(account) => authAction.authorize(account, req.session)
         case _ =>
-          val formBuiltFromRequest = form.bindFromRequest
-          val newForm = form.bindFromRequest.copy(
+          val formBuiltFromRequest = form.bindFromRequest()
+          val newForm = form.bindFromRequest().copy(
             errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
           )
           Future(BadRequest(html.signin(newForm)))

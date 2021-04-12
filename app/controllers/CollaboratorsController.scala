@@ -43,7 +43,7 @@ class CollaboratorsController @Inject() (
   def addCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async {
       implicit req: RepositoryRequest[AnyContent] =>
-        addCollaboratorForm.bindFromRequest.fold(
+        addCollaboratorForm.bindFromRequest().fold(
           formWithErrors =>
             metaGitRepository.getCollaborators(req.repository).map { list =>
               BadRequest(html.git.collaborators(formWithErrors, list))
@@ -73,7 +73,7 @@ class CollaboratorsController @Inject() (
 
   def removeCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      removeCollaboratorForm.bindFromRequest.fold(
+      removeCollaboratorForm.bindFromRequest().fold(
         _ =>
           metaGitRepository.getCollaborators(req.repository).map { list =>
             BadRequest(

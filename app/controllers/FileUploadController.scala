@@ -65,7 +65,7 @@ class FileUploadController @Inject() (
     authAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryAction.on(accountName, repositoryName, EditAccess)) {
         implicit req: RepositoryRequest[MultipartFormData[File]] =>
-          uploadFileForm.bindFromRequest.fold(
+          uploadFileForm.bindFromRequest().fold(
             formWithErrors =>
               BadRequest(
                 html.git.uploadFile(
