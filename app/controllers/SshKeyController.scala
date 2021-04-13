@@ -42,44 +42,48 @@ class SshKeyController @Inject() (
   }
 
   def addSshKey(): Action[AnyContent] = authAction.async { implicit request =>
-    addSshKeyForm.bindFromRequest.fold(
-      formWithErrors =>
-        accountService.listSshKeys(request.account).map { list =>
-          Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
-        },
-      sshKeyData =>
-        accountService.cardinalitySshKey(request.account).flatMap {
-          case Right(c: Long) if c < maximumNumberPerUser =>
-            val key = new SshKey(sshKeyData.publicKey, request.account)
-            accountService
-              .setSshKey(request.account, key)
-              .map(_ =>
+    addSshKeyForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          accountService.listSshKeys(request.account).map { list =>
+            Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
+          },
+        sshKeyData =>
+          accountService.cardinalitySshKey(request.account).flatMap {
+            case Right(c: Long) if c < maximumNumberPerUser =>
+              val key = new SshKey(sshKeyData.publicKey, request.account)
+              accountService
+                .setSshKey(request.account, key)
+                .map(_ =>
+                  Redirect(routes.SshKeyController.keysPage())
+                    .flashing("success" -> Messages("profile.ssh.notification.added"))
+                )
+            case _ =>
+              Future(
                 Redirect(routes.SshKeyController.keysPage())
-                  .flashing("success" -> Messages("profile.ssh.notification.added"))
+                  .flashing("error" -> Messages("profile.ssh.notification.toomuch"))
               )
-          case _ =>
-            Future(
-              Redirect(routes.SshKeyController.keysPage())
-                .flashing("error" -> Messages("profile.ssh.notification.toomuch"))
-            )
-        }
-    )
+          }
+      )
   }
 
   def deleteSshKey(): Action[AnyContent] = authAction.async { implicit request =>
-    deleteSshKeyForm.bindFromRequest.fold(
-      formWithErrors =>
-        accountService.listSshKeys(request.account).map { list =>
-          Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
-        },
-      (sshKeyIdData: SshRemoveData) =>
-        accountService
-          .deleteSshKey(request.account, sshKeyIdData.id)
-          .map(_ =>
-            Redirect(routes.SshKeyController.keysPage())
-              .flashing("success" -> Messages("profile.ssh.notification.removed"))
-          ) // TODO: check ownership
-    )
+    deleteSshKeyForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          accountService.listSshKeys(request.account).map { list =>
+            Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
+          },
+        (sshKeyIdData: SshRemoveData) =>
+          accountService
+            .deleteSshKey(request.account, sshKeyIdData.id)
+            .map(_ =>
+              Redirect(routes.SshKeyController.keysPage())
+                .flashing("success" -> Messages("profile.ssh.notification.removed"))
+            ) // TODO: check ownership
+      )
   }
 
 }

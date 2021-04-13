@@ -3,30 +3,30 @@
 # ~~~~
 
 # Default path
-GET     /                           controllers.AuthController.index
+GET     /                           controllers.AuthController.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Login
-GET     /signin              controllers.AuthController.loginPage
-POST     /signin              controllers.AuthController.login
+GET     /signin              controllers.AuthController.loginPage()
+POST     /signin              controllers.AuthController.login()
 
 # Sign up
-GET     /signup              controllers.AccountController.signup
-POST     /signup              controllers.AccountController.saveAccount
+GET     /signup              controllers.AccountController.signup()
+POST     /signup              controllers.AccountController.saveAccount()
 
 # Log out
-GET /logout controllers.AuthController.logout
+GET /logout controllers.AuthController.logout()
 
 # Repositories list
 
-GET /repositories      controllers.RzRepositoryController.list
+GET /repositories      controllers.RzRepositoryController.list()
 
 # Repositories creation
 
-GET /repositories/create controllers.RzRepositoryController.createRepository
-POST /repositories/create controllers.RzRepositoryController.saveRepository
+GET /repositories/create controllers.RzRepositoryController.createRepository()
+POST /repositories/create controllers.RzRepositoryController.saveRepository()
 
 # File view
 
@@ -68,17 +68,17 @@ GET /repositories/:account/:repository/:rev/archive controllers.RzRepositoryCont
 
 # Profile editing page
 
-GET /profile controllers.AccountController.accountPage
+GET /profile controllers.AccountController.accountPage()
 GET /profile/image/:account controllers.AccountController.accountPicture(account)
-POST /profile/image/delete controllers.AccountController.removeAccountPicture
-POST /profile controllers.AccountController.editAccount
-POST /profilePassword controllers.AccountController.updatePassword
+POST /profile/image/delete controllers.AccountController.removeAccountPicture()
+POST /profile controllers.AccountController.editAccount()
+POST /profilePassword controllers.AccountController.updatePassword()
 POST  /uploadProfilePage controllers.AccountController.uploadAccountPicture()
 
 # SSH Keys
-GET /profile/keys controllers.SshKeyController.keysPage
-POST /profile/keys/add controllers.SshKeyController.addSshKey
-POST /profile/keys/delete controllers.SshKeyController.deleteSshKey
+GET /profile/keys controllers.SshKeyController.keysPage()
+POST /profile/keys/add controllers.SshKeyController.addSshKey()
+POST /profile/keys/delete controllers.SshKeyController.deleteSshKey()
 
 # Commit log
 GET /repositories/:account/:repository/commits/:rev controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)

@@ -43,25 +43,51 @@ class CollaboratorsController @Inject() (
   def addCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async {
       implicit req: RepositoryRequest[AnyContent] =>
-        addCollaboratorForm.bindFromRequest.fold(
-          formWithErrors =>
+        addCollaboratorForm
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              metaGitRepository.getCollaborators(req.repository).map { list =>
+                BadRequest(html.git.collaborators(formWithErrors, list))
+              },
+            (data: NewCollaboratorData) =>
+              accountRepository.getByUsernameOrEmail(data.emailOrLogin).flatMap {
+                case Right(account: Account) =>
+                  metaGitRepository.isAccountCollaborator(account, req.repository).flatMap {
+                    case true =>
+                      Future(
+                        collaboratorPageRedirect(req)
+                          .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
+                      )
+                    case false =>
+                      val c =
+                        new Collaborator(account, AccessLevel.fromString(data.accessLevel).getOrElse(ViewAccess))
+                      metaGitRepository.addCollaborator(c, req.repository).map(_ => collaboratorPageRedirect(req))
+                  }
+                case _ =>
+                  Future(
+                    collaboratorPageRedirect(req)
+                      .flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
+                  )
+              }
+          )
+    }
+
+  def removeCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
+    authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
+      removeCollaboratorForm
+        .bindFromRequest()
+        .fold(
+          _ =>
             metaGitRepository.getCollaborators(req.repository).map { list =>
-              BadRequest(html.git.collaborators(formWithErrors, list))
+              BadRequest(
+                html.git.collaborators(addCollaboratorForm, list)
+              )
             },
-          (data: NewCollaboratorData) =>
-            accountRepository.getByUsernameOrEmail(data.emailOrLogin).flatMap {
+          (data: RemoveCollaboratorData) =>
+            accountRepository.getByUsernameOrEmail(data.id).flatMap {
               case Right(account: Account) =>
-                metaGitRepository.isAccountCollaborator(account, req.repository).flatMap {
-                  case true =>
-                    Future(
-                      collaboratorPageRedirect(req)
-                        .flashing("error" -> Messages("repository.collaborator.error.alreadycollab"))
-                    )
-                  case false =>
-                    val c =
-                      new Collaborator(account, AccessLevel.fromString(data.accessLevel).getOrElse(ViewAccess))
-                    metaGitRepository.addCollaborator(c, req.repository).map(_ => collaboratorPageRedirect(req))
-                }
+                metaGitRepository.removeCollaborator(account, req.repository).map(_ => collaboratorPageRedirect(req))
               case _ =>
                 Future(
                   collaboratorPageRedirect(req)
@@ -69,27 +95,6 @@ class CollaboratorsController @Inject() (
                 )
             }
         )
-    }
-
-  def removeCollaborator(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      removeCollaboratorForm.bindFromRequest.fold(
-        _ =>
-          metaGitRepository.getCollaborators(req.repository).map { list =>
-            BadRequest(
-              html.git.collaborators(addCollaboratorForm, list)
-            )
-          },
-        (data: RemoveCollaboratorData) =>
-          accountRepository.getByUsernameOrEmail(data.id).flatMap {
-            case Right(account: Account) =>
-              metaGitRepository.removeCollaborator(account, req.repository).map(_ => collaboratorPageRedirect(req))
-            case _ =>
-              Future(
-                collaboratorPageRedirect(req).flashing("error" -> Messages("repository.collaborator.error.nosuchuser"))
-              )
-          }
-      )
     }
 
 }
