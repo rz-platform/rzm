@@ -64,11 +64,13 @@ class RzRepositoryController @Inject() (
               )
             case _ =>
               val formBuiltFromRequest = createRepositoryForm.bindFromRequest()
-              val newForm = createRepositoryForm.bindFromRequest().copy(
-                errors = formBuiltFromRequest.errors ++ Seq(
-                  FormError("name", Messages("repository.create.error.alreadyexists"))
+              val newForm = createRepositoryForm
+                .bindFromRequest()
+                .copy(
+                  errors = formBuiltFromRequest.errors ++ Seq(
+                    FormError("name", Messages("repository.create.error.alreadyexists"))
+                  )
                 )
-              )
               Future(BadRequest(html.git.createRepository(newForm)))
           }
       )

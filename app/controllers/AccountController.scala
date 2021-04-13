@@ -88,10 +88,12 @@ class AccountController @Inject() (
                 .flatMap(_ => authAction.authorize(acc, request.session))
             case _ =>
               val formBuiltFromRequest = signupForm.bindFromRequest()
-              val newForm = signupForm.bindFromRequest().copy(
-                errors =
-                  formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
-              )
+              val newForm = signupForm
+                .bindFromRequest()
+                .copy(
+                  errors =
+                    formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
+                )
               Future(BadRequest(html.signup(newForm)))
           }
       )
@@ -118,49 +120,57 @@ class AccountController @Inject() (
     } else Future(true)
 
   def editAccount: Action[AnyContent] = authAction.async { implicit req =>
-    accountEditForm.bindFromRequest().fold(
-      formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
-      (accountData: AccountData) =>
-        isEmailAvailable(req.account.email, accountData.email).flatMap {
-          case true =>
-            accountRepository
-              .update(req.account, req.account.fromForm(accountData))
-              .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest(), updatePasswordForm)))
-          case false =>
-            val formBuiltFromRequest = accountEditForm.bindFromRequest()
-            val newForm = accountEditForm.bindFromRequest().copy(
-              errors = formBuiltFromRequest.errors ++ Seq(
-                FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
-              )
-            )
-            Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
-        }
-    )
+    accountEditForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
+        (accountData: AccountData) =>
+          isEmailAvailable(req.account.email, accountData.email).flatMap {
+            case true =>
+              accountRepository
+                .update(req.account, req.account.fromForm(accountData))
+                .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest(), updatePasswordForm)))
+            case false =>
+              val formBuiltFromRequest = accountEditForm.bindFromRequest()
+              val newForm = accountEditForm
+                .bindFromRequest()
+                .copy(
+                  errors = formBuiltFromRequest.errors ++ Seq(
+                    FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
+                  )
+                )
+              Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
+          }
+      )
   }
 
   def updatePassword(): Action[AnyContent] = authAction.async { implicit req =>
-    updatePasswordForm.bindFromRequest().fold(
-      formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), formWithErrors))),
-      passwordData =>
-        accountRepository.getPassword(req.account).flatMap {
-          case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
-            val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
-            accountRepository
-              .setPassword(req.account, newPasswordHash)
-              .map(_ =>
-                Redirect(routes.AccountController.accountPage())
-                  .flashing("success" -> Messages("profile.flash.passupdated"))
-              )
-          case _ =>
-            val formBuiltFromRequest = updatePasswordForm.bindFromRequest()
-            val newForm = updatePasswordForm.bindFromRequest().copy(
-              errors = formBuiltFromRequest.errors ++ Seq(
-                FormError("oldPassword", Messages("profile.error.passisincorrect"))
-              )
-            )
-            Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), newForm)))
-        }
-    )
+    updatePasswordForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), formWithErrors))),
+        passwordData =>
+          accountRepository.getPassword(req.account).flatMap {
+            case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
+              val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
+              accountRepository
+                .setPassword(req.account, newPasswordHash)
+                .map(_ =>
+                  Redirect(routes.AccountController.accountPage())
+                    .flashing("success" -> Messages("profile.flash.passupdated"))
+                )
+            case _ =>
+              val formBuiltFromRequest = updatePasswordForm.bindFromRequest()
+              val newForm = updatePasswordForm
+                .bindFromRequest()
+                .copy(
+                  errors = formBuiltFromRequest.errors ++ Seq(
+                    FormError("oldPassword", Messages("profile.error.passisincorrect"))
+                  )
+                )
+              Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), newForm)))
+          }
+      )
   }
 
   val allowedContentTypes = List("image/jpeg", "image/png")
