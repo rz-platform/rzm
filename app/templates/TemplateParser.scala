@@ -48,6 +48,6 @@ object TemplateParser {
     }
 
   private def readTextFile(filename: File): Try[List[String]] =
-    Using(Source.fromFile(filename))(source => (for (line <- source.getLines) yield line).toList)
+    Using(Source.fromFile(filename))(source => (for (line <- source.getLines()) yield line).toList)
 
 }

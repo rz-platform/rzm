@@ -65,29 +65,31 @@ class FileUploadController @Inject() (
     authAction(parse.multipartFormData(handleFilePartAsFile))
       .andThen(repositoryAction.on(accountName, repositoryName, EditAccess)) {
         implicit req: RepositoryRequest[MultipartFormData[File]] =>
-          uploadFileForm.bindFromRequest.fold(
-            formWithErrors =>
-              BadRequest(
-                html.git.uploadFile(
-                  formWithErrors,
-                  formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
-                  formWithErrors.data.getOrElse("path", ".")
+          uploadFileForm
+            .bindFromRequest()
+            .fold(
+              formWithErrors =>
+                BadRequest(
+                  html.git.uploadFile(
+                    formWithErrors,
+                    formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
+                    formWithErrors.data.getOrElse("path", ".")
+                  )
+                ),
+              (data: UploadFileForm) => {
+                val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
+                git.commitFiles(
+                  req.repository,
+                  files,
+                  req.account,
+                  if (rev.nonEmpty) rev else RzRepository.defaultBranch,
+                  data.path,
+                  Messages("repository.upload.message", files.length)
                 )
-              ),
-            (data: UploadFileForm) => {
-              val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
-              git.commitFiles(
-                req.repository,
-                files,
-                req.account,
-                if (rev.nonEmpty) rev else RzRepository.defaultBranch,
-                data.path,
-                Messages("repository.upload.message", files.length)
-              )
-              Redirect(
-                routes.FileTreeController.emptyTree(accountName, repositoryName, rev)
-              ).flashing("success" -> Messages("repository.upload.success"))
-            }
-          )
+                Redirect(
+                  routes.FileTreeController.emptyTree(accountName, repositoryName, rev)
+                ).flashing("success" -> Messages("repository.upload.success"))
+              }
+            )
       }
 }

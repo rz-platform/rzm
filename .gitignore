@@ -19,6 +19,10 @@ metals.sbt
 # SBT
 dist
 project/boot
+project/.boot
+project/.ivy
+project/.sbtboot
+.bsp
 project/target
 project/plugins/target
 target
