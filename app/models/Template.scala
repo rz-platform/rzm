@@ -57,11 +57,20 @@ case class Template(
   description: List[String],
   path: File,
   entrypoint: Option[String],
-  example: Option[String],
+  texCompiler: Option[String],
+  bibCompiler: Option[String],
   fields: List[Field]
 ) {
   def files =
     FilePath
       .recursiveList(path)
       .filter(TemplateExcluded.filter)
+
+  val illustration: Option[String] =
+    entrypoint match {
+      case Some(e) => Some(s"${e.replaceFirst("[.][^.]+$", "")}.pdf")
+      case _       => None
+    }
+
+  def this(name: String, description: List[String], path: File) = this(name, description, path, None, None, None, List())
 }

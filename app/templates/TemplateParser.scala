@@ -17,25 +17,18 @@ object TemplateParser {
       case Success(l) => l
       case Failure(_) => List()
     }
-    val js = readJson(absolutePath)
-    val fields = js match {
-      case Right(v) => TemplateFieldParser.parseFields(v)
-      case Left(_)  => List()
+    readJson(absolutePath) match {
+      case Right(v) => {
+        val fields = TemplateFieldParser.parseFields(v)
+        val entrypoint = TemplateFieldParser.parseArg(v, "entrypoint")
+        val texCompiler = TemplateFieldParser.parseArg(v, "tex")
+        val bibCompiler = TemplateFieldParser.parseArg(v, "bib")
+        Template(name, description, path, entrypoint, texCompiler, bibCompiler, fields)
+      }
+      case Left(_)  => new Template(name, description, path)
     }
-    val entrypoint = js match {
-      case Right(v) => TemplateFieldParser.parseEntrypoint(v)
-      case Left(_)  => None
-    }
-    val illustration = illustrationFileName(entrypoint)
-
-    Template(name, description, path, entrypoint, illustration, fields)
   }
 
-  private def illustrationFileName(entrypoint: Option[String]): Option[String] =
-    entrypoint match {
-      case Some(e) => Some(s"${e.replaceFirst("[.][^.]+$", "")}.pdf")
-      case _       => None
-    }
 
   private def readJson(absolutePath: String): Either[RzError, JsValue] =
     readTextFile(Paths.get(absolutePath, "schema.json").toFile) match {

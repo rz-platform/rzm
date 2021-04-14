@@ -18,8 +18,8 @@ object TemplateFieldParser {
         case Success(f) => f
       }
 
-  def parseEntrypoint(js: JsValue): Option[String] =
-    (js \ "entrypoint").toOption.flatMap { js: JsValue =>
+  def parseArg(js: JsValue, argName: String): Option[String] =
+    (js \ argName).toOption.flatMap { js: JsValue =>
       Try(js.as[String]) match {
         case Success(v) => Some(v)
         case Failure(_) => None

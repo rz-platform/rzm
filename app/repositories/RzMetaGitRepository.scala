@@ -23,8 +23,8 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     r.clients.withClient(client => client.hset(repo.id, "lastOpened", lastOpenedFile))
   }
 
-  def setRzRepoConf(repoConfig: RzRepositoryConfig): Future[Boolean] = Future {
-    r.clients.withClient(client => client.hmset(repoConfig.id, repoConfig.toMap))
+  def setRzRepoConf(config: RzRepositoryConfig): Future[Boolean] = Future {
+    r.clients.withClient(client => client.hmset(config.id, config.toMap))
   }
 
   private def getByRepositoryId(id: String, client: RedisClient): Either[RzError, RzRepository] = {

@@ -7,7 +7,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{ GitRepository, TemplateRepository }
+import repositories.{ GitRepository, TemplateRepository, RzMetaGitRepository }
 import templates.TemplateRenderer
 import views.html
 
@@ -18,6 +18,7 @@ class TemplateController @Inject() (
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
   config: Configuration,
+  metaGitRepository: RzMetaGitRepository,
   templateRepository: TemplateRepository,
   git: GitRepository,
   cc: MessagesControllerComponents,
@@ -26,8 +27,7 @@ class TemplateController @Inject() (
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)
 
-  // TODO: fix
-  //  renderer.compile(templateRepository.list.values)
+  renderer.compile(templateRepository.list.values)
 
   val createForm: Form[TemplateData] = Form(
     mapping(
@@ -40,7 +40,7 @@ class TemplateController @Inject() (
       Future(Ok(html.git.constructor(templateRepository.list)))
     }
 
-  def flattenMap(context: Map[String, Seq[String]]): Map[String, String] = context.map {
+  private def flattenMap(context: Map[String, Seq[String]]): Map[String, String] = context.map {
     case (key: String, values: Seq[String]) => (key, values.mkString(""))
   }
 
@@ -58,6 +58,11 @@ class TemplateController @Inject() (
     )
   }
 
+  private def updateRepoConfig(repo: RzRepository, tpl: Template) = {
+    val config = RzRepositoryConfig(repo, tpl.entrypoint, tpl.texCompiler, tpl.bibCompiler)
+    metaGitRepository.setRzRepoConf(config)
+  }
+
   def build(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
       val badRequest = Future(BadRequest(html.git.constructor(templateRepository.list)))
@@ -71,9 +76,9 @@ class TemplateController @Inject() (
         .bindFromRequest()
         .fold(
           _ => badRequest,
-          data =>
+          data => 
             templateRepository.get(data.name) match {
-              case Some(tpl) => renderTemplate(ctx, tpl)(req).map(_ => success)
+              case Some(tpl) => renderTemplate(ctx, tpl)(req).map(_ => updateRepoConfig(req.repository, tpl)).map(_ => success)
               case _         => badRequest
             }
         )
