@@ -27,6 +27,11 @@ object RzCompiler {
       case LuaLatex.id => Some(LuaLatex)
       case _           => Option.empty[RzCompiler]
     }
+  def make(id: Option[String]): Option[RzCompiler] =
+    id match {
+      case Some(s) => make(s)
+      case _       => Option.empty[RzCompiler]
+    }
 }
 
 sealed trait RzBib {
@@ -52,5 +57,10 @@ object RzBib {
       case NatBib.id   => Some(NatBib)
       case BibLatex.id => Some(BibLatex)
       case _           => Option.empty[RzBib]
+    }
+  def make(id: Option[String]): Option[RzBib] =
+    id match {
+      case Some(s) => make(s)
+      case _       => Option.empty[RzBib]
     }
 }

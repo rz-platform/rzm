@@ -64,7 +64,7 @@ class FileTreeController @Inject() (
   )
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       val raw = git.getRawFile(req.repository, rev, RzPathUrl.make(path).uri)
 
       raw match {
@@ -81,7 +81,7 @@ class FileTreeController @Inject() (
     }
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)) { implicit req =>
       val fileTree = git.fileTree(req.repository, rev)
       req.repository.lastOpenedFile match {
         case Some(path) =>
@@ -90,7 +90,7 @@ class FileTreeController @Inject() (
           )
         case _ =>
           Ok(
-            html.git.fileTree(
+            html.repository.view(
               editorForm,
               EmptyBlob,
               "",
@@ -104,7 +104,7 @@ class FileTreeController @Inject() (
     }
 
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       val rzPath   = RzPathUrl.make(path)
       val blobInfo = git.blobFile(req.repository, rzPath.uri, rev)
       val fileTree = git.fileTree(req.repository, rev)
@@ -113,7 +113,7 @@ class FileTreeController @Inject() (
           metaGitRepository.setRzRepoLastFile(req.repository, path)
           Future.successful {
             Ok(
-              html.git.fileTree(
+              html.repository.view(
                 editorForm.fill(
                   EditedItem(
                     blob.content.content.getOrElse(""),
@@ -191,7 +191,7 @@ class FileTreeController @Inject() (
   }
 
   def edit(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, EditAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       editorForm
         .bindFromRequest(cleanData)
@@ -208,16 +208,15 @@ class FileTreeController @Inject() (
                   case Some(blob) =>
                     Future(
                       BadRequest(
-                        html.git
-                          .fileTree(
-                            formWithErrors,
-                            blob,
-                            rzpath.encoded,
-                            rev,
-                            new FilePath(path),
-                            fileTree,
-                            addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
-                          )
+                        html.repository.view(
+                          formWithErrors,
+                          blob,
+                          rzpath.encoded,
+                          rev,
+                          new FilePath(path),
+                          fileTree,
+                          addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+                        )
                       )
                     )
                   case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
@@ -230,7 +229,7 @@ class FileTreeController @Inject() (
     }
 
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, EditAccess)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)) { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       addNewItemForm
         .bindFromRequest(cleanData)

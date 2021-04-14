@@ -11,7 +11,7 @@
       >
     </li>
     @request.role match { 
-    case OwnerAccess => {
+    case Role.Owner => {
     <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a
         href="@routes.CollaboratorsController.collaboratorsPage(request.repository.owner.userName, request.repository.name)"
@@ -36,6 +36,8 @@
         >@request.messages("repository.tree.commits")</a
       >
     </li>
+    @request.role match { 
+      case Role.Owner => {
     <li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
       <a
         href="@routes.TemplateController.list(request.repository.owner.userName, request.repository.name)"
@@ -43,6 +45,9 @@
         >@request.messages("repository.tree.constructor")</a
       >
     </li>
+    }
+    case _ => {}
+    }
     <li class="rz-menu-item cloneby">
         <input type="radio" id="showHttp" name="radios" checked> 
         <label for="showHttp" class="cloneLabel">HTTPS</label>

@@ -7,7 +7,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{ GitRepository, TemplateRepository, RzMetaGitRepository }
+import repositories.{ GitRepository, RzMetaGitRepository, TemplateRepository }
 import templates.TemplateRenderer
 import views.html
 
@@ -36,8 +36,8 @@ class TemplateController @Inject() (
   )
 
   def list(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      Future(Ok(html.git.constructor(templateRepository.list)))
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
+      Future(Ok(html.repository.constructor(templateRepository.list)))
     }
 
   private def flattenMap(context: Map[String, Seq[String]]): Map[String, String] = context.map {
@@ -58,14 +58,19 @@ class TemplateController @Inject() (
     )
   }
 
-  private def updateRepoConfig(repo: RzRepository, tpl: Template) = {
-    val config = RzRepositoryConfig(repo, tpl.entrypoint, tpl.texCompiler, tpl.bibCompiler)
+  private def updateRepoConfig(repo: RzRepository, tpl: Template): Future[Boolean] = {
+    val config = RzRepositoryConfig.makeDefault(
+      repo,
+      tpl.entrypoint,
+      RzCompiler.make(tpl.texCompiler),
+      RzBib.make(tpl.bibCompiler)
+    )
     metaGitRepository.setRzRepoConf(config)
   }
 
   def build(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, OwnerAccess)).async { implicit req =>
-      val badRequest = Future(BadRequest(html.git.constructor(templateRepository.list)))
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
+      val badRequest = Future(BadRequest(html.repository.constructor(templateRepository.list)))
       val success = Redirect(
         routes.FileTreeController
           .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
@@ -76,10 +81,11 @@ class TemplateController @Inject() (
         .bindFromRequest()
         .fold(
           _ => badRequest,
-          data => 
+          data =>
             templateRepository.get(data.name) match {
-              case Some(tpl) => renderTemplate(ctx, tpl)(req).map(_ => updateRepoConfig(req.repository, tpl)).map(_ => success)
-              case _         => badRequest
+              case Some(tpl) =>
+                renderTemplate(ctx, tpl)(req).map(_ => updateRepoConfig(req.repository, tpl)).map(_ => success)
+              case _ => badRequest
             }
         )
     }

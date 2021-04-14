@@ -18,17 +18,18 @@ class RepositoryAction @Inject() (
   def on(
     ownerName: String,
     repoName: String,
-    minAccess: AccessLevel
+    minRole: Role
   ): ActionRefiner[AccountRequest, RepositoryRequest] =
     new ActionRefiner[AccountRequest, RepositoryRequest] {
       def executionContext: ExecutionContext = ec
 
-      private def checkAccess(account: Account): Future[Either[RzError, (RzRepository, AccessLevel)]] =
+      private def checkAccess(account: Account): Future[Either[RzError, (RzRepository, Role)]] =
         gitEntitiesRepository.getByOwnerAndName(ownerName, repoName).flatMap {
           case Right(repo: RzRepository) =>
             gitEntitiesRepository.getCollaborator(account, repo).map {
-              case Right(c: Collaborator) if c.role.role <= minAccess.role => Right((repo, c.role))
-              case _                                                       => Left(AccessDenied)
+              case Right(c: Collaborator) if c.role.weight >= minRole.weight => Right((repo, c.role))
+
+              case _ => Left(AccessDenied)
             }
           case _ => Future(Left(NotFoundInRepository))
         }
@@ -38,7 +39,7 @@ class RepositoryAction @Inject() (
       ): Future[Either[Result, RepositoryRequest[A]]] =
         checkAccess(request.account).flatMap {
           case Right(data) =>
-            val (repository: RzRepository, access: AccessLevel) = data
+            val (repository: RzRepository, access: Role) = data
             Future(Right(new RepositoryRequest[A](request, repository, request.account, access, messagesApi)))
           case Left(AccessDenied) =>
             Future(Left(errorHandler.clientError(request, msg = request.messages("error.accessdenied"))))

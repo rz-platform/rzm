@@ -22,7 +22,11 @@ case class RzRepository(
 
   def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
 
-  val toMap = Map("lastOpened" -> lastOpenedFile, "createdAt" -> createdAt, "updatedAt" -> updatedAt)
+  val toMap: Map[String, String] = {
+    // take advantage of the iterable nature of Option
+    val lastOpened = if (this.lastOpenedFile.nonEmpty) Some("lastOpened" -> this.lastOpenedFile.get) else None
+    (Seq("createdAt" -> createdAt.toString, "updatedAt" -> updatedAt.toString) ++ lastOpened).toMap
+  }
 
   def this(owner: Account, name: String) = this(owner, name, None, DateTime.now, DateTime.now)
 }
@@ -60,7 +64,11 @@ case class RzRepositoryConfig(
   bibliography: RzBib
 ) {
   val id: String = repo.configurationId
-  val toMap      = Map("compiler" -> compiler.id, "bibliography" -> bibliography.id, "entrypoint" -> entrypoint)
+  val toMap: Map[String, String] = {
+    // take advantage of the iterable nature of Option
+    val entrypoint = if (this.entrypoint.nonEmpty) Some("entrypoint" -> this.entrypoint.get) else None
+    (Seq("compiler" -> compiler.id, "bibliography" -> bibliography.id) ++ entrypoint).toMap
+  }
 }
 
 object RzRepositoryConfig {

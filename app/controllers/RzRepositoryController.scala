@@ -31,7 +31,7 @@ class RzRepositoryController @Inject() (
   )
 
   def createRepository: Action[AnyContent] = authAction.async { implicit req =>
-    Future(Ok(html.git.createRepository(createRepositoryForm)))
+    Future(Ok(html.createRepository(createRepositoryForm)))
   }
 
   private def clearRepositoryData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
@@ -48,12 +48,12 @@ class RzRepositoryController @Inject() (
     createRepositoryForm
       .bindFromRequest(cleanData)
       .fold(
-        formWithErrors => Future(BadRequest(html.git.createRepository(formWithErrors))),
+        formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
         repository =>
           metaGitRepository.getByOwnerAndName(req.account.userName, repository.name).flatMap {
             case Left(NotFoundInRepository) =>
               val repo   = new RzRepository(req.account, repository.name)
-              val author = new Collaborator(req.account, OwnerAccess)
+              val author = new Collaborator(req.account, Role.Owner)
               val conf   = RzRepositoryConfig.makeDefault(repo, None, None, None)
               metaGitRepository.setRzRepo(repo, author, conf)
               git.initRepo(repo)
@@ -72,7 +72,7 @@ class RzRepositoryController @Inject() (
                     FormError("name", Messages("repository.create.error.alreadyexists"))
                   )
                 )
-              Future(BadRequest(html.git.createRepository(newForm)))
+              Future(BadRequest(html.createRepository(newForm)))
           }
       )
   }
@@ -81,7 +81,7 @@ class RzRepositoryController @Inject() (
    * Display list of repositories.
    */
   def list: Action[AnyContent] = authAction.async { implicit req =>
-    metaGitRepository.listRepositories(req.account).flatMap(list => Future(Ok(html.git.listRepositories(list))))
+    metaGitRepository.listRepositories(req.account).flatMap(list => Future(Ok(html.listRepositories(list))))
   }
 
   def downloadRepositoryArchive(
@@ -89,7 +89,7 @@ class RzRepositoryController @Inject() (
     repositoryName: String,
     rev: String
   ): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)) { implicit req =>
       Ok.sendFile(
         git.createArchive(req.repository, "", rev),
         inline = false,
@@ -98,10 +98,10 @@ class RzRepositoryController @Inject() (
     }
 
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, ViewAccess)).async { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       val commitLog = git.getCommitsLog(req.repository, rev, page, 30)
       commitLog match {
-        case Right((logs, hasNext)) => Future(Ok(html.git.commitLog(logs, rev, hasNext, page)))
+        case Right((logs, hasNext)) => Future(Ok(html.repository.log(logs, rev, hasNext, page)))
         case Left(_)                => errorHandler.onClientError(req, msg = Messages("error.notfound"))
       }
     }

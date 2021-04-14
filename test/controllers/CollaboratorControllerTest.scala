@@ -1,6 +1,6 @@
 package controllers
 
-import models.{ EditAccess, RzRepository }
+import models.{ Edit, RzRepository }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -20,7 +20,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
         .withCookies(owner.c)
     )
 
-    await(collaboratorsController.addCollaborator(owner.a.userName, repositoryName).apply(request))
+    await(collaboratorsController.addCollaboratorView(owner.a.userName, repositoryName).apply(request))
   }
 
   def removeCollaborator(
@@ -43,7 +43,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
+    val result       = addCollaborator(repoName, owner, collaborator.a.userName, Edit.toString)
 
     result.header.status must equal(303)
     val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
@@ -56,7 +56,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    addCollaborator(repoName, owner, "nonexistentusername", EditAccess.toString)
+    addCollaborator(repoName, owner, "nonexistentusername", Edit.toString)
     val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
     r.isRight must equal(false)
   }
@@ -66,11 +66,11 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
+    val result       = addCollaborator(repoName, owner, collaborator.a.userName, Edit.toString)
 
     result.header.status must equal(303)
 
-    addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
+    addCollaborator(repoName, owner, collaborator.a.userName, Edit.toString)
     result.header.status must equal(303)
   }
 
@@ -80,7 +80,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     createRepository(repoName, owner)
     val collaborator = createAccount()
 
-    addCollaborator(repoName, owner, collaborator.a.userName, EditAccess.toString)
+    addCollaborator(repoName, owner, collaborator.a.userName, Edit.toString)
 
     val result = removeCollaborator(repoName, owner, collaborator.a.userName)
 

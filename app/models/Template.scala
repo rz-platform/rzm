@@ -61,7 +61,7 @@ case class Template(
   bibCompiler: Option[String],
   fields: List[Field]
 ) {
-  def files =
+  def files: Array[File] =
     FilePath
       .recursiveList(path)
       .filter(TemplateExcluded.filter)
@@ -72,5 +72,6 @@ case class Template(
       case _       => None
     }
 
-  def this(name: String, description: List[String], path: File) = this(name, description, path, None, None, None, List())
+  def this(name: String, description: List[String], path: File) =
+    this(name, description, path, None, None, None, List())
 }

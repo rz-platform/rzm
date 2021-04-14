@@ -13,22 +13,21 @@ object TemplateParser {
   def parse(path: File): Template = {
     val name         = path.getName.split('-').map(_.capitalize).mkString(" ")
     val absolutePath = path.getAbsolutePath
-    val description: List[String] = readTextFile(Paths.get(absolutePath, "readme.txt").toFile) match {
-      case Success(l) => l
-      case Failure(_) => List()
-    }
+    val description: List[String] =
+      readTextFile(Paths.get(absolutePath, "readme.txt").toFile) match {
+        case Success(l) => l
+        case Failure(_) => List()
+      }
     readJson(absolutePath) match {
-      case Right(v) => {
-        val fields = TemplateFieldParser.parseFields(v)
-        val entrypoint = TemplateFieldParser.parseArg(v, "entrypoint")
-        val texCompiler = TemplateFieldParser.parseArg(v, "tex")
+      case Right(v) =>
+        val fields      = TemplateFieldParser.parseFields(v)
+        val entrypoint  = TemplateFieldParser.parseArg(v, "entrypoint")
+        val texCompiler = TemplateFieldParser.parseArg(v, "compiler")
         val bibCompiler = TemplateFieldParser.parseArg(v, "bib")
         Template(name, description, path, entrypoint, texCompiler, bibCompiler, fields)
-      }
-      case Left(_)  => new Template(name, description, path)
+      case Left(_) => new Template(name, description, path)
     }
   }
-
 
   private def readJson(absolutePath: String): Either[RzError, JsValue] =
     readTextFile(Paths.get(absolutePath, "schema.json").toFile) match {
