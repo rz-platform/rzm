@@ -451,8 +451,6 @@ class GitRepository @Inject() (config: Configuration) {
         inserter.flush()
         inserter.close()
 
-//        val receivePack    = new ReceivePack(git.getRepository)
-//        val receiveCommand = new ReceiveCommand(headTip, commitId, headName)
         commitId
       }
     }
@@ -460,20 +458,18 @@ class GitRepository @Inject() (config: Configuration) {
   def processTree[T](git: Git, id: ObjectId)(f: (String, CanonicalTreeParser) => T): Seq[T] =
     Using.resource(new RevWalk(git.getRepository)) { revWalk =>
       Using.resource(new TreeWalk(git.getRepository)) { treeWalk =>
-        val index = treeWalk.addTree(revWalk.parseTree(id))
-        treeWalk.setRecursive(true)
         val result = new collection.mutable.ListBuffer[T]()
-        while (treeWalk.next) {
-          result += f(treeWalk.getPathString, treeWalk.getTree(index, classOf[CanonicalTreeParser]))
+        if (id != null) {
+          val tree  = revWalk.parseTree(id)
+          val index = treeWalk.addTree(revWalk.parseTree(id))
+          treeWalk.setRecursive(true)
+          while (treeWalk.next) {
+            result += f(treeWalk.getPathString, treeWalk.getTree(index, classOf[CanonicalTreeParser]))
+          }
         }
         result.toSeq
       }
     }
-
-  def create(repo: RzRepository): Unit = {
-    initRepo(repo)
-    createFile(repo, "README.md", "Initial commit", repo.owner)
-  }
 
   def createFile(repo: RzRepository, fileName: String, commitName: String, account: Account): Unit =
     Using.resource(Git.open(repositoryDir(repo))) { git =>
@@ -564,7 +560,7 @@ class GitRepository @Inject() (config: Configuration) {
     }
   }
 
-  private def initRepo(repo: RzRepository): Unit =
+  def initRepo(repo: RzRepository): Unit =
     Using(new RepositoryBuilder().setGitDir(repositoryDir(repo)).setBare().build) { repository =>
       repository.create(true)
       setReceivePack(repository)

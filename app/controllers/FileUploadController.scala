@@ -34,8 +34,8 @@ class FileUploadController @Inject() (
   )
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
-    authAction.andThen(repositoryAction.on(accountName, repositoryName, EditAccess)).async { implicit request =>
-      Future(Ok(html.git.uploadFile(uploadFileForm, rev, RzPathUrl.make(path).uri)))
+    authAction.andThen(repositoryAction.on(accountName, repositoryName, Role.Editor)).async { implicit request =>
+      Future(Ok(html.repository.upload(uploadFileForm, rev, RzPathUrl.make(path).uri)))
     }
 
   /**
@@ -63,14 +63,14 @@ class FileUploadController @Inject() (
    */
   def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
     authAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryAction.on(accountName, repositoryName, EditAccess)) {
+      .andThen(repositoryAction.on(accountName, repositoryName, Role.Editor)) {
         implicit req: RepositoryRequest[MultipartFormData[File]] =>
           uploadFileForm
             .bindFromRequest()
             .fold(
               formWithErrors =>
                 BadRequest(
-                  html.git.uploadFile(
+                  html.repository.upload(
                     formWithErrors,
                     formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
                     formWithErrors.data.getOrElse("path", ".")

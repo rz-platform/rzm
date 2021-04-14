@@ -106,7 +106,7 @@ class AccountController @Inject() (
 
   def accountPage: Action[AnyContent] = authAction.async { implicit request =>
     accountRepository.getById(request.account.id).flatMap {
-      case Right(account) => Future(Ok(html.userProfile(filledAccountEditForm(account), updatePasswordForm)))
+      case Right(account) => Future(Ok(html.profile(filledAccountEditForm(account), updatePasswordForm)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }
   }
@@ -123,13 +123,13 @@ class AccountController @Inject() (
     accountEditForm
       .bindFromRequest()
       .fold(
-        formWithErrors => Future(BadRequest(html.userProfile(formWithErrors, updatePasswordForm))),
+        formWithErrors => Future(BadRequest(html.profile(formWithErrors, updatePasswordForm))),
         (accountData: AccountData) =>
           isEmailAvailable(req.account.email, accountData.email).flatMap {
             case true =>
               accountRepository
                 .update(req.account, req.account.fromForm(accountData))
-                .map(_ => Ok(html.userProfile(accountEditForm.bindFromRequest(), updatePasswordForm)))
+                .map(_ => Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm)))
             case false =>
               val formBuiltFromRequest = accountEditForm.bindFromRequest()
               val newForm = accountEditForm
@@ -139,7 +139,7 @@ class AccountController @Inject() (
                     FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
                   )
                 )
-              Future(BadRequest(html.userProfile(newForm, updatePasswordForm)))
+              Future(BadRequest(html.profile(newForm, updatePasswordForm)))
           }
       )
   }
@@ -148,7 +148,7 @@ class AccountController @Inject() (
     updatePasswordForm
       .bindFromRequest()
       .fold(
-        formWithErrors => Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), formWithErrors))),
+        formWithErrors => Future(BadRequest(html.profile(filledAccountEditForm(req.account), formWithErrors))),
         passwordData =>
           accountRepository.getPassword(req.account).flatMap {
             case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
@@ -168,7 +168,7 @@ class AccountController @Inject() (
                     FormError("oldPassword", Messages("profile.error.passisincorrect"))
                   )
                 )
-              Future(BadRequest(html.userProfile(filledAccountEditForm(req.account), newForm)))
+              Future(BadRequest(html.profile(filledAccountEditForm(req.account), newForm)))
           }
       )
   }

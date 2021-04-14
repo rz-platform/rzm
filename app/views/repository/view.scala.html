@@ -80,7 +80,7 @@
     @header.repositoryHeader(FileViewPage)
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
-        editor.fileEditor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
+        repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
       }
       case (EmptyRepository, _) => {""}
       case _=> {""}

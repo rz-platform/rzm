@@ -16,14 +16,14 @@ class AccountRequest[A](request: Request[A], val account: Account, val messagesA
 trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
   def account: Account
   def repository: RzRepository
-  def role: AccessLevel
+  def role: Role
 }
 
 class RepositoryRequest[A](
   request: AccountRequest[A],
   val repository: RzRepository,
   val account: Account,
-  val role: AccessLevel,
+  val role: Role,
   val messagesApi: MessagesApi
 ) extends WrappedRequest[A](request)
     with RepositoryRequestHeader

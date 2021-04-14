@@ -51,7 +51,7 @@ case class SshKeyData(publicKey: String)
 
 case class SshRemoveData(id: String)
 
-case class NewCollaboratorData(emailOrLogin: String, accessLevel: String)
+case class NewCollaboratorData(emailOrLogin: String, role: String)
 
 case class RemoveCollaboratorData(id: String)
 

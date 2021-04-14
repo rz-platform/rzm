@@ -12,6 +12,7 @@ import java.util
 import javax.inject.Inject
 import scala.collection.immutable.Map
 import scala.jdk.CollectionConverters._
+import scala.util.{ Failure, Success, Try }
 
 class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
   private val logger = play.api.Logger(this.getClass)
@@ -30,7 +31,7 @@ class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
    * Template will be returned.
    */
   def compile(tplList: Iterable[Template]) = tplList.map { tpl =>
-    tpl.files.filter(canRender).map(f => handlebars.compile(relativeFilePath(tpl, f)))
+    tpl.files.filter(canRender).map(f => Try(handlebars.compile(relativeFilePath(tpl, f))))
   }
 
   def render(tpl: Template, context: Map[String, String]): Seq[CommitFile] =

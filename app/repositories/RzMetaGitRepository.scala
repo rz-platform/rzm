@@ -1,22 +1,30 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, Collaborator, RzRepository }
+import models.{ Account, Collaborator, RzRepository, RzRepositoryConfig }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
 class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)(implicit ec: ExecutionContext) {
-  def setRzRepo(repo: RzRepository, author: Collaborator): Future[Option[List[Any]]] = Future {
+  def setRzRepo(repo: RzRepository, author: Collaborator, repoConfig: RzRepositoryConfig): Future[_] = Future {
     r.clients.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.hmset(repo.id, repo.toMap)
+        f.hmset(repoConfig.id, repoConfig.toMap)
         f.zadd(repo.owner.projectListId, repo.createdAt.toDouble, repo.id)
-
         f.hmset(author.keyAccessLevel(repo), author.toMap)
       }
     }
+  }
+
+  def setRzRepoLastFile(repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {
+    r.clients.withClient(client => client.hset(repo.id, "lastOpened", lastOpenedFile))
+  }
+
+  def setRzRepoConf(config: RzRepositoryConfig): Future[Boolean] = Future {
+    r.clients.withClient(client => client.hmset(config.id, config.toMap))
   }
 
   private def getByRepositoryId(id: String, client: RedisClient): Either[RzError, RzRepository] = {
@@ -51,7 +59,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     }
   }
 
-  def addCollaborator(c: Collaborator, repo: RzRepository): Future[Option[List[Any]]] = Future {
+  def addCollaborator(c: Collaborator, repo: RzRepository): Future[_] = Future {
     r.clients.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.zadd(repo.collaboratorsListId, c.createdAt.toDouble, c.account.id)
@@ -61,7 +69,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     }
   }
 
-  def removeCollaborator(account: Account, repo: RzRepository): Future[Option[List[Any]]] =
+  def removeCollaborator(account: Account, repo: RzRepository): Future[_] =
     Future {
       r.clients.withClient { client =>
         client.pipeline { f: client.PipelineClient =>

@@ -2,65 +2,50 @@ package models
 
 import repositories.{ ParsingError, RzError }
 
-sealed trait AccessLevel {
-  def role: Integer
+sealed trait Role {
+  def weight: Int
+  def name: String
 }
 
-case object OwnerAccess extends AccessLevel {
-  val role = 0
+object Role {
+  case object Owner extends Role {
+    val weight = 100
 
-  override def toString: String = "owner"
-}
+    val name: String = "owner"
+  }
 
-case object EditAccess extends AccessLevel {
-  val role = 20
+  case object Editor extends Role {
+    val weight = 90
 
-  override def toString: String = "edit"
-}
+    val name: String = "editor"
+  }
 
-case object ViewAccess extends AccessLevel {
-  val role = 30
+  case object Viewer extends Role {
+    val weight = 80
 
-  override def toString: String = "view"
-}
+    val name: String = "viewer"
+  }
 
-object AccessLevel {
-  def fromString(accessLevel: String): Option[AccessLevel] =
-    accessLevel match {
-      case _ if accessLevel == OwnerAccess.toString => Some(OwnerAccess)
-      case _ if accessLevel == EditAccess.toString  => Some(EditAccess)
-      case _ if accessLevel == ViewAccess.toString  => Some(ViewAccess)
-      case _                                        => Option.empty[AccessLevel]
-    }
-
-  def fromRole(role: Int): Option[AccessLevel] =
+  def fromString(role: String): Option[Role] =
     role match {
-      case _ if role == OwnerAccess.role => Some(OwnerAccess)
-      case _ if role == EditAccess.role  => Some(EditAccess)
-      case _ if role == ViewAccess.role  => Some(ViewAccess)
-      case _                             => Option.empty[AccessLevel]
+      case _ if role == Owner.name  => Some(Owner)
+      case _ if role == Editor.name => Some(Editor)
+      case _ if role == Viewer.name => Some(Viewer)
+      case _                        => Option.empty[Role]
     }
-
-  def fromAccount(collaborator: Option[Int], repositoryOwnerId: Long, accountId: Long): Option[AccessLevel] =
-    collaborator match {
-      case None if repositoryOwnerId == accountId => Some(OwnerAccess)
-      case Some(accessLevel)                      => Some(AccessLevel.fromRole(accessLevel).getOrElse(ViewAccess))
-      case _                                      => Option.empty[AccessLevel]
-    }
-
 }
 
 case class Collaborator(
   account: Account,
-  role: AccessLevel,
+  role: Role,
   createdAt: Long
 ) {
   def keyAccessLevel(repo: RzRepository): String =
     IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
 
-  def toMap: Map[String, String] = Map("role" -> role.role.toString, "createdAt" -> createdAt.toString)
+  def toMap: Map[String, String] = Map("role" -> role.name, "createdAt" -> createdAt.toString)
 
-  def this(account: Account, accessLevel: AccessLevel) = this(account, accessLevel, DateTime.now)
+  def this(account: Account, accessLevel: Role) = this(account, accessLevel, DateTime.now)
 }
 
 object Collaborator {
@@ -69,10 +54,10 @@ object Collaborator {
 
   def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
     (for {
-      role        <- data.get("role")
-      accessLevel <- AccessLevel.fromRole(role.toInt)
-      createdAt   <- data.get("createdAt")
-    } yield Collaborator(account, accessLevel, createdAt.toInt)) match {
+      role      <- data.get("role")
+      role      <- Role.fromString(role)
+      createdAt <- data.get("createdAt")
+    } yield Collaborator(account, role, createdAt.toInt)) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
