@@ -69,6 +69,7 @@ object IdTable {
 
   val rzRepoPrefix              = "ri:" // repository instance
   val rzRepoConfPrefix          = "rg:" // repository configuration
+  val lastOpenedFilePrefix      = "rl:" // repository last opened file for user
   val rzRepoCollaboratorsPrefix = "rc:" // repository collaborators
 
   val collaboratorPrefix = "ci:" // collaborator instance

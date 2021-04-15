@@ -81,14 +81,14 @@ class FileTreeController @Inject() (
     }
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)) { implicit req =>
-      val fileTree = git.fileTree(req.repository, rev)
-      req.repository.lastOpenedFile match {
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
+      metaGitRepository.getRzRepoLastFile(req.account, req.repository).map {
         case Some(path) =>
           Redirect(
             routes.FileTreeController.blob(accountName, repositoryName, rev, path)
           )
         case _ =>
+          val fileTree = git.fileTree(req.repository, rev)
           Ok(
             html.repository.view(
               editorForm,
@@ -110,7 +110,7 @@ class FileTreeController @Inject() (
       val fileTree = git.fileTree(req.repository, rev)
       blobInfo match {
         case Some(blob) =>
-          metaGitRepository.setRzRepoLastFile(req.repository, path)
+          metaGitRepository.setRzRepoLastFile(req.account, req.repository, path)
           Future.successful {
             Ok(
               html.repository.view(

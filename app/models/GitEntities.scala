@@ -9,7 +9,6 @@ import java.time.{ LocalDateTime, ZoneId }
 case class RzRepository(
   owner: Account,
   name: String,
-  lastOpenedFile: Option[String],
   createdAt: Long,
   updatedAt: Long
 ) {
@@ -22,13 +21,9 @@ case class RzRepository(
 
   def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
 
-  val toMap: Map[String, String] = {
-    // take advantage of the iterable nature of Option
-    val lastOpened = if (this.lastOpenedFile.nonEmpty) Some("lastOpened" -> this.lastOpenedFile.get) else None
-    (Seq("createdAt" -> createdAt.toString, "updatedAt" -> updatedAt.toString) ++ lastOpened).toMap
-  }
+  val toMap: Map[String, String] = Map("createdAt" -> createdAt.toString, "updatedAt" -> updatedAt.toString)
 
-  def this(owner: Account, name: String) = this(owner, name, None, DateTime.now, DateTime.now)
+  def this(owner: Account, name: String) = this(owner, name, DateTime.now, DateTime.now)
 }
 
 object RzRepository {
@@ -48,7 +43,6 @@ object RzRepository {
     } yield RzRepository(
       owner,
       name,
-      data.get("lastOpened"),
       DateTime.parseTimestamp(createdAt),
       DateTime.parseTimestamp(updatedAt)
     )) match {
@@ -96,6 +90,11 @@ object RzRepositoryConfig {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
+}
+
+object LastOpenedFile {
+  def id(account: Account, repo: RzRepository): String =
+    IdTable.lastOpenedFilePrefix + account.userName + ":" + repo.owner.userName + ":" + repo.name
 }
 
 /**

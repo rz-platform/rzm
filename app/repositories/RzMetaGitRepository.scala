@@ -1,11 +1,11 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, Collaborator, RzRepository, RzRepositoryConfig }
+import models.{ Account, Collaborator, LastOpenedFile, RzRepository, RzRepositoryConfig }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
-
+import scala.concurrent.duration._
 @Singleton
 class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)(implicit ec: ExecutionContext) {
   def setRzRepo(repo: RzRepository, author: Collaborator, repoConfig: RzRepositoryConfig): Future[_] = Future {
@@ -19,8 +19,14 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     }
   }
 
-  def setRzRepoLastFile(repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {
-    r.clients.withClient(client => client.hset(repo.id, "lastOpened", lastOpenedFile))
+  def setRzRepoLastFile(account: Account, repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {
+    r.clients.withClient(client =>
+      client.set(LastOpenedFile.id(account, repo), lastOpenedFile, expire = Duration(30, "days"))
+    )
+  }
+
+  def getRzRepoLastFile(account: Account, repo: RzRepository): Future[Option[String]] = Future {
+    r.clients.withClient(client => client.get(LastOpenedFile.id(account, repo)))
   }
 
   def setRzRepoConf(config: RzRepositoryConfig): Future[Boolean] = Future {
