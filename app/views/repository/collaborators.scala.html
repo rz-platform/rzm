@@ -2,8 +2,8 @@
 @import views.html.helper._
 
 @base.auth(request.messages("repository.collaborator.title")){
-@header.repositoryHeader(CollaboratorsPage)
-@header.notificationHeader()
+@header.repositoryMenu(CollaboratorsPage)
+@header.alerts()
 @if(collaborators.length > 0) {
 <h2> @request.messages("repository.collaborator.list") </h2>
 } 

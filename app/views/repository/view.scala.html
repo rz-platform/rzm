@@ -77,7 +77,7 @@
   </div>
 
   <div class="rz-editor-content">
-    @header.repositoryHeader(FileViewPage)
+    @header.repositoryMenu(FileViewPage)
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
         repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 

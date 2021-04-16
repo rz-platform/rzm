@@ -32,21 +32,20 @@
 }
 
 @base.auth(req.messages("repository.constructor.title")){
-@header.repositoryHeader(ConstructorPage)
+@header.repositoryMenu(ConstructorPage)
 
 <div class="template-page">
   <div class="rz-menu rz-menu-scrollable custom-restricted">
     <ul class="rz-menu-list">
       <li class="rz-menu-item">
       @templateMap.map { case(key, template) =>
-        <a id="@key" class="rz-menu-link" href="#">@key</a>
+        <a id="@key" class="rz-menu-link" href="#@key" onclick="window.setTemplateActive('@key');">@key</a>
       }
       </li>
     </ul>
   </div>
-
-  <div class="template-description">
   @templateMap.map { case(key, template) =>
+  <div class="template-description" id="@key-template">
     <div class="template-description-content">
         @template.description.map { text =>
           <p> @{text} </p>
@@ -65,8 +64,10 @@
           </fieldset>
         }
     </div>
-  }
   </div>
+  }
 </div>
 
-}()
+}{
+  <script src='@routes.Assets.at("dist/constructor.bundle.js")' type="text/javascript" defer></script>
+}
