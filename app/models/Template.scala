@@ -53,7 +53,7 @@ object Checkbox {
 }
 
 case class Template(
-  name: String,
+  id: String,
   description: List[String],
   path: File,
   entrypoint: Option[String],
@@ -61,6 +61,8 @@ case class Template(
   bibCompiler: Option[String],
   fields: List[Field]
 ) {
+  val name: String = id.split('-').map(_.capitalize).mkString(" ")
+
   def files: Array[File] =
     FilePath
       .recursiveList(path)

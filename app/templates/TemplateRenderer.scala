@@ -17,9 +17,9 @@ import scala.util.{ Failure, Success, Try }
 class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
   private val logger = play.api.Logger(this.getClass)
 
-  val loader     = new FileTemplateLoader(templateRepository.dir.toString, "")
-  val cache      = new ConcurrentMapTemplateCache()
-  var handlebars = new Handlebars(loader).`with`(cache)
+  private val loader     = new FileTemplateLoader(templateRepository.dir.toString, "")
+  private val cache      = new ConcurrentMapTemplateCache()
+  private val handlebars = new Handlebars(loader).`with`(cache)
 
   val supportedTextExtensions = List("txt", "tex", "json", "bib")
 
@@ -30,7 +30,7 @@ class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
    * since in the resource, compilation will be skipped and the previously created
    * Template will be returned.
    */
-  def compile(tplList: Iterable[Template]) = tplList.map { tpl =>
+  def compile(tplList: Iterable[Template]): Unit = tplList.map { tpl =>
     tpl.files.filter(canRender).map(f => Try(handlebars.compile(relativeFilePath(tpl, f))))
   }
 
