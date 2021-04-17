@@ -1,21 +1,24 @@
-@(templateMap: scala.collection.SortedMap[String, Template])(implicit req: RepositoryRequestHeader)
+@(map: scala.collection.SortedMap[String, Template], template: Option[Template], currentKey: Option[String])(implicit req: RepositoryRequestHeader)
 @import models._
 @import views.html.helper._
 
 @renderNumeric(n: Numeric) = {
-  <label for="@n.name">@n.label</label>
+  <label for="@n.name" class="rz-template-name">@n.label</label>
+  <label for="@n.name">@n.description</label>
   <input id="@n.name" name="@n.name" type="number" value="@n.default" min="@n.min" max="@n.max" required />
 }
 
 @renderCheckbox(c: Checkbox) = {
   <label for="@c.name" class="rz-checkbox">
+    <p>@c.description</p>
     <input type="checkbox" id="@c.name" name="@c.name" /> 
       @c.label
   </label>
 }
 
 @renderSelect(s: Choice) = {
-  <label for="@s.name">@s.label</label>
+  <label for="@s.name" class="rz-template-name">@s.label</label>
+  <label for="@s.name">@s.description</label>
   <select name="@s.name" id="@s.name">
     @s.choices.map { c =>
       <option>@c</option>
@@ -31,42 +34,57 @@
   }}
 }
 
+@renderTemplatePdf(tplId: String) = {
+  <embed src="@routes.TemplateController.templatePdf(tplId)" type="application/pdf" class="rz-pdf-template"/>
+}
+
+
+@renderTemplate(tpl: Template) = {
+  <div>
+    @renderTemplatePdf(tpl.id)
+  </div>
+  <div class="template-description">
+    <div class="template-description-content">
+        @tpl.description.map { text =>
+          <p> @{text} </p>
+        }
+        @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked rz-form-template") {
+          @CSRF.formField
+            <input type="hidden" name="name" value="@tpl.id" />
+            @tpl.fields.map { field =>
+              <div class="rz-control-group"> @renderField(field) </div>
+            }
+            <div class="rz-controls">
+                <button type="submit" class="rz-button rz-button-primary">Create</button>
+            </div>
+        }
+    </div>
+  </div>
+}
+
 @base.auth(req.messages("repository.constructor.title")){
 @header.repositoryMenu(ConstructorPage)
 
 <div class="template-page">
-  <div class="rz-menu rz-menu-scrollable custom-restricted">
+  <div class="rz-menu rz-menu-scrollable">
     <ul class="rz-menu-list">
       <li class="rz-menu-item">
-      @templateMap.map { case(key, template) =>
-        <a id="@key" class="rz-menu-link" href="#@key" onclick="window.setTemplateActive('@key');">@key</a>
+      @map.map { case(key, template) =>
+        <a 
+          class='rz-menu-link @if(currentKey.getOrElse("").equals(key)) { rz-menu-selected }'
+          href="@routes.TemplateController.view(req.repository.owner.userName, req.repository.name, key)">@template.name</a>
       }
       </li>
     </ul>
   </div>
-  @templateMap.map { case(key, template) =>
-  <div class="template-description" id="@key-template">
-    <div class="template-description-content">
-        @template.description.map { text =>
-          <p> @{text} </p>
-        }
-        <p>@template.entrypoint</p>
-        @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked") {
-          @CSRF.formField
-          <fieldset>
-            <input type="hidden" name="name" value="@key" />
-            @template.fields.map { field =>
-              <div class="rz-control-group"> @renderField(field) </div>
-            }
-            <div class="rz-controls">
-                <button type="submit" class="rz-button rz-button-primary">Submit</button>
-            </div>
-          </fieldset>
-        }
-    </div>
-  </div>
-  }
+
+  @{template match {
+  case Some(tpl) => renderTemplate(tpl)
+  case _ => {}
+  }}
+
 </div>
+
 
 }{
   <script src='@routes.Assets.at("dist/constructor.bundle.js")' type="text/javascript" defer></script>

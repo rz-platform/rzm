@@ -68,12 +68,28 @@ case class Template(
       .recursiveList(path)
       .filter(TemplateExcluded.filter)
 
-  val illustration: Option[String] =
+  private val illustration: Option[String] =
     entrypoint match {
       case Some(e) => Some(s"${e.replaceFirst("[.][^.]+$", "")}.pdf")
       case _       => None
     }
 
+  val illustrationFile: Option[File] = illustration match {
+    case Some(s) => Template.readFile(path.toString + "/" + s)
+    case _ => None
+  }
+
   def this(name: String, description: List[String], path: File) =
     this(name, description, path, None, None, None, List())
+}
+
+object Template {
+  def readFile(path: String): Option[File] = {
+    val file = new java.io.File(path)
+    if (file.exists()) {
+      Some(file)
+    } else {
+      None
+    }
+  }
 }

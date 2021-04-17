@@ -41,7 +41,10 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.FileTreeContro
 
 # Constructor
 
-GET /repositories/:account/:repository/constructor controllers.TemplateController.list(account:String, repository:String)
+GET /constructor/:templateId/illustration controllers.TemplateController.templatePdf(templateId: String)
+
+GET /repositories/:account/:repository/constructor controllers.TemplateController.overview(account:String, repository:String)
+GET /repositories/:account/:repository/constructor/:templateId controllers.TemplateController.view(account:String, repository:String, templateId: String)
 POST /repositories/:account/:repository/constructor/build controllers.TemplateController.build(account:String, repository:String)
 
 # File upload

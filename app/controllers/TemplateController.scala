@@ -35,9 +35,23 @@ class TemplateController @Inject() (
     )(TemplateData.apply)(TemplateData.unapply)
   )
 
-  def list(accountName: String, repositoryName: String): Action[AnyContent] =
+  def view(accountName: String, repositoryName: String, templateId: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
-      Future(Ok(html.repository.constructor(templateRepository.list)))
+      templateRepository.list.get(templateId) match {
+        case Some(tpl) => Future(Ok(html.repository.constructor(templateRepository.list, Some(tpl), Some(tpl.id))))
+        case _         => Future(Ok(html.repository.constructor(templateRepository.list, None, None)))
+      }
+    }
+
+  def overview(accountName: String, repositoryName: String) =
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
+      templateRepository.list.keySet.headOption match {
+        case Some(templateId) =>
+          Future(
+            Redirect(routes.TemplateController.view(req.repository.owner.userName, req.repository.name, templateId))
+          )
+        case _ => Future(Ok(html.repository.constructor(templateRepository.list, None, None)))
+      }
     }
 
   private def flattenMap(context: Map[String, Seq[String]]): Map[String, String] = context.map {
@@ -70,7 +84,7 @@ class TemplateController @Inject() (
 
   def build(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
-      val badRequest = Future(BadRequest(html.repository.constructor(templateRepository.list)))
+      val badRequest = Future(BadRequest(html.repository.constructor(templateRepository.list, None, None)))
       val success = Redirect(
         routes.FileTreeController
           .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
@@ -89,4 +103,12 @@ class TemplateController @Inject() (
             }
         )
     }
+
+  def templatePdf(templateId: String): Action[AnyContent] = Action { implicit request =>
+    templateRepository.list.get(templateId) match {
+      case Some(tpl) if tpl.illustrationFile.nonEmpty =>
+        Ok.sendFile(tpl.illustrationFile.get)
+      case _ => NotFound
+    }
+  }
 }
