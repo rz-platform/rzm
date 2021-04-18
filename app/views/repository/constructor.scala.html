@@ -64,17 +64,19 @@
 
 @base.auth(req.messages("repository.constructor.title")){
 @header.repositoryMenu(ConstructorPage)
+@header.alerts()
+<h2>Design project from template</h2>
 
 <div class="template-page">
   <div class="rz-menu rz-menu-scrollable">
     <ul class="rz-menu-list">
-      <li class="rz-menu-item">
       @map.map { case(key, template) =>
+      <li class="rz-menu-item">
         <a 
           class='rz-menu-link @if(currentKey.getOrElse("").equals(key)) { rz-menu-selected }'
           href="@routes.TemplateController.view(req.repository.owner.userName, req.repository.name, key)">@template.name</a>
-      }
       </li>
+      }
     </ul>
   </div>
 
