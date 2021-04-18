@@ -2,15 +2,25 @@
   width: 100%;
   margin-right: auto;
   margin-left: auto;
-  padding-right: 1rem;
-  padding-left: 1rem;
+  padding-right: 0;
+  padding-left: 0;
 }
 
+@media (min-width: 768px) {
+  .container {
+    margin-left: 301px;
+    max-width: 750px;
+  }
+}
 @media (min-width: 992px) {
   .container {
     margin-left: 301px;
-    max-width: 700px;
-    padding-right: 0;
-    padding-left: 0;
+    max-width: 970px;
+  }
+}
+@media (min-width: 1200px) {
+  .container {
+    margin-left: 301px;
+    max-width: 1170px;
   }
 }

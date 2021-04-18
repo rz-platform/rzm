@@ -23,6 +23,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class FileUploadController @Inject() (
   git: GitRepository,
   authAction: AuthenticatedAction,
+  metaGitRepository: RzMetaGitRepository,
   cc: MessagesControllerComponents,
   repositoryAction: RepositoryAction
 )(implicit ec: ExecutionContext)
@@ -63,33 +64,39 @@ class FileUploadController @Inject() (
    */
   def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
     authAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryAction.on(accountName, repositoryName, Role.Editor)) {
-        implicit req: RepositoryRequest[MultipartFormData[File]] =>
-          uploadFileForm
-            .bindFromRequest()
-            .fold(
-              formWithErrors =>
+      .andThen(repositoryAction.on(accountName, repositoryName, Role.Editor))
+      .async { implicit req: RepositoryRequest[MultipartFormData[File]] =>
+        uploadFileForm
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Future(
                 BadRequest(
                   html.repository.upload(
                     formWithErrors,
                     formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
                     formWithErrors.data.getOrElse("path", ".")
                   )
-                ),
-              (data: UploadFileForm) => {
-                val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
-                git.commitFiles(
-                  req.repository,
-                  files,
-                  req.account,
-                  if (rev.nonEmpty) rev else RzRepository.defaultBranch,
-                  data.path,
-                  Messages("repository.upload.message", files.length)
                 )
-                Redirect(
-                  routes.FileTreeController.emptyTree(accountName, repositoryName, rev)
-                ).flashing("success" -> Messages("repository.upload.success"))
-              }
-            )
+              ),
+            (data: UploadFileForm) => {
+              val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
+              git.commitFiles(
+                req.repository,
+                files,
+                req.account,
+                if (rev.nonEmpty) rev else RzRepository.defaultBranch,
+                data.path,
+                Messages("repository.upload.message", files.length)
+              )
+              metaGitRepository
+                .updateRepo(req.repository)
+                .map(_ =>
+                  Redirect(
+                    routes.FileTreeController.emptyTree(accountName, repositoryName, rev)
+                  ).flashing("success" -> Messages("repository.upload.success"))
+                )
+            }
+          )
       }
 }

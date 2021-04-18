@@ -4,7 +4,7 @@
 @base.auth(request.messages("profile.ssh.title")){
 <h1> @request.messages("profile.ssh.header") </h1>
 
-@header.notificationHeader() @sshKeys.map { key =>
+@header.alerts() @sshKeys.map { key =>
 <div class="ssh-key-block">
   <div>
     <div class="ssh-key-block-email">@key.email</div>

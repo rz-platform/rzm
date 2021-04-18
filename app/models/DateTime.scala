@@ -37,4 +37,10 @@ object DateTime {
     } catch {
       case _: NumberFormatException => now
     }
+
+  def parseTimestamp(t: Option[String]): Option[Long] =
+    t match {
+      case Some(time) => Some(parseTimestamp(time))
+      case _          => None
+    }
 }

@@ -11,7 +11,7 @@ import scala.util.{ Failure, Success, Try, Using }
 
 object TemplateParser {
   def parse(path: File): Template = {
-    val name         = path.getName.split('-').map(_.capitalize).mkString(" ")
+    val id           = path.getName.toLowerCase.replace(" ", "-")
     val absolutePath = path.getAbsolutePath
     val description: List[String] =
       readTextFile(Paths.get(absolutePath, "readme.txt").toFile) match {
@@ -24,8 +24,8 @@ object TemplateParser {
         val entrypoint  = TemplateFieldParser.parseArg(v, "entrypoint")
         val texCompiler = TemplateFieldParser.parseArg(v, "compiler")
         val bibCompiler = TemplateFieldParser.parseArg(v, "bib")
-        Template(name, description, path, entrypoint, texCompiler, bibCompiler, fields)
-      case Left(_) => new Template(name, description, path)
+        Template(id, description, path, entrypoint, texCompiler, bibCompiler, fields)
+      case Left(_) => new Template(id, description, path)
     }
   }
 

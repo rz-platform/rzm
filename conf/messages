@@ -116,7 +116,7 @@ repository.tree.downloads=Download ZIP
 repository.tree.createFolder=Create new folder
 repository.tree.createFolder.formName=Folder name
 repository.tree.commits=Project history
-repository.tree.constructor=Constructor
+repository.tree.creator=Creator
 repository.tree.fileview=File view
 repository.tree.cloneby=Clone
 
@@ -128,5 +128,5 @@ repository.commitLog.header=Commits on
 repository.commitLog.nextPage=Next page
 repository.commitLog.previousPage=Previous page
 
-repository.constructor.title = Template Constructor
-repository.constructor.commit.message = "Initial commit. {0}"
+repository.creator.title = Template Constructor
+repository.creator.commit.message = "Initial commit. {0}"

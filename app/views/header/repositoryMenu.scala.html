@@ -1,5 +1,15 @@
 @(page: RepositoryPage)(implicit request: RepositoryRequestHeader)
 
+@creatorButton() = {
+<li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
+<a
+  href="@routes.TemplateController.overview(request.repository.owner.userName, request.repository.name)"
+  class="rz-menu-link"
+  >@request.messages("repository.tree.creator")</a
+>
+</li>
+}
+
 <div class="rz-menu rz-menu-horizontal">
   <span class="repository-name">@request.repository.owner.userName / @request.repository.name → </span>
   <ul class="rz-menu-list">
@@ -32,30 +42,22 @@
     <li class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }">
       <a
         href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, 1)"
-        class="rz-menu-link"
-        >@request.messages("repository.tree.commits")</a
-      >
+        class="rz-menu-link">
+        @request.messages("repository.tree.commits")
+      </a>
     </li>
-    @request.role match { 
-      case Role.Owner => {
-    <li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
-      <a
-        href="@routes.TemplateController.list(request.repository.owner.userName, request.repository.name)"
-        class="rz-menu-link"
-        >@request.messages("repository.tree.constructor")</a
-      >
-    </li>
-    }
-    case _ => {}
-    }
-    <li class="rz-menu-item cloneby">
-        <input type="radio" id="showHttp" name="radios" checked> 
-        <label for="showHttp" class="cloneLabel">HTTPS</label>
-        <input type="radio" id="showSsh" name="radios"> 
-        <label for="showSsh" class="cloneLabel">SSH</label>
+    @{(request.role,request.repository.updatedAt)  match { 
+      case (Role.Owner, None) => creatorButton()
+      case _ => {}
+    }}
+    <li class="rz-menu-item rz-clone-by">
+        <input type="radio" id="show-http" name="radios" checked> 
+        <label for="show-http" class="clone-label">HTTPS</label>
+        <input type="radio" id="show-ssh" name="radios"> 
+        <label for="show-ssh" class="clone-label">SSH</label>
       
-        <input id="gitHttpUrl" type="text" readonly value="@request.repository.httpUrl(request)"  />
-        <input id="gitSshUrl" type="text" readonly value="@request.repository.sshUrl(request)"  />
+        <input id="git-http-url" type="text" readonly value="@request.repository.httpUrl(request)"  />
+        <input id="git-ssh-url" type="text" readonly value="@request.repository.sshUrl(request)"  />
     </li>
   </ul>
 </div>

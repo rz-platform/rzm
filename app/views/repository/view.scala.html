@@ -48,7 +48,7 @@
         @if(file.pathWithoutRoot.equals(path)) { id="rz-menu-file-tree-chosen" }
       >
         <a
-          class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-file-tree-chosen }"
+          class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-selected }"
           href="@routes.FileTreeController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
         >
           <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
@@ -77,7 +77,7 @@
   </div>
 
   <div class="rz-editor-content">
-    @header.repositoryHeader(FileViewPage)
+    @header.repositoryMenu(FileViewPage)
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
         repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 

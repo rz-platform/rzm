@@ -53,7 +53,7 @@ object Checkbox {
 }
 
 case class Template(
-  name: String,
+  id: String,
   description: List[String],
   path: File,
   entrypoint: Option[String],
@@ -61,17 +61,35 @@ case class Template(
   bibCompiler: Option[String],
   fields: List[Field]
 ) {
+  val name: String = id.split('-').map(_.capitalize).mkString(" ")
+
   def files: Array[File] =
     FilePath
       .recursiveList(path)
       .filter(TemplateExcluded.filter)
 
-  val illustration: Option[String] =
+  private val illustration: Option[String] =
     entrypoint match {
       case Some(e) => Some(s"${e.replaceFirst("[.][^.]+$", "")}.pdf")
       case _       => None
     }
 
+  val illustrationFile: Option[File] = illustration match {
+    case Some(s) => Template.readFile(path.toString + "/" + s)
+    case _       => None
+  }
+
   def this(name: String, description: List[String], path: File) =
     this(name, description, path, None, None, None, List())
+}
+
+object Template {
+  def readFile(path: String): Option[File] = {
+    val file = new java.io.File(path)
+    if (file.exists()) {
+      Some(file)
+    } else {
+      None
+    }
+  }
 }

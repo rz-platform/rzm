@@ -21,7 +21,7 @@ class TemplateRepository @Inject() (config: Configuration) {
     if (dir.exists && dir.isDirectory) {
       val l: Array[Template] =
         dir.listFiles.filter(filter).map(file => TemplateParser.parse(file)).sortBy(t => t.name)
-      SortedMap.from(l.map(t => Tuple2(t.name, t)))
+      SortedMap.from(l.map(t => Tuple2(t.id, t)))
     } else {
       logger.warn("Template folder does not exist")
       SortedMap()

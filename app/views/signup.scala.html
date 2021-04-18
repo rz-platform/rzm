@@ -4,7 +4,7 @@
 @html = {
 <div class="rz-auth">
   <h1> @request.messages("signup.head") </h1>
-  @header.notificationHeader()
+  @header.alerts()
   @form(routes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
   @inputText(signupForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"), Symbol("_help") -> "", Symbol("autofocus") -> "") 

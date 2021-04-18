@@ -1,4 +1,21 @@
 @(currentPage: List[RzRepository])(implicit request: AccountRequestHeader)
+
+
+@linkToCreator(repository: RzRepository) = {
+<a
+  href="@routes.TemplateController.overview(repository.owner.userName, repository.name)"
+  class="rz-menu-link"
+  >  @repository.owner.userName / @repository.name </a
+>
+}
+@linkToFileTree(repository: RzRepository) = {
+<a
+  href="@routes.FileTreeController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
+  class="rz-menu-link"
+  >  @repository.owner.userName / @repository.name </a
+>
+}
+
 @base.auth(request.messages("repository.list.title")){
 <div class="repo-list-header">
   <a class="rz-button" href="@routes.RzRepositoryController.createRepository()">
@@ -10,11 +27,10 @@
   @Option(currentPage).filterNot(_.isEmpty).map {repositories => 
     @repositories.map { case (repository) => 
     <div class="repo-list-row">
-      <a
-        href="@routes.FileTreeController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
-      >
-        @repository.owner.userName / @repository.name
-      </a>
+    @{repository.updatedAt match {
+      case Some(_) => linkToFileTree(repository)
+      case _ => linkToCreator(repository)
+    }}
     </div>
     } 
   }.getOrElse {

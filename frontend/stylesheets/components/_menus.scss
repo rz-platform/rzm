@@ -171,3 +171,43 @@
 .menu-item-divided {
   border-top: 1px solid #eee;
 }
+
+// repository menu
+
+.repository-name {
+  font-size: 18px;
+  padding-left: 10px;
+}
+
+.clone-label {
+  cursor: pointer;
+}
+
+.clone-label:hover {
+  text-decoration: underline dashed;
+}
+
+input[id='show-http']:checked ~ #git-ssh-url {
+  display: none;
+}
+
+input[id='show-ssh']:checked ~ #git-http-url {
+  display: none;
+}
+
+.rz-clone-by {
+  color: $base-gray-color;
+  padding-left: 1em;
+  input[type='radio'] {
+    display: none;
+  }
+
+  input[type='radio']:checked + label {
+    color: #000;
+  }
+}
+
+#git-http-url,
+#git-ssh-url {
+  width: 250px;
+}

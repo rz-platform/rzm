@@ -85,7 +85,7 @@ class FileTreeController @Inject() (
       metaGitRepository.getRzRepoLastFile(req.account, req.repository).map {
         case Some(path) =>
           Redirect(
-            routes.FileTreeController.blob(accountName, repositoryName, rev, path)
+            routes.FileTreeController.blob(req.repository.owner.userName, req.repository.name, rev, path)
           )
         case _ =>
           val fileTree = git.fileTree(req.repository, rev)
@@ -174,11 +174,13 @@ class FileTreeController @Inject() (
         )
         builder.finish()
     }
-    Future(
-      Redirect(
-        routes.FileTreeController.blob(accountName, repositoryName, editedFile.rev, newPath.encoded)
+    metaGitRepository
+      .updateRepo(req.repository)
+      .map(_ =>
+        Redirect(
+          routes.FileTreeController.blob(accountName, repositoryName, editedFile.rev, newPath.encoded)
+        )
       )
-    )
   }
 
   private def cleanItemData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
@@ -229,19 +231,21 @@ class FileTreeController @Inject() (
     }
 
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)) { implicit req =>
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       addNewItemForm
         .bindFromRequest(cleanData)
         .fold(
           formWithErrors =>
-            Redirect(
-              routes.FileTreeController.emptyTree(
-                accountName,
-                repositoryName,
-                formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch)
-              )
-            ).flashing("error" -> Messages("repository.addNewItem.error.namereq")),
+            Future(
+              Redirect(
+                routes.FileTreeController.emptyTree(
+                  accountName,
+                  repositoryName,
+                  formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch)
+                )
+              ).flashing("error" -> Messages("repository.addNewItem.error.namereq"))
+            ),
           (newItem: NewItem) => {
             val fName = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
 
@@ -264,9 +268,13 @@ class FileTreeController @Inject() (
                 )
                 builder.finish()
             }
-            Redirect(
-              routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, fName.encoded)
-            )
+            metaGitRepository
+              .updateRepo(req.repository)
+              .map(_ =>
+                Redirect(
+                  routes.FileTreeController.blob(accountName, repositoryName, newItem.rev, fName.encoded)
+                )
+              )
           }
         )
     }

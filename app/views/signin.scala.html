@@ -4,7 +4,7 @@
 @html = {
 <div class="rz-auth">
   <h1> @request.messages("signin.head") </h1>
-  @header.notificationHeader() 
+  @header.alerts() 
   @form(routes.AuthController.login(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
   @inputText(signinForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("autofocus") -> "")

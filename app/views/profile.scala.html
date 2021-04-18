@@ -3,7 +3,7 @@
 @import views.html.helper._
 @base.auth(request.messages("profile.title")) {
 <h1> @request.messages("profile.title") </h1>
-@header.notificationHeader()
+@header.alerts()
 
 <div class="profile-block">
   @form(routes.AccountController.editAccount(), Symbol("class") -> "rz-form rz-form-stacked") { @CSRF.formField
