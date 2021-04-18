@@ -1,7 +1,7 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, Collaborator, LastOpenedFile, RzRepository, RzRepositoryConfig }
+import models.{ Account, Collaborator, DateTime, LastOpenedFile, RzRepository, RzRepositoryConfig }
 
 import javax.inject.{ Inject, Singleton }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -17,6 +17,10 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
         f.hmset(author.keyAccessLevel(repo), author.toMap)
       }
     }
+  }
+
+  def updateRepo(repo: RzRepository): Future[_] = Future {
+    r.clients.withClient(client => client.hset(repo.id, "updatedAt", DateTime.now))
   }
 
   def setRzRepoLastFile(account: Account, repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {

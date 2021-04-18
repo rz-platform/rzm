@@ -38,8 +38,8 @@ class TemplateController @Inject() (
   def view(accountName: String, repositoryName: String, templateId: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
       templateRepository.list.get(templateId) match {
-        case Some(tpl) => Future(Ok(html.repository.constructor(templateRepository.list, Some(tpl), Some(tpl.id))))
-        case _         => Future(Ok(html.repository.constructor(templateRepository.list, None, None)))
+        case Some(tpl) => Future(Ok(html.repository.creator(templateRepository.list, Some(tpl), Some(tpl.id))))
+        case _         => Future(Ok(html.repository.creator(templateRepository.list, None, None)))
       }
     }
 
@@ -50,7 +50,7 @@ class TemplateController @Inject() (
           Future(
             Redirect(routes.TemplateController.view(req.repository.owner.userName, req.repository.name, templateId))
           )
-        case _ => Future(Ok(html.repository.constructor(templateRepository.list, None, None)))
+        case _ => Future(Ok(html.repository.creator(templateRepository.list, None, None)))
       }
     }
 
@@ -68,7 +68,7 @@ class TemplateController @Inject() (
       req.account,
       RzRepository.defaultBranch,
       ".",
-      Messages("repository.constructor.commit.message", tpl.name)
+      Messages("repository.creator.commit.message", tpl.name)
     )
   }
 
@@ -84,7 +84,7 @@ class TemplateController @Inject() (
 
   def build(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
-      val badRequest = Future(BadRequest(html.repository.constructor(templateRepository.list, None, None)))
+      val badRequest = Future(BadRequest(html.repository.creator(templateRepository.list, None, None)))
       val success = Redirect(
         routes.FileTreeController
           .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
@@ -98,7 +98,10 @@ class TemplateController @Inject() (
           data =>
             templateRepository.get(data.name) match {
               case Some(tpl) =>
-                renderTemplate(ctx, tpl)(req).map(_ => updateRepoConfig(req.repository, tpl)).map(_ => success)
+                renderTemplate(ctx, tpl)(req)
+                  .map(_ => updateRepoConfig(req.repository, tpl))
+                  .map(_ => metaGitRepository.updateRepo(req.repository))
+                  .map(_ => success)
               case _ => badRequest
             }
         )

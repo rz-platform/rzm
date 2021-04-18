@@ -10,7 +10,7 @@ case class RzRepository(
   owner: Account,
   name: String,
   createdAt: Long,
-  updatedAt: Long
+  updatedAt: Option[Long]
 ) {
   val id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
 
@@ -21,9 +21,13 @@ case class RzRepository(
 
   def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
 
-  val toMap: Map[String, String] = Map("createdAt" -> createdAt.toString, "updatedAt" -> updatedAt.toString)
+  val toMap: Map[String, String] = {
+    // take advantage of the iterable nature of Option
+    val updatedAt = if (this.updatedAt.nonEmpty) Some("updatedAt" -> this.updatedAt.get.toString) else None
+    (Seq("createdAt" -> createdAt.toString) ++ updatedAt).toMap
+  }
 
-  def this(owner: Account, name: String) = this(owner, name, DateTime.now, DateTime.now)
+  def this(owner: Account, name: String) = this(owner, name, DateTime.now, None)
 }
 
 object RzRepository {
@@ -39,12 +43,11 @@ object RzRepository {
   def make(name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
     (for {
       createdAt <- data.get("createdAt")
-      updatedAt <- data.get("updatedAt")
     } yield RzRepository(
       owner,
       name,
       DateTime.parseTimestamp(createdAt),
-      DateTime.parseTimestamp(updatedAt)
+      DateTime.parseTimestamp(data.get("updatedAt"))
     )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)

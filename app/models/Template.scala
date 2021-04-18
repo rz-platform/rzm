@@ -76,7 +76,7 @@ case class Template(
 
   val illustrationFile: Option[File] = illustration match {
     case Some(s) => Template.readFile(path.toString + "/" + s)
-    case _ => None
+    case _       => None
   }
 
   def this(name: String, description: List[String], path: File) =

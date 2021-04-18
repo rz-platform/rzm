@@ -35,7 +35,7 @@
 }
 
 @renderTemplatePdf(tplId: String) = {
-  <embed src="@routes.TemplateController.templatePdf(tplId)" type="application/pdf" class="rz-pdf-template"/>
+  <embed src="@routes.TemplateController.templatePdf(tplId)#zoom=75" type="application/pdf" class="rz-pdf-template"/>
 }
 
 
@@ -50,13 +50,13 @@
         }
         @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked rz-form-template") {
           @CSRF.formField
+            <div class="rz-controls">
+                <button type="submit" class="rz-button rz-button-primary">Create</button>
+            </div>
             <input type="hidden" name="name" value="@tpl.id" />
             @tpl.fields.map { field =>
               <div class="rz-control-group"> @renderField(field) </div>
             }
-            <div class="rz-controls">
-                <button type="submit" class="rz-button rz-button-primary">Create</button>
-            </div>
         }
     </div>
   </div>
@@ -65,10 +65,9 @@
 @base.auth(req.messages("repository.constructor.title")){
 @header.repositoryMenu(ConstructorPage)
 @header.alerts()
-<h2>Design project from template</h2>
 
 <div class="template-page">
-  <div class="rz-menu rz-menu-scrollable">
+  <div class="rz-menu rz-template-list">
     <ul class="rz-menu-list">
       @map.map { case(key, template) =>
       <li class="rz-menu-item">
@@ -89,5 +88,4 @@
 
 
 }{
-  <script src='@routes.Assets.at("dist/constructor.bundle.js")' type="text/javascript" defer></script>
 }

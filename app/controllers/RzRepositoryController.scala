@@ -59,8 +59,7 @@ class RzRepositoryController @Inject() (
               git.initRepo(repo)
               Future(
                 Redirect(
-                  routes.FileTreeController
-                    .emptyTree(repo.owner.userName, repository.name, RzRepository.defaultBranch)
+                  routes.TemplateController.overview(req.account.userName, repo.name)
                 )
               )
             case _ =>
