@@ -70,7 +70,7 @@ npm run prettier && npm run check
 ```
 cd frontend && npm run build && cd -
 sbt dist
-target/universal/stage/bin/rzm  -Dplay.evolutions.db.default.autoApply=true  -Dplay.http.secret.key=secret
+target/universal/stage/bin/rzm -Dplay.http.secret.key=secret
 ```
 
 ## Copyright
@@ -80,5 +80,7 @@ Copyright 2020 Eugene Bosiakov (@bosiakov).
 RZM contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
 
 [Turbolinks license](./frontend/turbolinks/README.md).
+
+iA-Fonts [license](./public/fonts/LICENSE.md).
 
 Icons made by <a href="https://www.flaticon.com/authors/becris" title="Becris">Becris</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>
