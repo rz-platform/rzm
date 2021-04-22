@@ -88,7 +88,15 @@
   </div>
 </div>
 }{
-<link rel="preconnect" href="https://fonts.gstatic.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"> 
+<style>
+@@font-face {
+  font-family: "iA Writer Duospace";
+  font-weight: normal;
+  font-style: normal;
+  src: url(@routes.Assets.at("fonts/iAWriterDuospace-Regular.eot")) format("embedded-opentype"),
+    url(@routes.Assets.at("fonts/iAWriterDuospace-Regular.woff2")) format("woff2"),
+    url(@routes.Assets.at("fonts/iAWriterDuospace-Regular.woff")) format("woff");
+}
+</style>
 <script src='@routes.Assets.at("dist/fileview.bundle.js")' type="text/javascript" defer></script>
 }
