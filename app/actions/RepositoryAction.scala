@@ -6,10 +6,9 @@ import play.api.i18n.MessagesApi
 import play.api.mvc.{ ActionRefiner, Result }
 import repositories.{ AccessDenied, NotFoundInRepository, RzError, RzMetaGitRepository }
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
-@Singleton
 class RepositoryAction @Inject() (
   messagesApi: MessagesApi,
   gitEntitiesRepository: RzMetaGitRepository,

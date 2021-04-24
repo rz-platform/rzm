@@ -2,29 +2,28 @@ package repositories
 
 import com.redis.serialization.Parse.Implicits.parseByteArray
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A session Repository that ties session id to secret key
  */
-@Singleton
-class SessionRepository @Inject() (r: Redis)(implicit ec: ExecutionContext) {
+class SessionRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) {
   def create(secretKey: Array[Byte]): Future[String] = Future {
     val sessionId = newSessionId()
-    r.clients.withClient(client => client.set(sessionId, secretKey))
+    redis.withClient(client => client.set(sessionId, secretKey))
     sessionId
   }
 
   def lookup(sessionId: String): Future[Option[Array[Byte]]] = Future {
-    r.clients.withClient(client => client.get[Array[Byte]](sessionId))
+    redis.withClient(client => client.get[Array[Byte]](sessionId))
   }
 
   def put(sessionId: String, secretKey: Array[Byte]): Future[Unit] = Future {
-    r.clients.withClient(client => client.set(sessionId, secretKey))
+    redis.withClient(client => client.set(sessionId, secretKey))
   }
   def delete(sessionId: String): Future[Unit] = Future {
-    r.clients.withClient(client => client.del(sessionId))
+    redis.withClient(client => client.del(sessionId))
   }
 
   private val sr = new java.security.SecureRandom()

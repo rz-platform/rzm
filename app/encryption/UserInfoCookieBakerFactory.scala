@@ -2,13 +2,12 @@ package encryption
 import models.{ Auth, UserInfo }
 import play.api.http.SecretConfiguration
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Inject
 import scala.concurrent.duration._
 
 /**
  * Creates a cookie baker with the given secret key.
  */
-@Singleton
 class UserInfoCookieBakerFactory @Inject() (
   encryptionService: EncryptionService,
   secretConfiguration: SecretConfiguration

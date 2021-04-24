@@ -5,10 +5,9 @@ import play.api.Configuration
 import templates.TemplateParser
 
 import java.io.File
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Inject
 import scala.collection.SortedMap
 
-@Singleton
 class TemplateRepository @Inject() (config: Configuration) {
   private val logger = play.api.Logger(this.getClass)
 
