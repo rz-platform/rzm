@@ -1,15 +1,17 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, Collaborator, DateTime, LastOpenedFile, RzRepository, RzRepositoryConfig }
+import models._
 
-import javax.inject.{ Inject, Singleton }
-import scala.concurrent.{ ExecutionContext, Future }
+import javax.inject.Inject
 import scala.concurrent.duration._
-@Singleton
-class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountRepository)(implicit ec: ExecutionContext) {
+import scala.concurrent.{ ExecutionContext, Future }
+
+class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRepository)(
+  implicit ec: ExecutionContext
+) {
   def setRzRepo(repo: RzRepository, author: Collaborator, repoConfig: RzRepositoryConfig): Future[_] = Future {
-    r.clients.withClient { client =>
+    redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.hmset(repo.id, repo.toMap)
         f.hmset(repoConfig.id, repoConfig.toMap)
@@ -20,21 +22,21 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
   }
 
   def updateRepo(repo: RzRepository): Future[_] = Future {
-    r.clients.withClient(client => client.hset(repo.id, "updatedAt", DateTime.now))
+    redis.withClient(client => client.hset(repo.id, "updatedAt", DateTime.now))
   }
 
   def setRzRepoLastFile(account: Account, repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {
-    r.clients.withClient(client =>
+    redis.withClient(client =>
       client.set(LastOpenedFile.id(account, repo), lastOpenedFile, expire = Duration(30, "days"))
     )
   }
 
   def getRzRepoLastFile(account: Account, repo: RzRepository): Future[Option[String]] = Future {
-    r.clients.withClient(client => client.get(LastOpenedFile.id(account, repo)))
+    redis.withClient(client => client.get(LastOpenedFile.id(account, repo)))
   }
 
   def setRzRepoConf(config: RzRepositoryConfig): Future[Boolean] = Future {
-    r.clients.withClient(client => client.hmset(config.id, config.toMap))
+    redis.withClient(client => client.hmset(config.id, config.toMap))
   }
 
   private def getByRepositoryId(id: String, client: RedisClient): Either[RzError, RzRepository] = {
@@ -45,7 +47,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
   def getByOwnerAndName(owner: String, name: String, client: RedisClient): Either[RzError, RzRepository] =
     accountRepository.getById(Account.id(owner), client) match {
       case Right(account) =>
-        r.clients.withClient { client =>
+        redis.withClient { client =>
           client.hgetall[String, String](RzRepository.id(owner, name)) match {
             case Some(m) if m.nonEmpty => RzRepository.make(name, account, m)
             case _                     => Left(NotFoundInRepository)
@@ -55,10 +57,10 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     }
 
   def getByOwnerAndName(owner: String, name: String): Future[Either[RzError, RzRepository]] =
-    Future(r.clients.withClient(client => getByOwnerAndName(owner, name, client)))
+    Future(redis.withClient(client => getByOwnerAndName(owner, name, client)))
 
   def listRepositories(account: Account): Future[List[RzRepository]] = Future {
-    r.clients.withClient { client =>
+    redis.withClient { client =>
       client.zrange(account.projectListId) match {
         case Some(r: List[String]) =>
           r.map { id: String => getByRepositoryId(id, client) }.collect {
@@ -70,7 +72,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
   }
 
   def addCollaborator(c: Collaborator, repo: RzRepository): Future[_] = Future {
-    r.clients.withClient { client =>
+    redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.zadd(repo.collaboratorsListId, c.createdAt.toDouble, c.account.id)
         f.zadd(c.account.projectListId, c.createdAt.toDouble, repo.id)
@@ -81,7 +83,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
 
   def removeCollaborator(account: Account, repo: RzRepository): Future[_] =
     Future {
-      r.clients.withClient { client =>
+      redis.withClient { client =>
         client.pipeline { f: client.PipelineClient =>
           f.zrem(repo.collaboratorsListId, account.id)
           f.zrem(account.projectListId, repo.id)
@@ -92,7 +94,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
 
   def isAccountCollaborator(account: Account, repo: RzRepository): Future[Boolean] =
     Future {
-      r.clients.withClient { client =>
+      redis.withClient { client =>
         client.hgetall(Collaborator.keyAccessLevel(account, repo)) match {
           case Some(m) if m.nonEmpty => true
           case _                     => false
@@ -102,7 +104,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
 
   def getCollaborator(account: Account, repo: RzRepository): Future[Either[RzError, Collaborator]] =
     Future {
-      r.clients.withClient { client =>
+      redis.withClient { client =>
         client.hgetall(Collaborator.keyAccessLevel(account, repo)) match {
           case Some(m: Map[String, String]) => Collaborator.make(account, m)
           case None                         => Left(NotFoundInRepository)
@@ -111,7 +113,7 @@ class RzMetaGitRepository @Inject() (r: Redis, accountRepository: AccountReposit
     }
 
   def getCollaborators(repo: RzRepository): Future[List[Collaborator]] = Future {
-    r.clients.withClient { client =>
+    redis.withClient { client =>
       client.zrange(repo.collaboratorsListId) match {
         case Some(r: List[String]) =>
           r.map(aId => accountRepository.getById(aId, client)).flatMap(a => getCollaboratorByAccount(a, repo, client))

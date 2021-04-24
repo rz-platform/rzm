@@ -7,14 +7,13 @@ import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.{ AccountRepository, SessionRepository }
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * An action that pulls everything together to show user info that is in an encrypted cookie,
  * with only the secret key stored on the server.
  */
-@Singleton
 class AuthenticatedAction @Inject() (
   accountService: AccountRepository,
   factory: UserInfoCookieBakerFactory,

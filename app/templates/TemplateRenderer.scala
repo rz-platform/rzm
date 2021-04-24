@@ -12,7 +12,7 @@ import java.util
 import javax.inject.Inject
 import scala.collection.immutable.Map
 import scala.jdk.CollectionConverters._
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
 class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
   private val logger = play.api.Logger(this.getClass)
