@@ -98,10 +98,11 @@ class RzRepositoryController @Inject() (
 
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
-      val commitLog = git.getCommitsLog(req.repository, rev, page, 30)
-      commitLog match {
-        case Right((logs, hasNext)) => Future(Ok(html.repository.log(logs, rev, hasNext, page)))
-        case Left(_)                => errorHandler.onClientError(req, msg = Messages("error.notfound"))
+      val commitLog = git.getCommitsLog(req.repository, rev, page, 20)
+      val (logs, hasNext) = commitLog match {
+        case Right((logs, hasNext)) => (logs, hasNext)
+        case Left(_)                => (Seq(), false)
       }
+      Future(Ok(html.repository.log(logs, rev, hasNext, page)))
     }
 }

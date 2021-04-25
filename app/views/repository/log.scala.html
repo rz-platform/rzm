@@ -1,32 +1,36 @@
 @(commitLog: Seq[CommitInfo], rev:String, hasNext:Boolean, page:Int)(implicit request: RepositoryRequestHeader)
 
-@base.auth(request.messages("repository.commitLog.title")){
+@base.auth(request.messages("repository.log.title")){
 @header.repositoryMenu(CommitHistoryPage)
 
-<h2>@request.messages("repository.commitLog.header")</h2>
+<h2>@request.messages("repository.log.header")</h2>
 
-@commitLog.map { commitInfo =>
+@Option(commitLog).filterNot(_.isEmpty).map { commits =>
+  @commits.map { case (commit) =>
   <p>
-    @commitInfo.fullMessage
+    @commit.fullMessage
     <span class="info">by</span>
-    @commitInfo.authorName
+    @commit.authorName
     <span class="info">on</span>
-    <span class="info">@print.date(commitInfo.commitTime)</span>
+    <span class="info">@print.date(commit.commitTime)</span>
   </p>
+  }
+}.getOrElse {
+  <p> @request.messages("repository.log.empty") </p>
+}
+@if(page > 1) {
+  <a
+    class="rz-button"
+    href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)"
+  >
+    @request.messages("repository.log.previousPage")
+  </a>
 }
 @if(hasNext) {
   <a
-    class="button"
+    class="rz-button"
     href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page + 1)"
-    >@request.messages("repository.commitLog.nextPage")</a
+    >@request.messages("repository.log.nextPage")</a
   >
-  } 
-  @if(page > 1) {
-  <a
-    class="button"
-    href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, rev, page - 1)"
-  >
-    @request.messages("repository.commitLog.previousPage")
-  </a>
-  }
+}
 }()
