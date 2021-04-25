@@ -123,10 +123,11 @@ repository.tree.cloneby=Clone
 repository.tree.createFile=Create new file
 repository.tree.createFile.formName=File name
 
-repository.commitLog.title=Commits
-repository.commitLog.header=Commits on
-repository.commitLog.nextPage=Next page
-repository.commitLog.previousPage=Previous page
+repository.log.title=History
+repository.log.header=History
+repository.log.nextPage=Next page
+repository.log.previousPage=Previous page
+repository.log.empty=Nothing to display
 
-repository.creator.title = Template Constructor
+repository.creator.title = Project Creator
 repository.creator.commit.message = "Initial commit. {0}"
