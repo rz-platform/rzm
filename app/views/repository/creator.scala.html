@@ -35,7 +35,7 @@
 }
 
 @renderTemplatePdf(tplId: String) = {
-  <embed src="@routes.TemplateController.templatePdf(tplId)#zoom=75" type="application/pdf" class="rz-pdf-template"/>
+  <embed src="@routes.TemplateController.templatePdf(tplId)#zoom=75&pagemode=none&toolbar=0&view=FitH,top" type="application/pdf" class="rz-pdf-template"/>
 }
 
 
