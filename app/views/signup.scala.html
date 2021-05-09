@@ -1,23 +1,28 @@
-@(signupForm: Form[AccountRegistrationData])(implicit request: MessagesRequestHeader) 
+@(signupForm: Form[AccountRegistrationData], zoneIds: scala.collection.SortedMap[String, String])(implicit req: MessagesRequestHeader) 
 @import views.html.helper._ 
 
 @html = {
 <div class="rz-auth">
-  <h1> @request.messages("signup.head") </h1>
+  <h1> @req.messages("signup.head") </h1>
   @header.alerts()
   @form(routes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
-  @inputText(signupForm("userName"), Symbol("_label") -> request.messages("signup.form.userName"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
+  @inputText(signupForm("userName"), Symbol("_label") -> req.messages("signup.form.userName"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
   @inputPassword(signupForm("password"), Symbol("_label") ->
-  request.messages("signup.form.password"), Symbol("_help") -> "") @inputText(signupForm("mailAddress"),
-  Symbol("_label") -> request.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),
-  Symbol("_label") -> request.messages("signup.form.fullname"), Symbol("_help") -> "")
+  req.messages("signup.form.password"), Symbol("_help") -> "") @inputText(signupForm("mailAddress"),
+  Symbol("_label") -> req.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),
+  Symbol("_label") -> req.messages("signup.form.fullname"), Symbol("_help") -> "")
 
-  <input type="submit" value='@request.messages("signup.submit")' class="rz-button rz-button-primary" />
+  <input type="hidden" name="timezone" id="timezone" value="@DateTime.defaultTz.toString" />
+
+  <input type="submit" value='@req.messages("signup.submit")' class="rz-button rz-button-primary" />
   or
-  <a class="rz-button" href="@routes.AuthController.loginPage()">@request.messages("signup.signInLink")</a>
+  <a class="rz-button" href="@routes.AuthController.loginPage()">@req.messages("signup.signInLink")</a>
   }
 }
 
+@js = {
+  <script src='@routes.Assets.at("dist/timezone.bundle.js")' type="text/javascript" defer></script>
+}
 
-@base.main(request.messages("signup.title"))(html, Html(""))()
+@base.main(req.messages("signup.title"))(html, js)()

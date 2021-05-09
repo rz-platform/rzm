@@ -1,30 +1,25 @@
 package repositories
 
-import java.time.{ LocalDateTime, ZoneId }
-import java.util
+import java.time.{ LocalDateTime, ZoneId, ZoneOffset }
+import scala.collection.SortedMap
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 object TimezoneOffsetRepository {
+  private val localDateTime: LocalDateTime = LocalDateTime.now
+  private val zoneList = ZoneId.getAvailableZoneIds.asScala.map { zoneId: String =>
+    val id = ZoneId.of(zoneId)
+    // LocalDateTime -> ZonedDateTime
+    val zonedDateTime = localDateTime.atZone(id)
+    // ZonedDateTime -> ZoneOffset
+    val zoneOffset: ZoneOffset = zonedDateTime.getOffset
+    //replace Z to +00:00
+    val offset = zoneOffset.getId.replaceAll("Z", "+00:00")
+    (id.toString, offset)
+  }.toList.sortBy(t => t._2)
 
-  private val allZoneIdsAndItsOffSet: util.HashMap[String, String] = {
-    val result        = new util.HashMap[String, String]
-    val localDateTime = LocalDateTime.now
-
-    for (zoneId: String <- ZoneId.getAvailableZoneIds.toArray()) {
-      val id = ZoneId.of(zoneId)
-      // LocalDateTime -> ZonedDateTime
-      val zonedDateTime = localDateTime.atZone(id)
-      // ZonedDateTime -> ZoneOffset
-      val zoneOffset = zonedDateTime.getOffset
-      //replace Z to +00:00
-      val offset = zoneOffset.getId.replaceAll("Z", "+00:00")
-      result.put(id.toString, offset)
-    }
-    result
-  }
-
-  val sortedMap = new util.LinkedHashMap[String, String]
-
-  allZoneIdsAndItsOffSet.entrySet.stream
-    .sorted(util.Map.Entry.comparingByValue[String, String].reversed)
-    .forEachOrdered((e: util.Map.Entry[String, String]) => sortedMap.put(e.getKey, e.getValue))
+  /*
+   * List of tz database time zones
+   * See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+   */
+  val zoneIds: SortedMap[String, String] = SortedMap.from(zoneList)
 }

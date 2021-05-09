@@ -1,33 +1,32 @@
 package models
 
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, LocalDateTime }
+import java.time.{ Instant, LocalDateTime, ZoneId }
 import java.util.TimeZone
 
 object DateTime {
   val shortFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")
   val fullFormatter: DateTimeFormatter  = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:dd")
 
-  def isToday(d: LocalDateTime): Boolean = {
-    val today = LocalDateTime.now();
-    if (today.getYear == d.getYear && today.getDayOfYear == d.getDayOfYear) {
-      true
-    } else {
-      false
-    }
-  }
+  def printShort(d: LocalDateTime, tz: String): String = dateToTimeZone(d, tz).format(shortFormatter)
 
-  def printShort(d: LocalDateTime): String =
-    if (isToday(d)) {
-      "Today" // TODO: localize
-    } else {
-      d.format(shortFormatter)
-    }
+  def printFull(d: LocalDateTime, tz: String): String = dateToTimeZone(d, tz).format(fullFormatter)
 
-  def printFull(d: LocalDateTime): String = d.format(fullFormatter)
+  val defaultTz: ZoneId = TimeZone.getTimeZone("Etc/UTC").toZoneId
 
   def fromTimestamp(t: Long): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), TimeZone.getDefault.toZoneId);
+    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), defaultTz)
+
+  /*
+   * Changing LocalDateTime based on time difference in current time zone vs. user time zone
+   */
+  def dateToTimeZone(date: LocalDateTime, tz: String): LocalDateTime = {
+    val timezone = TimeZone.getTimeZone(tz)
+    date
+      .atZone(defaultTz)
+      .withZoneSameInstant(timezone.toZoneId)
+      .toLocalDateTime
+  }
 
   def now: Long = Instant.now().getEpochSecond
 

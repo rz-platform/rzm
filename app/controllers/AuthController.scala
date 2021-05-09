@@ -1,6 +1,7 @@
 package controllers
 
 import actions.AuthenticatedAction
+import forms.RzConstraints
 import models._
 import play.api.data.Forms._
 import play.api.data._
@@ -23,7 +24,11 @@ class AuthController @Inject() (
   def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(form))))
 
   val form: Form[AccountLoginData] = Form(
-    mapping("userName" -> nonEmptyText, "password" -> nonEmptyText)(AccountLoginData.apply)(AccountLoginData.unapply)
+    mapping(
+      "userName" -> nonEmptyText,
+      "password" -> nonEmptyText,
+      "timezone" -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint)
+    )(AccountLoginData.apply)(AccountLoginData.unapply)
   )
 
   def index: Action[AnyContent] =
@@ -42,7 +47,16 @@ class AuthController @Inject() (
   def login: Action[AnyContent] = Action.async { implicit req =>
     val successFunc: AccountLoginData => Future[Result] = { accountData: AccountLoginData =>
       checkPassword(accountData.userName, accountData.password).flatMap {
-        case Right(account) => authAction.authorize(account, req.session)
+        case Right(account) =>
+          for {
+            (sessionId, encryptedCookie) <- authAction.createSession(UserInfo(account.userName))
+            _                            <- accountRepository.setTimezone(account, accountData.timezone)
+          } yield {
+            val session: Session = req.session + (Auth.sessionId -> sessionId)
+            Redirect(routes.RzRepositoryController.list())
+              .withSession(session)
+              .withCookies(encryptedCookie)
+          }
         case _ =>
           val formBuiltFromRequest = form.bindFromRequest()
           val newForm = form

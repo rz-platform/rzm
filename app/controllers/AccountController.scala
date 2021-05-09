@@ -1,6 +1,7 @@
 package controllers
 
 import actions.AuthenticatedAction
+import forms.RzConstraints
 import models._
 import play.api.Configuration
 import play.api.data.Forms._
@@ -40,6 +41,7 @@ class AccountController @Inject() (
       "userName"    -> text(maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
+      "timezone"    -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint),
       "mailAddress" -> email
     )(AccountRegistrationData.apply)(AccountRegistrationData.unapply)
   )
@@ -59,7 +61,15 @@ class AccountController @Inject() (
     )(PasswordData.apply)(PasswordData.unapply)
   )
 
-  def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm))))
+  val timeZoneForm: Form[TimeZoneData] = Form(
+    mapping(
+      "timezone" -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint)
+    )(TimeZoneData.apply)(TimeZoneData.unapply)
+  )
+
+  private val zoneIds = TimezoneOffsetRepository.zoneIds
+
+  def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 
   private def clearAccountData(data: Option[Map[String, Seq[String]]]): Map[String, Seq[String]] = {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
@@ -77,15 +87,15 @@ class AccountController @Inject() (
     signupForm
       .bindFromRequest(cleanData)
       .fold(
-        formWithErrors => Future(BadRequest(html.signup(formWithErrors))),
-        (accountData: AccountRegistrationData) =>
-          accountRepository.getByUsernameOrEmail(accountData.userName).flatMap { // TODO accountData.email
+        formWithErrors => Future(BadRequest(html.signup(formWithErrors, zoneIds))),
+        data =>
+          accountRepository.getByUsernameOrEmail(data.userName).flatMap { // TODO accountData.email
             case Left(NotFoundInRepository) =>
-              val acc      = new Account(accountData)
-              val password = HashedString.fromString(accountData.password)
+              val account  = new Account(data)
+              val password = HashedString.fromString(data.password)
               accountRepository
-                .set(acc, password)
-                .flatMap(_ => authAction.authorize(acc, request.session))
+                .set(account, password)
+                .flatMap(_ => authAction.authorize(account, request.session))
             case _ =>
               val formBuiltFromRequest = signupForm.bindFromRequest()
               val newForm = signupForm
@@ -94,7 +104,7 @@ class AccountController @Inject() (
                   errors =
                     formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
                 )
-              Future(BadRequest(html.signup(newForm)))
+              Future(BadRequest(html.signup(newForm, zoneIds)))
           }
       )
   }
@@ -106,7 +116,7 @@ class AccountController @Inject() (
 
   def accountPage: Action[AnyContent] = authAction.async { implicit request =>
     accountRepository.getById(request.account.id).flatMap {
-      case Right(account) => Future(Ok(html.profile(filledAccountEditForm(account), updatePasswordForm)))
+      case Right(account) => Future(Ok(html.profile(filledAccountEditForm(account), updatePasswordForm, zoneIds)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }
   }
@@ -123,13 +133,13 @@ class AccountController @Inject() (
     accountEditForm
       .bindFromRequest()
       .fold(
-        formWithErrors => Future(BadRequest(html.profile(formWithErrors, updatePasswordForm))),
+        formWithErrors => Future(BadRequest(html.profile(formWithErrors, updatePasswordForm, zoneIds))),
         (accountData: AccountData) =>
           isEmailAvailable(req.account.email, accountData.email).flatMap {
             case true =>
               accountRepository
                 .update(req.account, req.account.fromForm(accountData))
-                .map(_ => Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm)))
+                .map(_ => Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds)))
             case false =>
               val formBuiltFromRequest = accountEditForm.bindFromRequest()
               val newForm = accountEditForm
@@ -139,8 +149,23 @@ class AccountController @Inject() (
                     FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
                   )
                 )
-              Future(BadRequest(html.profile(newForm, updatePasswordForm)))
+              Future(BadRequest(html.profile(newForm, updatePasswordForm, zoneIds)))
           }
+      )
+  }
+
+  def setTimeZone(): Action[AnyContent] = authAction.async { implicit req =>
+    timeZoneForm
+      .bindFromRequest()
+      .fold(
+        _ => Future(Redirect(routes.AccountController.accountPage())),
+        data =>
+          accountRepository
+            .setTimezone(req.account, data.tz)
+            .map(_ =>
+              Redirect(routes.AccountController.accountPage())
+                .flashing("success" -> Messages("profile.flash.tzupdated"))
+            )
       )
   }
 
@@ -148,7 +173,7 @@ class AccountController @Inject() (
     updatePasswordForm
       .bindFromRequest()
       .fold(
-        formWithErrors => Future(BadRequest(html.profile(filledAccountEditForm(req.account), formWithErrors))),
+        formWithErrors => Future(BadRequest(html.profile(filledAccountEditForm(req.account), formWithErrors, zoneIds))),
         passwordData =>
           accountRepository.getPassword(req.account).flatMap {
             case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
@@ -168,7 +193,7 @@ class AccountController @Inject() (
                     FormError("oldPassword", Messages("profile.error.passisincorrect"))
                   )
                 )
-              Future(BadRequest(html.profile(filledAccountEditForm(req.account), newForm)))
+              Future(BadRequest(html.profile(filledAccountEditForm(req.account), newForm, zoneIds)))
           }
       )
   }

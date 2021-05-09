@@ -51,13 +51,20 @@ class GenericControllerTest
 
   def createAccount(): AuthorizedAccount = {
     val data =
-      AccountRegistrationData(getRandomString, Some(getRandomString), getRandomString, s"$getRandomString@rzm.dev")
+      AccountRegistrationData(
+        getRandomString,
+        Some(getRandomString),
+        getRandomString,
+        DateTime.defaultTz.toString,
+        s"$getRandomString@rzm.dev"
+      )
     val request = addCSRFToken(
       FakeRequest(routes.AccountController.saveAccount())
         .withFormUrlEncodedBody(
           "userName"    -> data.userName,
           "fullName"    -> data.fullName.get,
           "password"    -> data.password,
+          "timezone"    -> DateTime.defaultTz.toString,
           "mailAddress" -> data.email
         )
     )

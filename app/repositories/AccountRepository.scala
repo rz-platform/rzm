@@ -34,7 +34,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
       case _              => getByEmailId(Account.emailId(s))
     }
 
-  def set(account: Account, password: HashedString): Future[Option[List[Any]]] = Future {
+  def set(account: Account, password: HashedString): Future[_] = Future {
     redis.withClient(client =>
       client.pipeline { f =>
         f.hmset(account.id, account.toMap)
@@ -44,7 +44,11 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     )
   }
 
-  def update(oldAccount: Account, account: Account): Future[Option[List[Any]]] = Future {
+  def setTimezone(account: Account, tz: String): Future[_] = Future {
+    redis.withClient(client => client.hset(account.id, "tz", tz))
+  }
+
+  def update(oldAccount: Account, account: Account): Future[_] = Future {
     redis.withClient { client =>
       client.pipeline { f =>
         f.hmset(account.id, account.toMap)

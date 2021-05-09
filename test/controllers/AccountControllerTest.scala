@@ -1,9 +1,9 @@
 package controllers
 
-import models.Account
+import models.{ Account, DateTime }
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ await, defaultAwaitTimeout }
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 class AccountControllerTest extends GenericControllerTest {
 
@@ -41,6 +41,7 @@ class AccountControllerTest extends GenericControllerTest {
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
+              "timezone"    -> DateTime.defaultTz.toString,
               "mailAddress" -> s"$getRandomString@rzm.dev"
             )
         )
