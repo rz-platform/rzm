@@ -8,6 +8,7 @@ module.exports = {
         fileview: './app/fileview.page.ts',
         turbo: './app/turbolinks.ts',
         upload: './app/upload.page.ts',
+        timezone: './app/timezone.ts',
         main: './stylesheets/main.scss',
     },
     module: {

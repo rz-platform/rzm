@@ -7,6 +7,7 @@ case class Account(
   userName: String,
   fullName: String,
   email: String,
+  tz: String,
   created: Long,
   picture: Option[String]
 ) {
@@ -19,20 +20,21 @@ case class Account(
   def toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
     val picture = if (this.picture.nonEmpty) Some("picture" -> this.picture.get) else None
-    (Seq("fullName" -> fullName, "email" -> email, "created" -> created.toString) ++ picture).toMap
+    (Seq("fullName" -> fullName, "email" -> email, "created" -> created.toString, "tz" -> tz) ++ picture).toMap
   }
 
-  def this(userForm: AccountRegistrationData) =
+  def this(data: AccountRegistrationData) =
     this(
-      userForm.userName,
-      userForm.fullName.getOrElse(""),
-      userForm.email,
+      data.userName,
+      data.fullName.getOrElse(""),
+      data.email,
+      data.timezone,
       DateTime.now,
       None
     )
 
-  def fromForm(userForm: AccountData): Account =
-    Account(userName, userForm.fullName.getOrElse(""), userForm.email, created, picture)
+  def fromForm(data: AccountData): Account =
+    Account(userName, data.fullName.getOrElse(""), data.email, tz, created, picture)
 }
 
 object Account {
@@ -44,7 +46,8 @@ object Account {
       fullName <- data.get("fullName")
       email    <- data.get("email")
       created  <- data.get("created")
-    } yield Account(key.substring(3), fullName, email, DateTime.parseTimestamp(created), data.get("picture"))) match {
+      tz       <- data.get("tz")
+    } yield Account(key.substring(3), fullName, email, tz, DateTime.parseTimestamp(created), data.get("picture"))) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }

@@ -9,11 +9,11 @@ GET     /                           controllers.AuthController.index()
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Login
-GET     /signin              controllers.AuthController.loginPage()
+GET      /signin              controllers.AuthController.loginPage()
 POST     /signin              controllers.AuthController.login()
 
 # Sign up
-GET     /signup              controllers.AccountController.signup()
+GET      /signup              controllers.AccountController.signup()
 POST     /signup              controllers.AccountController.saveAccount()
 
 # Log out
@@ -25,7 +25,7 @@ GET /repositories      controllers.RzRepositoryController.list()
 
 # Repositories creation
 
-GET /repositories/create controllers.RzRepositoryController.createRepository()
+GET  /repositories/create controllers.RzRepositoryController.createRepository()
 POST /repositories/create controllers.RzRepositoryController.saveRepository()
 
 # File view
@@ -43,20 +43,20 @@ GET /repositories/:account/:repository/raw/:rev/*path controllers.FileTreeContro
 
 GET /creator/:templateId/illustration controllers.TemplateController.templatePdf(templateId: String)
 
-GET /repositories/:account/:repository/creator controllers.TemplateController.overview(account:String, repository:String)
-GET /repositories/:account/:repository/creator/:templateId controllers.TemplateController.view(account:String, repository:String, templateId: String)
+GET  /repositories/:account/:repository/creator controllers.TemplateController.overview(account:String, repository:String)
+GET  /repositories/:account/:repository/creator/:templateId controllers.TemplateController.view(account:String, repository:String, templateId: String)
 POST /repositories/:account/:repository/creator/build controllers.TemplateController.build(account:String, repository:String)
 
 # File upload
 
-GET /repositories/:account/:repository/upload/:rev controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String = "")
-GET /repositories/:account/:repository/upload/:rev/*path controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String)
+GET  /repositories/:account/:repository/upload/:rev controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/upload/:rev/*path controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String)
 POST /repositories/:account/:repository/upload/:rev controllers.FileUploadController.upload(account:String, repository:String, rev: String)
 
 
 # Collaborators
 
-GET /repositories/:account/:repository/collaborators controllers.CollaboratorsController.collaboratorsPage(account:String, repository:String)
+GET  /repositories/:account/:repository/collaborators controllers.CollaboratorsController.collaboratorsPage(account:String, repository:String)
 POST /repositories/:account/:repository/collaborators controllers.CollaboratorsController.addCollaborator(account:String, repository:String)
 POST /repositories/:account/:repository/collaborators/remove controllers.CollaboratorsController.removeCollaborator(account:String, repository:String)
 
@@ -71,15 +71,16 @@ GET /repositories/:account/:repository/:rev/archive controllers.RzRepositoryCont
 
 # Profile editing page
 
-GET /profile controllers.AccountController.accountPage()
-GET /profile/image/:account controllers.AccountController.accountPicture(account)
+GET  /profile controllers.AccountController.accountPage()
+GET  /profile/image/:account controllers.AccountController.accountPicture(account)
 POST /profile/image/delete controllers.AccountController.removeAccountPicture()
 POST /profile controllers.AccountController.editAccount()
-POST /profilePassword controllers.AccountController.updatePassword()
-POST  /uploadProfilePage controllers.AccountController.uploadAccountPicture()
+POST /profile/password controllers.AccountController.updatePassword()
+POST /profile/tz controllers.AccountController.setTimeZone()
+POST /profile/image/ controllers.AccountController.uploadAccountPicture()
 
 # SSH Keys
-GET /profile/keys controllers.SshKeyController.keysPage()
+GET  /profile/keys controllers.SshKeyController.keysPage()
 POST /profile/keys/add controllers.SshKeyController.addSshKey()
 POST /profile/keys/delete controllers.SshKeyController.deleteSshKey()
 
