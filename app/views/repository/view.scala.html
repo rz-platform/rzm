@@ -27,8 +27,16 @@
           >
             <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
           </a>
+          <a
+            href="@routes.FileTreeController.addNewItemPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+          >
           <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon add-file-button file-tree-icon" />
+          </a>
+          <a
+            href="@routes.FileTreeController.addNewFolderPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+          >
           <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon add-folder-button file-tree-icon" />
+          </a>
         </div>
       </div>
     </div>
@@ -67,9 +75,11 @@
 @CSRF.formField
 <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon" />
 <img src='@routes.Assets.at("images/document.svg")' class="svg-icon" id="file-icon" />
-@inputText(newItemForm("path"),Symbol("id") -> "new-item-form-path") @inputText(newItemForm("rev"))
-@checkbox(newItemForm("isFolder"),Symbol("id")->"new-item-form-is-folder") @inputText(newItemForm("name"),Symbol("id")
--> "new-item-form-name") }
+@inputText(newItemForm("path"),Symbol("id") -> "new-item-form-path") 
+@inputText(newItemForm("rev"))
+@checkbox(newItemForm("isFolder"),Symbol("id")->"new-item-form-is-folder") 
+@inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name") 
+}
 
 <div class="rz-sidebar">
   <div class="rz-sidebar-filetree" id="rz-sidebar-filetree">

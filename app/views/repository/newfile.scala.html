@@ -1,0 +1,26 @@
+@(newItemForm: Form[NewItem], rev: String, path: String, isFolder: Boolean)(implicit req: RepositoryRequestHeader) 
+@import views.html.helper._
+
+@base.auth(req.messages("repository.newfile.title")){
+@header.repositoryMenu(NewFilePage)
+@header.alerts()
+
+@if(!path.isEmpty) {
+<p> @req.messages("repository.newfile.messagePath", path) </p>
+} else {
+<p> @req.messages("repository.newfile.messageRoot") </p>
+}
+
+@form(routes.FileTreeController.addNewItem(req.repository.owner.userName,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
+@CSRF.formField
+<input type="text" name="path" value=@if(path.isEmpty) {"."} else {@rev} /> 
+<input type="text" name="rev" value="@rev" /> 
+<input type="checkbox" name="isFolder" @if(isFolder) {checked="true"} else {} value="true" />
+
+
+@inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name")
+
+<input type="submit" value='@req.messages("repository.newfile.submit")' class="rz-button rz-button-primary" />
+}
+
+}()

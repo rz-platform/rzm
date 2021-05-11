@@ -230,13 +230,23 @@ class FileTreeController @Inject() (
         )
     }
 
+  def addNewItemPage(accountName: String, repositoryName: String, rev: String, path: String) =  
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
+      Future(Ok(html.repository.newfile(addNewItemForm, rev, RzPathUrl.make(path).uri, false)))
+  }
+
+  def addNewFolderPage(accountName: String, repositoryName: String, rev: String, path: String) =  
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
+      Future(Ok(html.repository.newfile(addNewItemForm, rev, RzPathUrl.make(path).uri, true)))
+  }
+
   def addNewItem(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
       val cleanData = cleanItemData(req.body.asFormUrlEncoded)
       addNewItemForm
         .bindFromRequest(cleanData)
         .fold(
-          formWithErrors =>
+          formWithErrors => {
             Future(
               Redirect(
                 routes.FileTreeController.emptyTree(
@@ -245,7 +255,8 @@ class FileTreeController @Inject() (
                   formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch)
                 )
               ).flashing("error" -> Messages("repository.addNewItem.error.namereq"))
-            ),
+            )
+          },
           (newItem: NewItem) => {
             val fName = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
 

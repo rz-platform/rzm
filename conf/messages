@@ -133,3 +133,10 @@ repository.log.empty=Nothing to display
 
 repository.creator.title = Project Creator
 repository.creator.commit.message = "Initial commit. {0}"
+
+repository.newfile.title = New Entity
+repository.newfile.submit = Create
+repository.newfile.newfolderinroot = New folder in the project root
+repository.newfile.newfileinroot = New file in the project root
+repository.newfile.newfolderinpath=New folder in {0}
+repository.newfile.newfileinpath=New file in {0}

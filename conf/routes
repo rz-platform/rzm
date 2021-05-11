@@ -62,8 +62,16 @@ POST /repositories/:account/:repository/collaborators/remove controllers.Collabo
 
 # Creation / Editing
 
-POST /repositories/:account/:repository/edit controllers.FileTreeController.edit(account:String, repository:String)
-POST /repositories/:account/:repository/createItem controllers.FileTreeController.addNewItem(account: String, repository: String)
+POST /repositories/:account/:repository/edit          controllers.FileTreeController.edit(account:String, repository:String)
+
+GET  /repositories/:account/:repository/create/file/:rev controllers.FileTreeController.addNewItemPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/create/file/:rev/*path controllers.FileTreeController.addNewItemPage(account:String, repository:String, rev: String, path: String)
+
+GET  /repositories/:account/:repository/create/folder/:rev controllers.FileTreeController.addNewFolderPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/create/folder/:rev/*path controllers.FileTreeController.addNewFolderPage(account:String, repository:String, rev: String, path: String)
+
+
+POST /repositories/:account/:repository/create/item   controllers.FileTreeController.addNewItem(account: String, repository: String)
 
 # Repository archive
 
@@ -80,10 +88,12 @@ POST /profile/tz controllers.AccountController.setTimeZone()
 POST /profile/image/ controllers.AccountController.uploadAccountPicture()
 
 # SSH Keys
+
 GET  /profile/keys controllers.SshKeyController.keysPage()
 POST /profile/keys/add controllers.SshKeyController.addSshKey()
 POST /profile/keys/delete controllers.SshKeyController.deleteSshKey()
 
 # Commit log
+
 GET /repositories/:account/:repository/commits/:rev controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
 GET /repositories/:account/:repository/commits/:rev/:page controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int)
