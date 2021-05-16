@@ -37,7 +37,8 @@ class GenericControllerTest
 
   def accountController: AccountController             = app.injector.instanceOf[AccountController]
   def collaboratorsController: CollaboratorsController = app.injector.instanceOf[CollaboratorsController]
-  def fileTreeController: FileTreeController           = app.injector.instanceOf[FileTreeController]
+  def fileViewController: FileViewController           = app.injector.instanceOf[FileViewController]
+  def fileEditController: FileEditController           = app.injector.instanceOf[FileEditController]
 
   def accountRepository: AccountRepository = app.injector.instanceOf[AccountRepository]
   def rzGitRepository: RzMetaGitRepository = app.injector.instanceOf[RzMetaGitRepository]
@@ -80,12 +81,12 @@ class GenericControllerTest
     owner: AuthorizedAccount
   ): (Result, RzRepository) = {
     val request = addCSRFToken(
-      FakeRequest(routes.RzRepositoryController.saveRepository())
+      FakeRequest(routes.RzRepositoryController.save())
         .withFormUrlEncodedBody("name" -> name, "description" -> getRandomString)
         .withSession(owner.s)
         .withCookies(owner.c)
     )
-    val result = await(gitEntitiesController.saveRepository().apply(request))
+    val result = await(gitEntitiesController.save().apply(request))
     (result, new RzRepository(owner.a, name))
   }
 

@@ -12,7 +12,7 @@
     <div>@request.messages("profile.ssh.createdAt") @print.date(key.createdAtDate)</div>
   </div>
   <div class="ssh-key-block-remove-block">
-    @form(routes.SshKeyController.deleteSshKey()) { 
+    @form(routes.SshKeyController.deleteKey()) { 
     @CSRF.formField
     <input type="hidden" name="id" value="@key.id" />
     <button class="rz-button" type="submit"> @request.messages("profile.ssh.remove") </button>
@@ -22,7 +22,7 @@
 }
 
 <div class="ssh-key-actions">
-  @form(routes.SshKeyController.addSshKey(), Symbol("class") -> "rz-form") { @CSRF.formField
+  @form(routes.SshKeyController.addKey(), Symbol("class") -> "rz-form") { @CSRF.formField
   @textarea(sshKeyAdd("publicKey"), Symbol("_label") -> request.messages("profile.ssh.addkeytitle"), Symbol("_help") ->
   "", Symbol("class") -> "ssh-key-textarea", Symbol("placeholder")->request.messages("profile.ssh.addplaceholder"), Symbol("autofocus") -> "")
   <input type="submit" value="Add SSH Key" class="rz-button rz-button-primary" />

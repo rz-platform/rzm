@@ -10,7 +10,7 @@
 }
 @linkToFileTree(repository: RzRepository) = {
 <a
-  href="@routes.FileTreeController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
+  href="@routes.FileViewController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
   class="rz-menu-link"
   >  @repository.owner.userName / @repository.name </a
 >
@@ -18,7 +18,7 @@
 
 @base.auth(request.messages("repository.list.title")){
 <div class="repo-list-header">
-  <a class="rz-button" href="@routes.RzRepositoryController.createRepository()">
+  <a class="rz-button" href="@routes.RzRepositoryController.createPage()">
     @request.messages("repository.list.createNew")
   </a>
 </div>

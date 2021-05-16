@@ -10,6 +10,6 @@ case object TemplateError  extends RzError
 case object JsonParseError extends RzError
 case object FileNotFound   extends RzError
 
-trait FileUploadException
-class WrongContentType extends Exception with FileUploadException
-class ExceededMaxSize  extends Exception with FileUploadException
+sealed trait ImageProcessingError extends Throwable
+case object WrongContentType      extends ImageProcessingError
+case object ExceededMaxSize       extends ImageProcessingError

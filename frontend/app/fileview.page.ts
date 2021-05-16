@@ -9,10 +9,14 @@ function clickHandler(event: MouseEvent) {
     if (target.classList.contains('add-file-button')) {
       addInlineInput(event, false);
       toggleIsFolder(false);
+      event.preventDefault();
+      return false;
     }
     if (target.classList.contains('add-folder-button')) {
       addInlineInput(event, true);
       toggleIsFolder(true);
+      event.preventDefault();
+      return false;
     }
     if (target.classList.contains('file-tree-show')) {
       const target = event.target as HTMLElement;

@@ -1,11 +1,9 @@
 package controllers
 
 import actions.AuthenticatedAction
-import models.{ RzRegex, SshKey, SshKeyData, SshRemoveData }
+import forms.SshForms._
+import models.{ SshKey, SshRemoveData }
 import play.api.Configuration
-import play.api.data.Form
-import play.api.data.Forms.{ mapping, nonEmptyText }
-import play.api.data.validation.Constraints.pattern
 import play.api.i18n.Messages
 import play.api.mvc.{ Action, AnyContent, MessagesAbstractController, MessagesControllerComponents }
 import repositories.AccountRepository
@@ -24,24 +22,11 @@ class SshKeyController @Inject() (
 ) extends MessagesAbstractController(cc) {
   private val maximumNumberPerUser: Int = config.get[String]("play.server.ssh.maximumNumberPerUser").toInt
 
-  val addSshKeyForm: Form[SshKeyData] = Form(
-    mapping(
-      "publicKey" -> nonEmptyText.verifying(
-        pattern(RzRegex.publicKey)
-      )
-    )(SshKeyData.apply)(SshKeyData.unapply)
-  )
-  val deleteSshKeyForm: Form[SshRemoveData] = Form(
-    mapping(
-      "id" -> nonEmptyText
-    )(SshRemoveData.apply)(SshRemoveData.unapply)
-  )
-
-  def keysPage(): Action[AnyContent] = authAction.async { implicit req =>
+  def page(): Action[AnyContent] = authAction.async { implicit req =>
     accountService.listSshKeys(req.account).map(list => Ok(html.sshKeys(list, addSshKeyForm, deleteSshKeyForm)))
   }
 
-  def addSshKey(): Action[AnyContent] = authAction.async { implicit request =>
+  def addKey(): Action[AnyContent] = authAction.async { implicit request =>
     addSshKeyForm
       .bindFromRequest()
       .fold(
@@ -56,19 +41,19 @@ class SshKeyController @Inject() (
               accountService
                 .setSshKey(request.account, key)
                 .map(_ =>
-                  Redirect(routes.SshKeyController.keysPage())
+                  Redirect(routes.SshKeyController.page())
                     .flashing("success" -> Messages("profile.ssh.notification.added"))
                 )
             case _ =>
               Future(
-                Redirect(routes.SshKeyController.keysPage())
+                Redirect(routes.SshKeyController.page())
                   .flashing("error" -> Messages("profile.ssh.notification.toomuch"))
               )
           }
       )
   }
 
-  def deleteSshKey(): Action[AnyContent] = authAction.async { implicit request =>
+  def deleteKey(): Action[AnyContent] = authAction.async { implicit request =>
     deleteSshKeyForm
       .bindFromRequest()
       .fold(
@@ -80,7 +65,7 @@ class SshKeyController @Inject() (
           accountService
             .deleteSshKey(request.account, sshKeyIdData.id)
             .map(_ =>
-              Redirect(routes.SshKeyController.keysPage())
+              Redirect(routes.SshKeyController.page())
                 .flashing("success" -> Messages("profile.ssh.notification.removed"))
             ) // TODO: check ownership
       )

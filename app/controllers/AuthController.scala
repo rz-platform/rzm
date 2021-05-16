@@ -1,9 +1,8 @@
 package controllers
 
 import actions.AuthenticatedAction
-import forms.RzConstraints
+import forms.AuthForms
 import models._
-import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
@@ -21,28 +20,10 @@ class AuthController @Inject() (
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
-  def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(form))))
-
-  val form: Form[AccountLoginData] = Form(
-    mapping(
-      "userName" -> nonEmptyText,
-      "password" -> nonEmptyText,
-      "timezone" -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint)
-    )(AccountLoginData.apply)(AccountLoginData.unapply)
-  )
+  def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(AuthForms.signin))))
 
   def index: Action[AnyContent] =
     authAction.async(implicit req => Future(Redirect(routes.RzRepositoryController.list())))
-
-  private def checkPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountRepository.getByUsernameOrEmail(userName).flatMap {
-      case Right(account: Account) =>
-        accountRepository.getPassword(account).map {
-          case Right(password: String) if HashedString(password).check(passwordHash) => Right(account)
-          case _                                                                     => Left(AccessDenied)
-        }
-      case Left(e) => Future(Left(e))
-    }
 
   def login: Action[AnyContent] = Action.async { implicit req =>
     val successFunc: AccountLoginData => Future[Result] = { accountData: AccountLoginData =>
@@ -52,14 +33,14 @@ class AuthController @Inject() (
             (sessionId, encryptedCookie) <- authAction.createSession(UserInfo(account.userName))
             _                            <- accountRepository.setTimezone(account, accountData.timezone)
           } yield {
-            val session: Session = req.session + (Auth.sessionId -> sessionId)
+            val session = req.session + (Auth.sessionId -> sessionId)
             Redirect(routes.RzRepositoryController.list())
               .withSession(session)
               .withCookies(encryptedCookie)
           }
         case _ =>
-          val formBuiltFromRequest = form.bindFromRequest()
-          val newForm = form
+          val formBuiltFromRequest = AuthForms.signin.bindFromRequest()
+          val newForm = AuthForms.signin
             .bindFromRequest()
             .copy(
               errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
@@ -74,7 +55,7 @@ class AuthController @Inject() (
       }
     }
 
-    form.bindFromRequest().fold(errorFunc, successFunc)
+    AuthForms.signin.bindFromRequest().fold(errorFunc, successFunc)
   }
 
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
@@ -87,4 +68,13 @@ class AuthController @Inject() (
     }
   }
 
+  private def checkPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
+    accountRepository.getByUsernameOrEmail(userName).flatMap {
+      case Right(account: Account) =>
+        accountRepository.getPassword(account).map {
+          case Right(password: String) if HashedString(password).check(passwordHash) => Right(account)
+          case _                                                                     => Left(AccessDenied)
+        }
+      case Left(e) => Future(Left(e))
+    }
 }

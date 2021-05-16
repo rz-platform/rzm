@@ -14,13 +14,13 @@ class CollaboratorControllerTest extends GenericControllerTest {
     role: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.CollaboratorsController.addCollaborator(owner.a.userName, repositoryName))
+      FakeRequest(routes.CollaboratorsController.add(owner.a.userName, repositoryName))
         .withFormUrlEncodedBody("emailOrLogin" -> collaboratorName, "role" -> role)
         .withSession(owner.s)
         .withCookies(owner.c)
     )
 
-    await(collaboratorsController.addCollaborator(owner.a.userName, repositoryName).apply(request))
+    await(collaboratorsController.add(owner.a.userName, repositoryName).apply(request))
   }
 
   def removeCollaborator(
@@ -29,13 +29,13 @@ class CollaboratorControllerTest extends GenericControllerTest {
     collaboratorName: String
   ): Result = {
     val request = addCSRFToken(
-      FakeRequest(routes.CollaboratorsController.removeCollaborator(owner.a.userName, repositoryName))
+      FakeRequest(routes.CollaboratorsController.remove(owner.a.userName, repositoryName))
         .withFormUrlEncodedBody("email" -> collaboratorName)
         .withSession(owner.s)
         .withCookies(owner.c)
     )
 
-    await(collaboratorsController.removeCollaborator(owner.a.userName, repositoryName).apply(request))
+    await(collaboratorsController.remove(owner.a.userName, repositoryName).apply(request))
   }
 
   "Add collaborator successfully" in {

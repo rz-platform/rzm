@@ -4,9 +4,8 @@ import actions.{ AuthenticatedAction, RepositoryAction }
 import akka.stream.IOResult
 import akka.stream.scaladsl.{ FileIO, Sink }
 import akka.util.ByteString
+import forms.UploadForms._
 import models.{ RepositoryRequest, _ }
-import play.api.data.Forms._
-import play.api.data._
 import play.api.i18n.Messages
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart
@@ -28,16 +27,48 @@ class FileUploadController @Inject() (
   repositoryAction: RepositoryAction
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
-  type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
-  val uploadFileForm: Form[UploadFileForm] = Form(
-    mapping("path" -> text)(UploadFileForm.apply)(UploadFileForm.unapply)
-  )
+  type FilePartHandler[A] = FileInfo => Accumulator[ByteString, FilePart[A]]
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repositoryAction.on(accountName, repositoryName, Role.Editor)).async { implicit request =>
-      Future(Ok(html.repository.upload(uploadFileForm, rev, RzPathUrl.make(path).uri)))
+      Future(Ok(html.repository.upload(uploadForm, rev, RzPathUrl.make(path).uri)))
     }
+
+  /**
+   * Uploads a multipart file as a POST request.
+   *
+   */
+  def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
+    authAction(parse.multipartFormData(handleFilePartAsFile))
+      .andThen(repositoryAction.on(accountName, repositoryName, Role.Editor))
+      .async { implicit req: RepositoryRequest[MultipartFormData[File]] =>
+        uploadForm
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Future(
+                BadRequest(
+                  html.repository.upload(
+                    formWithErrors,
+                    formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
+                    formWithErrors.data.getOrElse("path", ".")
+                  )
+                )
+              ),
+            data => {
+              val files  = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
+              val branch = if (rev.nonEmpty) rev else RzRepository.defaultBranch
+
+              for {
+                _ <- commitFiles(files, branch, data.path)(req)
+                _ <- metaGitRepository.updateRepo(req.repository)
+              } yield Redirect(
+                routes.FileViewController.emptyTree(accountName, repositoryName, rev)
+              ).flashing("success" -> Messages("repository.upload.success"))
+            }
+          )
+      }
 
   /**
    * Uses a custom FilePartHandler to return a type of "File" rather than
@@ -58,45 +89,17 @@ class FileUploadController @Inject() (
       }
   }
 
-  /**
-   * Uploads a multipart file as a POST request.
-   *
-   */
-  def upload(accountName: String, repositoryName: String, rev: String = ""): Action[MultipartFormData[File]] =
-    authAction(parse.multipartFormData(handleFilePartAsFile))
-      .andThen(repositoryAction.on(accountName, repositoryName, Role.Editor))
-      .async { implicit req: RepositoryRequest[MultipartFormData[File]] =>
-        uploadFileForm
-          .bindFromRequest()
-          .fold(
-            formWithErrors =>
-              Future(
-                BadRequest(
-                  html.repository.upload(
-                    formWithErrors,
-                    formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
-                    formWithErrors.data.getOrElse("path", ".")
-                  )
-                )
-              ),
-            (data: UploadFileForm) => {
-              val files = req.body.files.map(filePart => CommitFile.fromFilePart(filePart, data.path))
-              git.commitFiles(
-                req.repository,
-                files,
-                req.account,
-                if (rev.nonEmpty) rev else RzRepository.defaultBranch,
-                data.path,
-                Messages("repository.upload.message", files.length)
-              )
-              metaGitRepository
-                .updateRepo(req.repository)
-                .map(_ =>
-                  Redirect(
-                    routes.FileTreeController.emptyTree(accountName, repositoryName, rev)
-                  ).flashing("success" -> Messages("repository.upload.success"))
-                )
-            }
-          )
-      }
+  private def commitFiles(files: Seq[CommitFile], rev: String, path: String)(
+    implicit req: RepositoryRequest[_]
+  ): Future[_] =
+    Future {
+      git.commitFiles(
+        req.repository,
+        files,
+        req.account,
+        rev,
+        path,
+        Messages("repository.upload.message", files.length)
+      )
+    }
 }

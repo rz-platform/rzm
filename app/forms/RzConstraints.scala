@@ -1,5 +1,6 @@
 package forms
 
+import models.ForbiddenSymbols
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
 import repositories.TimezoneOffsetRepository
 
@@ -11,5 +12,15 @@ object RzConstraints {
       Invalid(Seq(ValidationError("")))
     }
   })
+
+  val checkNameForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
+    if (!ForbiddenSymbols.isNameValid(itemName)) Valid
+    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
+  }
+
+  val checkPathForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
+    if (!ForbiddenSymbols.isPathValid(itemName)) Valid
+    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
+  }
 
 }
