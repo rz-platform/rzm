@@ -2,7 +2,7 @@
 @import views.html.helper._
 @import print.date
 
-@form(routes.FileTreeController.edit(request.repository.owner.userName,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
+@form(routes.FileEditController.edit(request.repository.owner.userName,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
 
 @CSRF.formField
 <div class="rz-editor-content-header">
@@ -28,7 +28,7 @@
     }
     <a
       class="rz-button button-small"
-      href="@routes.FileTreeController.raw(request.repository.owner.userName, request.repository.name, rev, path)"
+      href="@routes.FileViewController.raw(request.repository.owner.userName, request.repository.name, rev, path)"
     >
       <img src='@routes.Assets.at("images/download.svg")' class="svg-icon" />
       @request.messages("repository.viewFile.raw")
@@ -51,12 +51,12 @@
 }
 @if(blob.content.viewType == "image"){
   <img
-    src="@routes.FileTreeController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
+    src="@routes.FileViewController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {
   <a
-    href="@routes.FileTreeController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
+    href="@routes.FileViewController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
   >
     @request.messages("repository.viewFile.cant")
   </a>

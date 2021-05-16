@@ -44,11 +44,11 @@
 </div>
 
 <div class="profile-block">
-  @helper.form(action = routes.AccountController.uploadAccountPicture(), Symbol("enctype") -> "multipart/form-data", Symbol("class") -> "rz-form") {
+  @helper.form(action = routes.AccountPictureController.uploadAccountPicture(), Symbol("enctype") -> "multipart/form-data", Symbol("class") -> "rz-form") {
   @CSRF.formField
   @if(req.account.picture) {
   <p>
-    <img src="@routes.AccountController.accountPicture(req.account.userName)" />
+    <img src="@routes.AccountPictureController.accountPicture(req.account.userName)" />
   </p>
   }
   <input type="file" name="picture" />
@@ -61,7 +61,7 @@
 
 <div class="profile-block">
   @if(req.account.picture) {
-  @helper.form(action = routes.AccountController.removeAccountPicture()) {
+  @helper.form(action = routes.AccountPictureController.removeAccountPicture()) {
   @CSRF.formField
   <input type="submit" value='@req.messages("profile.delete.picture")' class="rz-button rz-button-primary" />
   }
@@ -69,6 +69,6 @@
 </div>
 
 <div class="profile-block">
-  <a href="@routes.SshKeyController.keysPage()" class="rz-button">SSH Keys</a>
+  <a href="@routes.SshKeyController.page()" class="rz-button">SSH Keys</a>
 </div>
 }()

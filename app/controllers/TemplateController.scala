@@ -43,7 +43,7 @@ class TemplateController @Inject() (
       }
     }
 
-  def overview(accountName: String, repositoryName: String) =
+  def overview(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
       templateRepository.list.keySet.headOption match {
         case Some(templateId) =>
@@ -86,7 +86,7 @@ class TemplateController @Inject() (
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
       val badRequest = Future(BadRequest(html.repository.creator(templateRepository.list, None, None)))
       val success = Redirect(
-        routes.FileTreeController
+        routes.FileViewController
           .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
       )
 
@@ -98,10 +98,11 @@ class TemplateController @Inject() (
           data =>
             templateRepository.get(data.name) match {
               case Some(tpl) =>
-                renderTemplate(ctx, tpl)(req)
-                  .map(_ => updateRepoConfig(req.repository, tpl))
-                  .map(_ => metaGitRepository.updateRepo(req.repository))
-                  .map(_ => success)
+                for {
+                  _ <- renderTemplate(ctx, tpl)(req)
+                  _ <- updateRepoConfig(req.repository, tpl)
+                  _ <- metaGitRepository.updateRepo(req.repository)
+                } yield success
               case _ => badRequest
             }
         )

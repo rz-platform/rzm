@@ -15,7 +15,7 @@
   <ul class="rz-menu-list">
     <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
       <a
-        href="@routes.FileTreeController.emptyTree(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
+        href="@routes.FileViewController.emptyTree(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
@@ -24,7 +24,7 @@
     case Role.Owner => {
     <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a
-        href="@routes.CollaboratorsController.collaboratorsPage(request.repository.owner.userName, request.repository.name)"
+        href="@routes.CollaboratorsController.page(request.repository.owner.userName, request.repository.name)"
         class="rz-menu-link"
         >@request.messages("repository.tree.collaborators")</a
       >
@@ -34,7 +34,7 @@
     }
     <li class="rz-menu-item">
       <a
-        href="@routes.RzRepositoryController.downloadRepositoryArchive(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
+        href="@routes.RzRepositoryController.downloadArchive(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.downloads")</a
       >

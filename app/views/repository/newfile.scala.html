@@ -5,20 +5,28 @@
 @header.repositoryMenu(NewFilePage)
 @header.alerts()
 
-@if(!path.isEmpty) {
-<p> @req.messages("repository.newfile.messagePath", path) </p>
+
+<p> 
+@if(isFolder) {
+@req.messages("repository.newfile.newfolder") 
 } else {
-<p> @req.messages("repository.newfile.messageRoot") </p>
+@req.messages("repository.newfile.newfile") 
 }
+@if(path.isEmpty) {
+@req.messages("repository.newfile.root")
+} else {
+@req.messages("repository.newfile.path", path)
+}
+</p>
 
-@form(routes.FileTreeController.addNewItem(req.repository.owner.userName,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
+@form(routes.FileEditController.addNewItem(req.repository.owner.userName,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
 @CSRF.formField
-<input type="text" name="path" value=@if(path.isEmpty) {"."} else {@rev} /> 
-<input type="text" name="rev" value="@rev" /> 
-<input type="checkbox" name="isFolder" @if(isFolder) {checked="true"} else {} value="true" />
+<input type="hidden" name="path" value=@if(path.isEmpty) {"."} else {"@rev"} /> 
+<input type="hidden" name="rev" value="@rev" /> 
+<input type="checkbox" class="hidden" name="isFolder" @if(isFolder) {checked="true"} else {} value="true" />
 
 
-@inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name")
+@inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name", Symbol("_label") -> "Name", Symbol("_help") -> "", Symbol("autofocus")->true)
 
 <input type="submit" value='@req.messages("repository.newfile.submit")' class="rz-button rz-button-primary" />
 }
