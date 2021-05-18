@@ -22,4 +22,8 @@
   <script src='@routes.Assets.at("dist/timezone.bundle.js")' type="text/javascript" defer></script>
 }
 
-@base.main(request.messages("signin.title"))(html, js)()
+@headerHtml = {
+  <div class="rz-menu-heading rz-logo"> RZM </div>
+}
+
+@base.main(request.messages("signin.title"))(html, headerHtml)(js)
