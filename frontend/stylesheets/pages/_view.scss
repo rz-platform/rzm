@@ -126,3 +126,13 @@
 .rz-editor-content-header > div {
   margin-right: 15px;
 }
+
+.backdrop {
+  position: absolute;
+  z-index: 1;
+  border: 2px solid #685972;
+  background-color: #fff;
+  overflow: auto;
+  pointer-events: none;
+  transition: transform 1s;
+}

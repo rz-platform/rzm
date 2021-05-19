@@ -28,7 +28,7 @@ export function initializeEditor(textarea: HTMLInputElement, callback: () => voi
     setDocOffset(textarea.selectionStart);
   };
 
-  textarea.oninput = function () {
+  textarea.oninput = function (e) {
     setDocOffset(textarea.selectionStart);
     callback();
   };

@@ -62,7 +62,7 @@ function buildInlineInputField(iconSrc: string, depth: number): HTMLElement {
     '-content">' +
     '<form id="' +
     creationFormId +
-    '">' +
+    '" class="rz-form">' +
     '<img class="svg-icon" src="' +
     iconSrc +
     '" />' +

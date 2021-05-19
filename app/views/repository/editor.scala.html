@@ -14,7 +14,7 @@
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
     } 
-    @inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")
+    <div class="rz-form rz-form-inline">@inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")</div>
   </div>
   <div class="actions">
     @if(blob.content.viewType == "text"){
@@ -45,6 +45,7 @@
 @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
 
 @if(blob.content.viewType == "text"){
+  <div class="backdrop"></div>
   <div class="code-wrap">
     <textarea class="editor" id="code" name="content" spellcheck="false" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>
