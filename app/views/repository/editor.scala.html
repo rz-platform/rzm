@@ -45,8 +45,8 @@
 @inputText(editorForm("rev"), Symbol("hidden")->"hidden", Symbol("_label") -> "", Symbol("_help") -> "", Symbol("_class")->"hidden")
 
 @if(blob.content.viewType == "text"){
-  <div class="backdrop"></div>
   <div class="code-wrap">
+    <div class="backdrop" id="backdrop"></div>
     <textarea class="editor" id="code" name="content" spellcheck="false" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>
 }

@@ -130,9 +130,11 @@
 .backdrop {
   position: absolute;
   z-index: 1;
-  border: 2px solid #685972;
   background-color: #fff;
   overflow: auto;
   pointer-events: none;
   transition: transform 1s;
+  opacity: 0.1;
+  background-color: black;
+  height: 24px;
 }
