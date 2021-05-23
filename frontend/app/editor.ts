@@ -3,11 +3,11 @@ import { getHashedUrl } from './hashcode';
 const storageOffsetPostfix = '_offset';
 
 const baseSize = 24;
+const newLine = '\n';
+let newLines: number[] = [];
 
-function setDocOffset(offset: number | null): void {
-  if (offset) {
-    localStorage.setItem(getHashedUrl() + storageOffsetPostfix, offset.toString());
-  }
+function setDocOffset(offset: number): void {
+  localStorage.setItem(getHashedUrl() + storageOffsetPostfix, offset.toString());
 }
 
 function getDocOffset(): number | null {
@@ -22,53 +22,69 @@ function getDocOffset(): number | null {
   return null;
 }
 
-function setLineHighlight(textarea: HTMLInputElement, backdrop: HTMLInputElement, currentLine: number) {
+function setLineHighlight(
+  textarea: HTMLInputElement,
+  backdrop: HTMLInputElement,
+  currentLine: number,
+  maxHeight: number
+) {
   const scrollTop = textarea.scrollTop;
-  const offset = baseSize * (currentLine - 1) - scrollTop;
-
-  backdrop.style.top = offset + "px";
-}
-
-function calculateCurrentLine(textarea: HTMLInputElement): number {
-  const selection = textarea.selectionStart;
-  if (selection) {
-    return textarea.value.substr(0, selection).split("\n").length || 0;    
+  const offset = baseSize * ((currentLine || 1) - 1) - scrollTop;
+  if (offset >= maxHeight || offset < 0) {
+    backdrop.style.display = 'none';
   } else {
-    return 0;
+    backdrop.style.display = 'block';
+    backdrop.style.top = offset + 'px';
   }
 }
 
-let currentLine: number = 0;
+function calculateNewLines(str: string) {
+  newLines = [];
+  let index = -2;
+  while (index != -1) {
+    index = str.indexOf(newLine, index + 1);
+    if (index != -1) newLines.push(index);
+  }
+}
 
+function calculateCurrentLine(selection: number): number {
+  let i = 0;
+  const l = newLines.length;
+  while (i < l) {
+    if (selection <= newLines[i]) {
+      return i + 1;
+    }
+    i += 1;
+  }
+  return l + 1;
+}
+
+let currentLine: number = 0;
+let maxHeight: number = 0;
 export function initializeEditor(textarea: HTMLInputElement, callback: () => void): void {
   textarea.focus();
   textarea.setSelectionRange(getDocOffset(), getDocOffset());
 
   const backdrop = <HTMLInputElement>document.getElementById('backdrop');
-  backdrop.style.width = textarea.offsetWidth + "px";
+  backdrop.style.left = textarea.offsetWidth * 0.08 + 'px';
+  maxHeight = textarea.offsetHeight;
 
-  currentLine = calculateCurrentLine(textarea);
-  setLineHighlight(textarea, backdrop, currentLine);
-  textarea.onclick = textarea.oncontextmenu = function () {
-    currentLine = calculateCurrentLine(textarea);
-    setLineHighlight(textarea, backdrop, currentLine);
-    setDocOffset(textarea.selectionStart);
-  };
-
-  textarea.oninput = function (e) {
-    currentLine = calculateCurrentLine(textarea);
-    setLineHighlight(textarea, backdrop, currentLine);
-    setDocOffset(textarea.selectionStart);
-    callback();
-  };
-
-  textarea.onkeyup = ({ key }) => {
-    setLineHighlight(textarea, backdrop, currentLine);
-    if (['Arrow', 'Page', 'Home', 'End'].some(type => key.substring(0, type.length) === type)) {
-      setDocOffset(textarea.selectionStart);
+  calculateNewLines(textarea.value);
+  currentLine = calculateCurrentLine(textarea.selectionEnd || 0);
+  setLineHighlight(textarea, backdrop, currentLine, maxHeight);
+  function update(e) {
+    if (e.type == 'input') {
+      callback();
+      calculateNewLines(textarea.value);
     }
-  };
-  textarea.onscroll = function (e) {
-    setLineHighlight(textarea, backdrop, currentLine);
+    currentLine = calculateCurrentLine(textarea.selectionEnd || 0);
+    setLineHighlight(textarea, backdrop, currentLine, maxHeight);
+    if (e.type != 'scoll') {
+      setDocOffset(textarea.selectionEnd || 0);
+    }
   }
+
+  ['keyup', 'click', 'scroll', 'select', 'mousedown', 'keydown', 'input', 'keypress'].forEach(event => {
+    textarea.addEventListener(event, update);
+  });
 }

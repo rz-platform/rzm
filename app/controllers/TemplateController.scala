@@ -110,8 +110,8 @@ class TemplateController @Inject() (
 
   def templatePdf(templateId: String): Action[AnyContent] = Action { implicit request =>
     templateRepository.list.get(templateId) match {
-      case Some(tpl) if tpl.illustrationFile.nonEmpty =>
-        Ok.sendFile(tpl.illustrationFile.get)
+      case Some(tpl) if tpl.illustrationFile.nonEmpty => Ok.sendFile(tpl.illustrationFile.get)
+
       case _ => NotFound
     }
   }
