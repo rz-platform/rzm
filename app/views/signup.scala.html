@@ -25,4 +25,15 @@
   <script src='@routes.Assets.at("dist/timezone.bundle.js")' type="text/javascript" defer></script>
 }
 
-@base.main(req.messages("signup.title"))(html, js)()
+@headerHtml = {
+  <ul class="rz-menu-list">
+    <li class="rz-menu-item">
+    <a href="@routes.RzRepositoryController.list()" class="rz-menu-link">
+      <span class="rz-logo"> RZM </span>
+      @req.messages("signin.title")</a>
+    </a>
+  </li>
+</ul>
+}
+
+@base.main(req.messages("signup.title"))(html, headerHtml)(js)

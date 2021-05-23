@@ -62,7 +62,7 @@ function buildInlineInputField(iconSrc: string, depth: number): HTMLElement {
     '-content">' +
     '<form id="' +
     creationFormId +
-    '">' +
+    '" class="rz-form">' +
     '<img class="svg-icon" src="' +
     iconSrc +
     '" />' +
@@ -98,15 +98,18 @@ function nextDepth(depth: number): number {
 export function addInlineInput(e: Event, isFolder: boolean): void {
   if (e.target) {
     const target = e.target as HTMLElement;
-    const parent = parentByLevel(target, 4);
-
+    let parentLevel = 4;
+    if (target.tagName.toLowerCase() == 'img') {
+      parentLevel += 1;
+    }
+    const parent = parentByLevel(target, parentLevel);
     const folder = document.getElementById('folder-icon');
     const file = document.getElementById('file-icon');
 
     if (parent && folder && file) {
       const iconSrc = isFolder ? folder.getAttribute('src') : file.getAttribute('src');
       if (iconSrc) {
-        const depth = parseInt(<string>parent.getAttribute('depth'), 10);
+        const depth = parseInt(<string>parent.getAttribute('depth'), 10) || 0;
         insertAfter(buildInlineInputField(iconSrc, nextDepth(depth)), parent);
 
         const form = <HTMLFormElement>document.getElementById(creationFormId);

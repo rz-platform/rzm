@@ -7,15 +7,15 @@ function clickHandler(event: MouseEvent) {
   if (event && event.target) {
     const target = event.target as HTMLElement;
     if (target.classList.contains('add-file-button')) {
+      event.preventDefault();
       addInlineInput(event, false);
       toggleIsFolder(false);
-      event.preventDefault();
       return false;
     }
     if (target.classList.contains('add-folder-button')) {
+      event.preventDefault();
       addInlineInput(event, true);
       toggleIsFolder(true);
-      event.preventDefault();
       return false;
     }
     if (target.classList.contains('file-tree-show')) {

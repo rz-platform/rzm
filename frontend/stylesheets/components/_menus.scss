@@ -187,11 +187,11 @@
   text-decoration: underline dashed;
 }
 
-input[id='show-http']:checked ~ #git-ssh-url {
+input[id='show-http']:checked ~ #git-ssh-url-block {
   display: none;
 }
 
-input[id='show-ssh']:checked ~ #git-http-url {
+input[id='show-ssh']:checked ~ #git-http-url-block {
   display: none;
 }
 
@@ -210,4 +210,20 @@ input[id='show-ssh']:checked ~ #git-http-url {
 #git-http-url,
 #git-ssh-url {
   width: 250px;
+}
+
+.ssh-copy-button {
+  margin-left: -5px;
+}
+
+.rz-form-inline {
+  display: inline;
+}
+
+.rz-input-inline {
+  border-radius: 4px 0 0 4px !important;
+}
+
+.rz-button-left {
+  border-radius: 0 4px 4px 0 !important;
 }

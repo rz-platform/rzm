@@ -55,9 +55,23 @@
         <label for="show-http" class="clone-label">HTTPS</label>
         <input type="radio" id="show-ssh" name="radios"> 
         <label for="show-ssh" class="clone-label">SSH</label>
-      
-        <input id="git-http-url" type="text" readonly value="@request.repository.httpUrl(request)"  />
-        <input id="git-ssh-url" type="text" readonly value="@request.repository.sshUrl(request)"  />
+        
+        <span id="git-http-url-block">
+          <form class="rz-form rz-form-inline" onsubmit="return false;">
+            <input id="git-http-url" class="rz-input-inline" type="text" readonly value="@request.repository.httpUrl(request)" />
+            <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-http-url").select();document.execCommand("copy");'>
+              <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
+            </button>
+          </form>
+        </span>
+        <span id="git-ssh-url-block">
+          <form class="rz-form rz-form-inline" onsubmit="return false;">
+            <input id="git-ssh-url" class="rz-input-inline" type="text" readonly value="@request.repository.sshUrl(request)" />
+            <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-ssh-url").select();document.execCommand("copy");'>
+              <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
+            </button>
+          </form>
+        </span>
     </li>
   </ul>
 </div>

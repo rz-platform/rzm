@@ -71,4 +71,8 @@
 <div class="profile-block">
   <a href="@routes.SshKeyController.page()" class="rz-button">SSH Keys</a>
 </div>
+
+<div class="profile-block">
+    <a href="@routes.AuthController.logout()" class="rz-button">@req.messages("common.signout")</a>
+</div>
 }()

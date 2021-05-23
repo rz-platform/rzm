@@ -105,7 +105,7 @@
     border: 0;
     padding: 0 10% 0 10%;
     line-height: 1.5;
-    background-color: #f7f7f7;
+    background-color: $editor-background;
   }
   .rz-menu-file-tree {
     position: absolute;
@@ -125,4 +125,16 @@
 
 .rz-editor-content-header > div {
   margin-right: 15px;
+}
+
+.backdrop {
+  position: absolute;
+  z-index: 1;
+  overflow: auto;
+  pointer-events: none;
+  opacity: 0.5;
+  background-color: $editor-background;
+  color: black;
+  height: 24px;
+  transition: all 0.1s ease;
 }

@@ -14,7 +14,7 @@
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
     } 
-    @inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")
+    <div class="rz-form rz-form-inline">@inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")</div>
   </div>
   <div class="actions">
     @if(blob.content.viewType == "text"){
@@ -46,6 +46,7 @@
 
 @if(blob.content.viewType == "text"){
   <div class="code-wrap">
+    <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon backdrop" id="backdrop" style="display:none;"/>
     <textarea class="editor" id="code" name="content" spellcheck="false" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>
 }
