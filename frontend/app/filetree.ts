@@ -99,7 +99,7 @@ export function addInlineInput(e: Event, isFolder: boolean): void {
   if (e.target) {
     const target = e.target as HTMLElement;
     let parentLevel = 4;
-    if (e.target.tagName.toLowerCase() == 'img') {
+    if (target.tagName.toLowerCase() == 'img') {
       parentLevel += 1;
     }
     const parent = parentByLevel(target, parentLevel);
