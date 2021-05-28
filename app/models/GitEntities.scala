@@ -1,7 +1,6 @@
 package models
 
 import org.eclipse.jgit.lib.ObjectId
-import repositories.{ ParsingError, RzError }
 
 import java.io.InputStream
 import java.time.{ LocalDateTime, ZoneId }
@@ -81,9 +80,8 @@ object RzRepositoryConfig {
     (for {
       compilerId     <- data.get("compiler")
       bibliographyId <- data.get("bibliography")
-
-      compiler <- RzCompiler.make(compilerId)
-      bib      <- RzBib.make(bibliographyId)
+      compiler       <- RzCompiler.make(compilerId)
+      bib            <- RzBib.make(bibliographyId)
     } yield RzRepositoryConfig(
       repository,
       data.get("entrypoint"),
@@ -135,8 +133,7 @@ sealed trait RepositoryTreeContent
 
 case class Blob(
   content: ContentInfo,
-  latestCommit: CommitInfo,
-  isLfsFile: Boolean
+  latestCommit: CommitInfo
 ) extends RepositoryTreeContent
 
 case object EmptyBlob extends RepositoryTreeContent

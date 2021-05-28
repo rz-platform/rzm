@@ -6,7 +6,7 @@ import models._
 import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{ AccessDenied, AccountRepository, RzError, SessionRepository }
+import repositories.{ AccountRepository, SessionRepository }
 import views.html
 
 import javax.inject.Inject

@@ -1,6 +1,6 @@
 package models
 
-import repositories.{ ParsingError, RzError }
+import repositories.ParsingError
 
 sealed trait Role {
   def weight: Int

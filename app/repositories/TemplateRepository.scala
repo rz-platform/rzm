@@ -2,7 +2,7 @@ package repositories
 
 import models._
 import play.api.Configuration
-import templates.TemplateParser
+import services.templates.TemplateParser
 
 import java.io.File
 import javax.inject.Inject
@@ -11,8 +11,8 @@ import scala.collection.SortedMap
 class TemplateRepository @Inject() (config: Configuration) {
   private val logger = play.api.Logger(this.getClass)
 
-  // templates directory root
-  val dir = new File(config.get[String]("play.server.templates.dir"))
+  // services.templates directory root
+  val dir = new File(config.get[String]("play.server.services.templates.dir"))
 
   def get(name: String): Option[Template] = list.get(name)
 

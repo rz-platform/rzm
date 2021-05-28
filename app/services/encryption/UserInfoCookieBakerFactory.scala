@@ -1,4 +1,4 @@
-package encryption
+package services.encryption
 import models.{ Auth, UserInfo }
 import play.api.http.SecretConfiguration
 

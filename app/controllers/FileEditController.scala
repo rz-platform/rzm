@@ -2,19 +2,19 @@ package controllers
 
 import actions.{ AuthenticatedAction, RepositoryAction }
 import forms.EditorForms._
-import models.{ RepositoryRequest, _ }
-import org.eclipse.jgit.lib.{ Constants, FileMode }
+import models._
 import play.api.data.Form
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories._
+import services.GitService
 import views._
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class FileEditController @Inject() (
-  git: GitRepository,
+  git: GitService,
   metaGitRepository: RzMetaGitRepository,
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
@@ -82,7 +82,6 @@ class FileEditController @Inject() (
           formWithErrors => errorFunc(formWithErrors, accountName, repositoryName),
           newItem => {
             val fName: RzPathUrl = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
-
             for {
               _ <- commitNewFile(fName, newItem)(req)
               _ <- metaGitRepository.updateRepo(req.repository)
@@ -94,41 +93,18 @@ class FileEditController @Inject() (
     }
 
   private def saveChanges(
-    rev: String,
     oldPath: RzPathUrl,
     newPath: RzPathUrl,
     content: Array[Byte]
-  )(req: RepositoryRequest[AnyContent]): Future[_] = Future {
-    git.commitFiles(
+  )(req: RepositoryRequest[AnyContent]): Future[_] =
+    git.commitFile(
+      req.account,
       req.repository,
-      rev,
-      oldPath.pathWithoutFilename,
-      req.messages("repository.viewFile.commitMessage", oldPath.nameWithoutPath),
-      req.account
-    ) {
-      case (git_, headTip, builder, inserter) =>
-        val permission = git
-          .processTree(git_, headTip) { (path, tree) =>
-            // Add all entries except the editing file
-            if (!newPath.uri.contains(path) && !oldPath.uri.contains(path)) {
-              builder.add(git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId))
-            }
-            // Retrieve permission if file exists to keep it
-            oldPath.uri.collect { case x if x.toString == path => tree.getEntryFileMode.getBits }
-          }
-          .flatten
-          .headOption
-
-        builder.add(
-          git.createDirCacheEntry(
-            newPath.uri,
-            permission.map(bits => FileMode.fromBits(bits)).getOrElse(FileMode.REGULAR_FILE),
-            inserter.insert(Constants.OBJ_BLOB, content)
-          )
-        )
-        builder.finish()
-    }
-  }
+      oldPath,
+      newPath,
+      content,
+      req.messages("repository.viewFile.commitMessage", oldPath.nameWithoutPath)
+    )
 
   private def errorFunc(form: Form[NewItem], accountName: String, repositoryName: String)(
     implicit req: RepositoryRequest[AnyContent]
@@ -145,25 +121,5 @@ class FileEditController @Inject() (
   }
 
   private def commitNewFile(fName: RzPathUrl, newItem: NewItem)(req: RepositoryRequest[AnyContent]): Future[_] =
-    Future {
-      git.commitFiles(req.repository, newItem.rev, newItem.path, "Added file", req.account) {
-        case (git_, headTip, builder, inserter) =>
-          git.processTree(git_, headTip) { (path, tree) =>
-            if (!fName.uri.contains(path)) {
-              builder.add(
-                git.createDirCacheEntry(path, tree.getEntryFileMode, tree.getEntryObjectId)
-              )
-            }
-          }
-          val emptyArray = Array.empty[Byte]
-          builder.add(
-            git.createDirCacheEntry(
-              fName.uri,
-              FileMode.REGULAR_FILE,
-              inserter.insert(Constants.OBJ_BLOB, emptyArray)
-            )
-          )
-          builder.finish()
-      }
-    }
+    git.commitNewFile(req.account, req.repository, fName, newItem, "Added file")
 }

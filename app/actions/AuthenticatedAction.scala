@@ -1,7 +1,7 @@
 package actions
 
 import controllers.routes
-import encryption.{ EncryptionService, UserInfoCookieBakerFactory }
+import services.encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 import models.{ Account, AccountRequest, Auth, UserInfo }
 import play.api.i18n.MessagesApi
 import play.api.mvc._

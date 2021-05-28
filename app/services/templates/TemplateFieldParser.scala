@@ -1,10 +1,9 @@
-package templates
+package services.templates
 
-import models.{ Checkbox, Choice, Field, Numeric }
-import play.api.libs.json.{ JsArray, JsString, JsValue }
-import repositories.JsonParseError
+import models.{Checkbox, Choice, Field, JsonParseError, Numeric}
+import play.api.libs.json.{JsArray, JsString, JsValue}
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object TemplateFieldParser {
   def parseFields(js: JsValue): List[Field] =

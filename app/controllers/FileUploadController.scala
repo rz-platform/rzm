@@ -12,6 +12,7 @@ import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc._
 import play.core.parsers.Multipart.FileInfo
 import repositories._
+import services.GitService
 import views._
 
 import java.io.File
@@ -20,7 +21,7 @@ import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class FileUploadController @Inject() (
-  git: GitRepository,
+  git: GitService,
   authAction: AuthenticatedAction,
   metaGitRepository: RzMetaGitRepository,
   cc: MessagesControllerComponents,
@@ -92,14 +93,11 @@ class FileUploadController @Inject() (
   private def commitFiles(files: Seq[CommitFile], rev: String, path: String)(
     implicit req: RepositoryRequest[_]
   ): Future[_] =
-    Future {
-      git.commitFiles(
-        req.repository,
-        files,
-        req.account,
-        rev,
-        path,
-        Messages("repository.upload.message", files.length)
-      )
-    }
+    git.commitFiles(
+      req.repository,
+      files,
+      req.account,
+      rev,
+      Messages("repository.upload.message", files.length)
+    )
 }

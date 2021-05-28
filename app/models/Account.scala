@@ -1,7 +1,7 @@
 package models
 
 import play.api.libs.json.{ Format, Json }
-import repositories.{ ParsingError, RzError }
+import repositories.ParsingError
 
 case class Account(
   userName: String,

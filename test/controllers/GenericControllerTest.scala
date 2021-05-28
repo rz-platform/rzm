@@ -4,16 +4,17 @@ import actions.AuthenticatedAction
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Millis, Seconds, Span }
-import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{ Cookie, Result }
+import play.api.mvc.{Cookie, Result}
 import play.api.test.CSRFTokenHelper.addCSRFToken
-import play.api.test.Helpers.{ await, defaultAwaitTimeout }
-import play.api.test.{ FakeRequest, Injecting }
-import play.api.{ Configuration, Logger }
-import repositories.{ AccountRepository, GitRepository, RzMetaGitRepository }
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.{FakeRequest, Injecting}
+import play.api.{Configuration, Logger}
+import repositories.{AccountRepository, RzMetaGitRepository}
+import services.GitService
 
 case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
@@ -44,7 +45,7 @@ class GenericControllerTest
   def rzGitRepository: RzMetaGitRepository = app.injector.instanceOf[RzMetaGitRepository]
 
   def gitEntitiesController: RzRepositoryController = app.injector.instanceOf[RzRepositoryController]
-  def git: GitRepository                            = app.injector.instanceOf[GitRepository]
+  def git: GitService                            = app.injector.instanceOf[GitService]
 
   def authAction: AuthenticatedAction = app.injector.instanceOf[AuthenticatedAction]
 

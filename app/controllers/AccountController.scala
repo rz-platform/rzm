@@ -7,6 +7,7 @@ import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories._
+import services.TimeService
 import views._
 
 import javax.inject.Inject
@@ -23,7 +24,7 @@ class AccountController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val zoneIds = TimezoneOffsetRepository.zoneIds
+  private val zoneIds = TimeService.zoneIds
 
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 
@@ -79,9 +80,9 @@ class AccountController @Inject() (
         accountData =>
           isEmailAvailable(req.account.email, accountData.email).flatMap {
             case true =>
-              accountRepository
-                .update(req.account, req.account.fromForm(accountData))
-                .map(_ => Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds)))
+              for {
+                _ <- accountRepository.update(req.account, req.account.fromForm(accountData))
+              } yield Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds))
             case false =>
               val formBuiltFromRequest = accountEditForm.bindFromRequest()
               val newForm = accountEditForm
@@ -102,12 +103,10 @@ class AccountController @Inject() (
       .fold(
         _ => Future(Redirect(routes.AccountController.accountPage())),
         data =>
-          accountRepository
-            .setTimezone(req.account, data.tz)
-            .map(_ =>
-              Redirect(routes.AccountController.accountPage())
-                .flashing("success" -> Messages("profile.flash.tzupdated"))
-            )
+          for {
+            _ <- accountRepository.setTimezone(req.account, data.tz)
+          } yield Redirect(routes.AccountController.accountPage())
+            .flashing("success" -> Messages("profile.flash.tzupdated"))
       )
   }
 
@@ -120,12 +119,10 @@ class AccountController @Inject() (
           accountRepository.getPassword(req.account).flatMap {
             case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
               val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
-              accountRepository
-                .setPassword(req.account, newPasswordHash)
-                .map(_ =>
-                  Redirect(routes.AccountController.accountPage())
-                    .flashing("success" -> Messages("profile.flash.passupdated"))
-                )
+              for {
+                _ <- accountRepository.setPassword(req.account, newPasswordHash)
+              } yield Redirect(routes.AccountController.accountPage())
+                .flashing("success" -> Messages("profile.flash.passupdated"))
             case _ =>
               val formBuiltFromRequest = updatePasswordForm.bindFromRequest()
               val newForm = updatePasswordForm

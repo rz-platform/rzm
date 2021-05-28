@@ -4,7 +4,7 @@ import controllers.ErrorHandler
 import models._
 import play.api.i18n.MessagesApi
 import play.api.mvc.{ ActionRefiner, Result }
-import repositories.{ AccessDenied, NotFoundInRepository, RzError, RzMetaGitRepository }
+import repositories.RzMetaGitRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

@@ -1,4 +1,4 @@
-package encryption
+package services.encryption
 
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerTest

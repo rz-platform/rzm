@@ -1,13 +1,13 @@
-package templates
+package services.templates
 
-import models.Template
-import play.api.libs.json.{ JsValue, Json }
-import repositories.{ FileNotFound, JsonParseError, RzError }
+import models.{FileNotFound, JsonParseError, RzError, Template}
+import play.api.libs.json.{JsValue, Json}
+import repositories.FileNotFound
 
 import java.io.File
 import java.nio.file.Paths
 import scala.io.Source
-import scala.util.{ Failure, Success, Try, Using }
+import scala.util.{Failure, Success, Try, Using}
 
 object TemplateParser {
   def parse(path: File): Template = {

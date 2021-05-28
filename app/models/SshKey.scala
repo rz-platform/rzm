@@ -1,6 +1,6 @@
 package models
 
-import repositories.{ ParsingError, RzError }
+import repositories.ParsingError
 
 import java.security.MessageDigest
 import java.time.LocalDateTime

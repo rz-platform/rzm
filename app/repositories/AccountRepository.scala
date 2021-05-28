@@ -1,10 +1,11 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, HashedString, SshKey }
+import infrastructure.Redis
+import models.{Account, HashedString, NotFoundInRepository, RzError, SshKey}
 
 import javax.inject.Inject
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) {
   private val logger = play.api.Logger(this.getClass)
