@@ -66,36 +66,41 @@ class FileViewController @Inject() (
       }
     }
 
+  private def renderBlob(blob: Blob, fileTree: FileTree, rev: String, path: String, rzPath: RzPathUrl)(
+    implicit req: RepositoryRequest[AnyContent]
+  ): Future[Result] =
+    for {
+      _ <- metaGitRepository.setRzRepoLastFile(req.account, req.repository, path)
+    } yield Ok(
+      html.repository.view(
+        editorForm.fill(
+          EditedItem(
+            blob.content.content.getOrElse(""),
+            rev,
+            path,
+            rzPath.nameWithoutPath
+          )
+        ),
+        blob,
+        rzPath.uri,
+        rev,
+        new FilePath(path),
+        fileTree,
+        addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
+      )
+    ).withHeaders("Turbolinks-Location" -> req.uri)
+
   def blob(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
-      val rzPath = RzPathUrl.make(path)
-      for {
-        blobInfo: Option[Blob] <- git.blobFile(req.repository, rzPath.uri, rev)
+      val rzPath: RzPathUrl = RzPathUrl.make(path)
+      val result = for {
+        blobInfo <- git.blobFile(req.repository, rzPath.uri, rev)
         fileTree <- git.fileTree(req.repository, rev)
-      } yield
-      blobInfo flatMap {
-        case Some(blob: Blob) =>
-          metaGitRepository.setRzRepoLastFile(req.account, req.repository, path).flatMap(_ =>
-          Ok(
-            html.repository.view(
-              editorForm.fill(
-                EditedItem(
-                  blob.content.content.getOrElse(""),
-                  rev,
-                  path,
-                  rzPath.nameWithoutPath
-                )
-              ),
-              blob,
-              rzPath.uri,
-              rev,
-              new FilePath(path),
-              fileTree,
-              addNewItemForm.fill(NewItem("", rev, "", isFolder = false))
-            )
-          ).withHeaders("Turbolinks-Location" -> req.uri))
-        case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
+      } yield blobInfo match {
+        case Some(blob: Blob) => renderBlob(blob, fileTree, rev, path, rzPath)
+        case None             => errorHandler.onClientError(req, msg = Messages("error.notfound"))
       }
+      result.flatten
     }
 
 }

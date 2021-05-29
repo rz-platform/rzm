@@ -24,7 +24,7 @@ import scala.util.Using
 import scala.util.Using.Releasable
 
 // Package contains parts of code inherited from GitBucket project
-class GitStorage @Inject()(config: Configuration) {
+class GitStorage @Inject() (config: Configuration) {
   private val logger  = play.api.Logger(this.getClass)
   private val gitHome = config.get[String]("play.server.git.path")
 
@@ -351,7 +351,6 @@ class GitStorage @Inject()(config: Configuration) {
         commitName
       )
     }
-
 
   /**
    * Returns the commit list of the specified branch.

@@ -1,29 +1,29 @@
 package controllers
 
-import actions.{AuthenticatedAction, RepositoryAction}
+import actions.{ AuthenticatedAction, RepositoryAction }
 import models._
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{RzMetaGitRepository, TemplateRepository}
+import repositories.{ RzMetaGitRepository, TemplateRepository }
 import services.GitService
 import services.templates.TemplateRendererService
 import views.html
 
 import javax.inject.Inject
 import scala.collection.immutable.Map
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 class TemplateController @Inject() (
-                                     authAction: AuthenticatedAction,
-                                     repoAction: RepositoryAction,
-                                     config: Configuration,
-                                     metaGitRepository: RzMetaGitRepository,
-                                     templateRepository: TemplateRepository,
-                                     git: GitService,
-                                     cc: MessagesControllerComponents,
-                                     renderer: TemplateRendererService
+  authAction: AuthenticatedAction,
+  repoAction: RepositoryAction,
+  config: Configuration,
+  metaGitRepository: RzMetaGitRepository,
+  templateRepository: TemplateRepository,
+  git: GitService,
+  cc: MessagesControllerComponents,
+  renderer: TemplateRendererService
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)

@@ -3,7 +3,7 @@ package services.templates
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.cache.ConcurrentMapTemplateCache
 import com.github.jknack.handlebars.io.FileTemplateLoader
-import models.{CommitFile, FilePath, Template}
+import models.{ CommitFile, FilePath, Template }
 import repositories.TemplateRepository
 
 import java.io.File
@@ -14,7 +14,7 @@ import scala.collection.immutable.Map
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-class TemplateRendererService @Inject()(templateRepository: TemplateRepository) {
+class TemplateRendererService @Inject() (templateRepository: TemplateRepository) {
   private val logger = play.api.Logger(this.getClass)
 
   private val loader     = new FileTemplateLoader(templateRepository.dir.toString, "")

@@ -12,7 +12,7 @@ class TemplateRepository @Inject() (config: Configuration) {
   private val logger = play.api.Logger(this.getClass)
 
   // services.templates directory root
-  val dir = new File(config.get[String]("play.server.services.templates.dir"))
+  val dir = new File(config.get[String]("play.server.templates.dir"))
 
   def get(name: String): Option[Template] = list.get(name)
 

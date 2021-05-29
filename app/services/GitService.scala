@@ -1,16 +1,16 @@
 package services
 
-import infrastructure.{FileSystem, GitStorage}
+import infrastructure.{ FileSystem, GitStorage }
 import models._
-import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
+import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.dircache.{DirCache, DirCacheBuilder}
-import org.eclipse.jgit.lib.{Repository => _, _}
+import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder }
+import org.eclipse.jgit.lib.{ Repository => _, _ }
 import org.eclipse.jgit.treewalk.TreeWalk
 
 import java.io.File
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Using
 
 class GitService @Inject() (storage: GitStorage)(
@@ -79,22 +79,25 @@ class GitService @Inject() (storage: GitStorage)(
     val fileTree = new FileTree(FileNode(".", "."))
 
     Using.resource(Git.open(storage.repositoryDir(repo))) { git =>
-      storage.getDefaultBranch(git, revstr).map {
-        case (objectId, _) =>
-          storage.defining(storage.getRevCommitFromId(git, objectId)) { revCommit =>
-            val treeWalk = new TreeWalk(git.getRepository)
-            treeWalk.addTree(revCommit.getTree)
-            treeWalk.setRecursive(false)
-            while (treeWalk.next()) {
-              if (treeWalk.isSubtree) {
-                treeWalk.enterSubtree()
-              } else {
-                fileTree.addElement(treeWalk.getPathString)
+      storage
+        .getDefaultBranch(git, revstr)
+        .map {
+          case (objectId, _) =>
+            storage.defining(storage.getRevCommitFromId(git, objectId)) { revCommit =>
+              val treeWalk = new TreeWalk(git.getRepository)
+              treeWalk.addTree(revCommit.getTree)
+              treeWalk.setRecursive(false)
+              while (treeWalk.next()) {
+                if (treeWalk.isSubtree) {
+                  treeWalk.enterSubtree()
+                } else {
+                  fileTree.addElement(treeWalk.getPathString)
+                }
               }
+              fileTree
             }
-            fileTree
-          }
-      }.getOrElse(fileTree)
+        }
+        .getOrElse(fileTree)
     }
   }
 
@@ -128,13 +131,12 @@ class GitService @Inject() (storage: GitStorage)(
     Using.resource(Git.open(storage.repositoryDir(repo))) { git =>
       val revCommit = storage.getRevCommitFromId(git, git.getRepository.resolve(rev))
       storage.getPathObjectId(git, path, revCommit).map { objectId =>
-        val content = storage.getContentInfo(git, path, objectId)
+        val content    = storage.getContentInfo(git, path, objectId)
         val commitInfo = new CommitInfo(storage.getLastModifiedCommit(git, revCommit, path))
         Blob(content, commitInfo)
       }
     }
   }
-
 
   def commitFile(
     account: Account,
@@ -146,7 +148,7 @@ class GitService @Inject() (storage: GitStorage)(
   ): Future[ObjectId] =
     commitFiles(
       repo,
-      oldPath.pathWithoutFilename,
+      RzRepository.defaultBranch,
       message,
       account
     ) {

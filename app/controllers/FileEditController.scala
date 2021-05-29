@@ -44,7 +44,7 @@ class FileEditController @Inject() (
             val content = if (edited.content.nonEmpty) edited.content.getBytes() else Array.emptyByteArray
 
             for {
-              _ <- saveChanges(edited.rev, oldPath, newPath, content)(req)
+              _ <- saveChanges(oldPath, newPath, content)(req)
               _ <- metaGitRepository.updateRepo(req.repository)
             } yield Redirect(
               routes.FileViewController.blob(accountName, repositoryName, edited.rev, newPath.encoded)

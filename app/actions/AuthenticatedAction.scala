@@ -1,11 +1,11 @@
 package actions
 
 import controllers.routes
-import services.encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 import models.{ Account, AccountRequest, Auth, UserInfo }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.{ AccountRepository, SessionRepository }
+import services.encryption.{ EncryptionService, UserInfoCookieBakerFactory }
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

@@ -4,7 +4,7 @@ import com.redis.serialization.Parse.Implicits.parseByteArray
 import infrastructure.Redis
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A session Repository that ties session id to secret key

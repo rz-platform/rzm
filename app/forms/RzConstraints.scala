@@ -1,7 +1,7 @@
 package forms
 
 import models.ForbiddenSymbols
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
 import services.TimeService
 
 object RzConstraints {

@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{ Instant, LocalDateTime, ZoneId, ZoneOffset }
 import java.util.TimeZone
 import scala.collection.SortedMap
+import scala.jdk.CollectionConverters.SetHasAsScala
 
 object TimeService {
   private val localDateTime: LocalDateTime = LocalDateTime.now

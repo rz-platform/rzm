@@ -53,6 +53,7 @@
 @if(blob.content.viewType == "image"){
   <img
     src="@routes.FileViewController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
+    class="rz-content-image"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {

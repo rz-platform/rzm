@@ -1,7 +1,5 @@
 package models
 
-import repositories.ParsingError
-
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64

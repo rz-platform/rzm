@@ -1,7 +1,5 @@
 package models
 
-import repositories.ParsingError
-
 sealed trait Role {
   def weight: Int
   def name: String
