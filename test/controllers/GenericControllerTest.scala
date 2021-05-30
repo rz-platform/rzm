@@ -4,17 +4,17 @@ import actions.AuthenticatedAction
 import akka.actor.ActorSystem
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
+import org.scalatest.time.{ Millis, Seconds, Span }
+import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{Cookie, Result}
+import play.api.mvc.{ Cookie, Result }
 import play.api.test.CSRFTokenHelper.addCSRFToken
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.test.{FakeRequest, Injecting}
-import play.api.{Configuration, Logger}
-import repositories.{AccountRepository, RzMetaGitRepository}
-import services.GitService
+import play.api.test.Helpers.{ await, defaultAwaitTimeout }
+import play.api.test.{ FakeRequest, Injecting }
+import play.api.{ Configuration, Logger }
+import repositories.{ AccountRepository, RzMetaGitRepository }
+import services.{ DateTimeService, GitService }
 
 case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
