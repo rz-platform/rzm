@@ -228,7 +228,8 @@ input[id='show-ssh']:checked ~ #git-http-url-block {
   border-radius: 0 4px 4px 0 !important;
 }
 
-#git-http-url-block, #git-ssh-url-block {
+#git-http-url-block,
+#git-ssh-url-block {
   input {
     height: 35px;
   }
