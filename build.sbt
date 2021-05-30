@@ -18,7 +18,8 @@ lazy val root = (project in file("."))
       "com.googlecode.juniversalchardet" % "juniversalchardet"            % "1.0.3",
       "net.debasishg"                    %% "redisclient"                 % "3.30",
       "org.abstractj.kalium"             % "kalium"                       % "0.8.0",
-      "com.github.jknack"                % "handlebars"                   % "4.2.0"
+      "com.github.jknack"                % "handlebars"                   % "4.2.0",
+      caffeine
     ),
     scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked", "-Xfatal-warnings"),
     javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror")

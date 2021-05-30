@@ -97,7 +97,9 @@ class FileEditController @Inject() (
     newPath: RzPathUrl,
     content: Array[Byte]
   )(req: RepositoryRequest[AnyContent]): Future[_] =
-    git.commitFile(
+    for {
+      _ <- git.invalidateCache(req.repository)
+    } yield git.commitFile(
       req.account,
       req.repository,
       oldPath,
@@ -121,5 +123,7 @@ class FileEditController @Inject() (
   }
 
   private def commitNewFile(fName: RzPathUrl, newItem: NewItem)(req: RepositoryRequest[AnyContent]): Future[_] =
-    git.commitNewFile(req.account, req.repository, fName, newItem, "Added file")
+    for {
+      _ <- git.invalidateCache(req.repository)
+    }  yield git.commitNewFile(req.account, req.repository, fName, newItem, "Added file")
 }
