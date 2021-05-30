@@ -6,7 +6,7 @@ import java.util.TimeZone
 import scala.collection.SortedMap
 import scala.jdk.CollectionConverters.SetHasAsScala
 
-object TimeService {
+object DateTimeService {
   private val localDateTime: LocalDateTime = LocalDateTime.now
   private val zoneList = ZoneId.getAvailableZoneIds.asScala.map { zoneId: String =>
     val id = ZoneId.of(zoneId)
@@ -25,17 +25,15 @@ object TimeService {
    */
   val zoneIds: SortedMap[String, String] = SortedMap.from(zoneList)
 
-  val shortFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM")
-  val fullFormatter: DateTimeFormatter  = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:dd")
-
-  def printShort(d: LocalDateTime, tz: String): String = dateToTimeZone(d, tz).format(shortFormatter)
-
-  def printFull(d: LocalDateTime, tz: String): String = dateToTimeZone(d, tz).format(fullFormatter)
-
   val defaultTz: ZoneId = TimeZone.getTimeZone("Etc/UTC").toZoneId
 
-  def fromTimestamp(t: Long): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochSecond(t), defaultTz)
+  val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM HH:mm")
+
+  def now: Long = Instant.now().getEpochSecond
+
+  def formatDate(d: LocalDateTime, tz: String): String = dateToTimeZone(d, tz).format(formatter)
+
+  def fromTimestamp(t: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(t), defaultTz)
 
   /*
    * Changing LocalDateTime based on time difference in current time zone vs. user time zone
@@ -47,8 +45,6 @@ object TimeService {
       .withZoneSameInstant(timezone.toZoneId)
       .toLocalDateTime
   }
-
-  def now: Long = Instant.now().getEpochSecond
 
   def parseTimestamp(t: String): Long =
     try {

@@ -1,5 +1,4 @@
 @(d: java.time.LocalDateTime)(implicit req: RequestWithAccount)
-@import models.DateTime._
+@import services.DateTimeService
 
-<span class="date"><span class="short-date">@DateTime.printShort(d, req.account.tz)</span><span class="full-date hidden">@DateTime.printFull(d, req.account.tz)</span></span>
-
+<span class="full-date">@DateTimeService.formatDate(d, req.account.tz)</span>

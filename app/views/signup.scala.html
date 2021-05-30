@@ -1,5 +1,6 @@
 @(signupForm: Form[AccountRegistrationData], zoneIds: scala.collection.SortedMap[String, String])(implicit req: MessagesRequestHeader) 
 @import views.html.helper._ 
+@import services.DateTimeService
 
 @html = {
 <div class="rz-auth">
@@ -13,7 +14,7 @@
   Symbol("_label") -> req.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),
   Symbol("_label") -> req.messages("signup.form.fullname"), Symbol("_help") -> "")
 
-  <input type="hidden" name="timezone" id="timezone" value="@DateTime.defaultTz.toString" />
+  <input type="hidden" name="timezone" id="timezone" value="@DateTimeService.defaultTz.toString" />
 
   <input type="submit" value='@req.messages("signup.submit")' class="rz-button rz-button-primary" />
   or

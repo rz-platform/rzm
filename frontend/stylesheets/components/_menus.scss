@@ -227,3 +227,12 @@ input[id='show-ssh']:checked ~ #git-http-url-block {
 .rz-button-left {
   border-radius: 0 4px 4px 0 !important;
 }
+
+#git-http-url-block, #git-ssh-url-block {
+  input {
+    height: 35px;
+  }
+  button {
+    height: 35px;
+  }
+}

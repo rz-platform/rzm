@@ -1,7 +1,7 @@
 package controllers
 
 import actions.AuthenticatedAction
-import forms.AuthForms
+import forms.{ AuthForms, FormErrors }
 import models._
 import play.api.data._
 import play.api.i18n.Messages
@@ -39,12 +39,10 @@ class AuthController @Inject() (
               .withCookies(encryptedCookie)
           }
         case _ =>
-          val formBuiltFromRequest = AuthForms.signin.bindFromRequest()
-          val newForm = AuthForms.signin
-            .bindFromRequest()
-            .copy(
-              errors = formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signin.error.wrongcred")))
-            )
+          val newForm = FormErrors.error[AccountLoginData](
+            AuthForms.signin.bindFromRequest(),
+            FormError("userName", Messages("signin.error.wrongcred"))
+          )
           Future(BadRequest(html.signin(newForm)))
       }
     }

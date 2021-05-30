@@ -1,5 +1,6 @@
 @(signinForm: Form[AccountLoginData])(implicit request: MessagesRequestHeader) 
 @import views.html.helper._ 
+@import services.DateTimeService
 
 @html = {
 <div class="rz-auth">
@@ -9,7 +10,7 @@
   @CSRF.formField 
   @inputText(signinForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("autofocus") -> "")
   @inputPassword(signinForm("password"), Symbol("_label") -> "Password", Symbol("_help") -> "")
-  <input type="hidden" name="timezone" id="timezone" value="@DateTime.defaultTz.toString" />
+  <input type="hidden" name="timezone" id="timezone" value="@DateTimeService.defaultTz.toString" />
 
   <input type="submit" value='@request.messages("signin.submit")' class="rz-button rz-button-primary" />
   or

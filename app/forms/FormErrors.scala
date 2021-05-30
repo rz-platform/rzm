@@ -2,8 +2,8 @@ package forms
 
 import play.api.data.{ Form, FormError }
 
-object Forms {
-  def error(form: Form[Any], err: FormError): Form[Any] =
+object FormErrors {
+  def error[A](form: Form[A], err: FormError): Form[A] =
     form.copy(
       errors = form.errors ++ Seq(err)
     )

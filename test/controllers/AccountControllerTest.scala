@@ -41,7 +41,7 @@ class AccountControllerTest extends GenericControllerTest {
               "userName"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
-              "timezone"    -> DateTime.defaultTz.toString,
+              "timezone"    -> DateTimeService.defaultTz.toString,
               "mailAddress" -> s"$getRandomString@rzm.dev"
             )
         )

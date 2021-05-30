@@ -57,7 +57,7 @@ class GenericControllerTest
         getRandomString,
         Some(getRandomString),
         getRandomString,
-        DateTime.defaultTz.toString,
+        DateTimeService.defaultTz.toString,
         s"$getRandomString@rzm.dev"
       )
     val request = addCSRFToken(
@@ -66,14 +66,14 @@ class GenericControllerTest
           "userName"    -> data.userName,
           "fullName"    -> data.fullName.get,
           "password"    -> data.password,
-          "timezone"    -> DateTime.defaultTz.toString,
+          "timezone"    -> DateTimeService.defaultTz.toString,
           "mailAddress" -> data.email
         )
     )
     await(accountController.saveAccount().apply(request))
 
     val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
-    val session             = (Auth.sessionId -> sessionId)
+    val session             = Auth.sessionId -> sessionId
     AuthorizedAccount(new Account(data), session, cookie)
   }
 

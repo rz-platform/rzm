@@ -1,6 +1,7 @@
 package models
 
 import java.io.File
+import scala.util.matching.Regex
 
 object Auth {
   val sessionId = "sessionId"
@@ -43,10 +44,10 @@ object TemplateExcluded {
 }
 
 object RzRegex {
-  val publicKey =
+  val publicKey: Regex =
     "^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+/]+[=]{0,3}( [^@]+@[^@]+)?$".r
 
-  val onlyAlphabet = "^[A-Za-z\\d_\\-]+$".r
+  val onlyAlphabet: Regex = "^[A-Za-z\\d_\\-]+$".r
 }
 
 sealed trait RepositoryPage
@@ -58,9 +59,7 @@ case object NewFilePage       extends RepositoryPage
 case object ConstructorPage   extends RepositoryPage
 
 object IdTable {
-  /*
-  Always use two-letters
-   */
+  //  Always use two-letters
 
   val accountPrefix           = "ai:" // account instance
   val accountPasswordPrefix   = "ap:" // account password

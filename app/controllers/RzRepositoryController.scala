@@ -1,8 +1,8 @@
 package controllers
 
 import actions.{ AuthenticatedAction, RepositoryAction }
-import forms.RzRepositoryForms
 import forms.RzRepositoryForms.createRepositoryForm
+import forms.{ FormErrors, RzRepositoryForms }
 import models._
 import play.api.data.FormError
 import play.api.i18n.Messages
@@ -48,14 +48,10 @@ class RzRepositoryController @Inject() (
                 routes.TemplateController.overview(req.account.userName, repo.name)
               )
             case _ =>
-              val formBuiltFromRequest = createRepositoryForm.bindFromRequest()
-              val newForm = createRepositoryForm
-                .bindFromRequest()
-                .copy(
-                  errors = formBuiltFromRequest.errors ++ Seq(
-                    FormError("name", Messages("repository.create.error.alreadyexists"))
-                  )
-                )
+              val newForm = FormErrors.error[RepositoryData](
+                createRepositoryForm.bindFromRequest(),
+                FormError("name", Messages("repository.create.error.alreadyexists"))
+              )
               Future(BadRequest(html.createRepository(newForm)))
           }
       )

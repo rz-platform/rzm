@@ -2,12 +2,13 @@ package controllers
 
 import actions.AuthenticatedAction
 import forms.AccountForms._
+import forms.FormErrors
 import models._
 import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories._
-import services.TimeService
+import services.DateTimeService
 import views._
 
 import javax.inject.Inject
@@ -24,7 +25,7 @@ class AccountController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val zoneIds = TimeService.zoneIds
+  private val zoneIds = DateTimeService.zoneIds
 
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 
@@ -45,13 +46,10 @@ class AccountController @Inject() (
                 result <- authAction.authorize(account, request.session)
               } yield result
             case _ =>
-              val formBuiltFromRequest = signupForm.bindFromRequest()
-              val newForm = signupForm
-                .bindFromRequest()
-                .copy(
-                  errors =
-                    formBuiltFromRequest.errors ++ Seq(FormError("userName", Messages("signup.error.alreadyexists")))
-                )
+              val newForm = FormErrors.error[AccountRegistrationData](
+                signupForm.bindFromRequest(),
+                FormError("userName", Messages("signup.error.alreadyexists"))
+              )
               Future(BadRequest(html.signup(newForm, zoneIds)))
           }
       )
@@ -84,14 +82,10 @@ class AccountController @Inject() (
                 _ <- accountRepository.update(req.account, req.account.fromForm(accountData))
               } yield Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds))
             case false =>
-              val formBuiltFromRequest = accountEditForm.bindFromRequest()
-              val newForm = accountEditForm
-                .bindFromRequest()
-                .copy(
-                  errors = formBuiltFromRequest.errors ++ Seq(
-                    FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
-                  )
-                )
+              val newForm = FormErrors.error[AccountData](
+                accountEditForm.bindFromRequest(),
+                FormError("mailAddress", Messages("profile.error.emailalreadyexists"))
+              )
               Future(BadRequest(html.profile(newForm, updatePasswordForm, zoneIds)))
           }
       )
@@ -117,21 +111,17 @@ class AccountController @Inject() (
         formWithErrors => Future(BadRequest(html.profile(filledAccountEditForm(req.account), formWithErrors, zoneIds))),
         passwordData =>
           accountRepository.getPassword(req.account).flatMap {
-            case Right(passwordHash: String) if (HashedString(passwordHash).check(passwordData.newPassword)) =>
+            case Right(passwordHash: String) if HashedString(passwordHash).check(passwordData.newPassword) =>
               val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
               for {
                 _ <- accountRepository.setPassword(req.account, newPasswordHash)
               } yield Redirect(routes.AccountController.accountPage())
                 .flashing("success" -> Messages("profile.flash.passupdated"))
             case _ =>
-              val formBuiltFromRequest = updatePasswordForm.bindFromRequest()
-              val newForm = updatePasswordForm
-                .bindFromRequest()
-                .copy(
-                  errors = formBuiltFromRequest.errors ++ Seq(
-                    FormError("oldPassword", Messages("profile.error.passisincorrect"))
-                  )
-                )
+              val newForm = FormErrors.error[PasswordData](
+                updatePasswordForm.bindFromRequest(),
+                FormError("oldPassword", Messages("profile.error.passisincorrect"))
+              )
               Future(BadRequest(html.profile(filledAccountEditForm(req.account), newForm, zoneIds)))
           }
       )

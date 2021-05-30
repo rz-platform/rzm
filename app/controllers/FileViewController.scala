@@ -34,7 +34,7 @@ class FileViewController @Inject() (
             Result(
               header = ResponseHeader(200, Map.empty),
               body = HttpEntity.Streamed(stream, Some(rawFile.contentLength.toLong), Some(rawFile.contentType))
-            )
+            ).withHeaders(s"Content-Disposition" -> "attachment;")
           )
         case None => errorHandler.onClientError(req, msg = Messages("error.notfound"))
       }

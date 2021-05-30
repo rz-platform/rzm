@@ -21,7 +21,7 @@ case class FileNode(data: String, incrementalPath: String) {
   def depth: Int = if (isRoot) 0 else if (realDepth < FileTree.maxDepth) realDepth else FileTree.maxDepth
 
   def addElement(currentPath: String, list: Array[String]): Unit = {
-    val currentChild = new FileNode(list.head, currentPath + "/" + list(0))
+    val currentChild = FileNode(list.head, currentPath + "/" + list(0))
 
     if (list.length == 1) {
       files += currentChild
