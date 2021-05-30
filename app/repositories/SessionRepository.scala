@@ -1,6 +1,7 @@
 package repositories
 
 import com.redis.serialization.Parse.Implicits.parseByteArray
+import infrastructure.Redis
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

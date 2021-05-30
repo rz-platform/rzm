@@ -1,4 +1,4 @@
-package repositories
+package models
 
 sealed trait RzError extends Throwable
 

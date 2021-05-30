@@ -1,11 +1,10 @@
 package models
 
-import repositories.{ ParsingError, RzError }
+import services.DateTimeService
 
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64
-
 case class SshKey(
   publicKey: String,
   createdAt: Long,
@@ -35,11 +34,11 @@ case class SshKey(
 
   lazy val email: String = publicKey.split(" ")(2).trim
 
-  lazy val createdAtDate: LocalDateTime = DateTime.fromTimestamp(createdAt)
+  lazy val createdAtDate: LocalDateTime = DateTimeService.fromTimestamp(createdAt)
 
   def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
 
-  def this(publicKey: String, owner: Account) = this(publicKey, DateTime.now, owner)
+  def this(publicKey: String, owner: Account) = this(publicKey, DateTimeService.now, owner)
 }
 
 object SshKey {
@@ -49,7 +48,7 @@ object SshKey {
     (for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
-    } yield SshKey(publicKey, DateTime.parseTimestamp(createdAt), account)) match {
+    } yield SshKey(publicKey, DateTimeService.parseTimestamp(createdAt), account)) match {
       case Some(m) => Right(m)
       case None    => Left(ParsingError)
     }

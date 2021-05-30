@@ -7,8 +7,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import repositories.{ GitRepository, RzMetaGitRepository, TemplateRepository }
-import templates.TemplateRenderer
+import repositories.{ RzMetaGitRepository, TemplateRepository }
+import services.GitService
+import services.templates.TemplateRendererService
 import views.html
 
 import javax.inject.Inject
@@ -20,9 +21,9 @@ class TemplateController @Inject() (
   config: Configuration,
   metaGitRepository: RzMetaGitRepository,
   templateRepository: TemplateRepository,
-  git: GitRepository,
+  git: GitService,
   cc: MessagesControllerComponents,
-  renderer: TemplateRenderer
+  renderer: TemplateRendererService
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)
@@ -67,7 +68,6 @@ class TemplateController @Inject() (
       files,
       req.account,
       RzRepository.defaultBranch,
-      ".",
       Messages("repository.creator.commit.message", tpl.name)
     )
   }

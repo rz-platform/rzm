@@ -1,4 +1,4 @@
-package encryption
+package services.encryption
 
 import models.Nonce
 import play.api.libs.json.{ Json, Reads, Writes }
@@ -9,7 +9,7 @@ import java.security.SecureRandom
 import javax.inject.{ Inject, Singleton }
 
 /**
- * Implementation of encryption service, using Play JSON implicits conversion
+ * Implementation of services.encryption service, using Play JSON implicits conversion
  */
 @Singleton
 class EncryptionService @Inject() (configuration: Configuration) {

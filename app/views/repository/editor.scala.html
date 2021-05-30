@@ -17,6 +17,7 @@
     <div class="rz-form rz-form-inline">@inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")</div>
   </div>
   <div class="actions">
+    @if(request.role == Role.Owner || request.role == Role.Editor) {
     @if(blob.content.viewType == "text"){
     <input
       type="submit"
@@ -25,6 +26,7 @@
       id="file-save-submit"
       onclick="window.onbeforeunload = null;"
     />
+    }
     }
     <a
       class="rz-button button-small"
@@ -53,6 +55,7 @@
 @if(blob.content.viewType == "image"){
   <img
     src="@routes.FileViewController.raw(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, path)"
+    class="rz-content-image"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {

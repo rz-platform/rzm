@@ -21,6 +21,7 @@
         } 
         @if(node.isRoot) { @request.repository.name } else { @node.data }
         </div>
+        @if(request.role == Role.Owner || request.role == Role.Editor) {
         <div class="action-buttons">
           <a
             href="@routes.FileUploadController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
@@ -40,6 +41,7 @@
           <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon file-tree-icon add-folder-button"  />
           </a>
         </div>
+        }
       </div>
     </div>
   </div>

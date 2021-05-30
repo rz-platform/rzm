@@ -38,12 +38,10 @@ class SshKeyController @Inject() (
           accountService.cardinalitySshKey(request.account).flatMap {
             case Right(c: Long) if c < maximumNumberPerUser =>
               val key = new SshKey(sshKeyData.publicKey, request.account)
-              accountService
-                .setSshKey(request.account, key)
-                .map(_ =>
-                  Redirect(routes.SshKeyController.page())
-                    .flashing("success" -> Messages("profile.ssh.notification.added"))
-                )
+              for {
+                _ <- accountService.setSshKey(request.account, key)
+              } yield Redirect(routes.SshKeyController.page())
+                .flashing("success" -> Messages("profile.ssh.notification.added"))
             case _ =>
               Future(
                 Redirect(routes.SshKeyController.page())
@@ -62,12 +60,10 @@ class SshKeyController @Inject() (
             Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
           },
         (sshKeyIdData: SshRemoveData) =>
-          accountService
-            .deleteSshKey(request.account, sshKeyIdData.id)
-            .map(_ =>
-              Redirect(routes.SshKeyController.page())
-                .flashing("success" -> Messages("profile.ssh.notification.removed"))
-            ) // TODO: check ownership
+          for {
+            _ <- accountService.deleteSshKey(request.account, sshKeyIdData.id)
+          } yield Redirect(routes.SshKeyController.page())
+            .flashing("success" -> Messages("profile.ssh.notification.removed")) // TODO: check ownership
       )
   }
 

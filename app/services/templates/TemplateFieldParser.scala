@@ -1,8 +1,7 @@
-package templates
+package services.templates
 
-import models.{ Checkbox, Choice, Field, Numeric }
+import models.{ Checkbox, Choice, Field, JsonParseError, Numeric }
 import play.api.libs.json.{ JsArray, JsString, JsValue }
-import repositories.JsonParseError
 
 import scala.util.{ Failure, Success, Try }
 

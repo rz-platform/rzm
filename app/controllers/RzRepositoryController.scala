@@ -1,20 +1,22 @@
 package controllers
 
 import actions.{ AuthenticatedAction, RepositoryAction }
-import forms.RzRepositoryForms
 import forms.RzRepositoryForms.createRepositoryForm
+import forms.{ FormErrors, RzRepositoryForms }
 import models._
 import play.api.data.FormError
 import play.api.i18n.Messages
 import play.api.mvc.{ Action, AnyContent, MessagesAbstractController, MessagesControllerComponents }
-import repositories.{ GitRepository, NotFoundInRepository, RzMetaGitRepository }
+import repositories.RzMetaGitRepository
+import services.GitService
 import views.html
 
+import java.io.File
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 
 class RzRepositoryController @Inject() (
-  git: GitRepository,
+  git: GitService,
   metaGitRepository: RzMetaGitRepository,
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
@@ -39,22 +41,17 @@ class RzRepositoryController @Inject() (
               val repo   = new RzRepository(req.account, repository.name)
               val author = new Collaborator(req.account, Role.Owner)
               val conf   = RzRepositoryConfig.makeDefault(repo, None, None, None)
-              metaGitRepository.setRzRepo(repo, author, conf)
-              git.initRepo(repo)
-              Future(
-                Redirect(
-                  routes.TemplateController.overview(req.account.userName, repo.name)
-                )
+              for {
+                _ <- metaGitRepository.setRzRepo(repo, author, conf)
+                _ <- git.initRepo(repo)
+              } yield Redirect(
+                routes.TemplateController.overview(req.account.userName, repo.name)
               )
             case _ =>
-              val formBuiltFromRequest = createRepositoryForm.bindFromRequest()
-              val newForm = createRepositoryForm
-                .bindFromRequest()
-                .copy(
-                  errors = formBuiltFromRequest.errors ++ Seq(
-                    FormError("name", Messages("repository.create.error.alreadyexists"))
-                  )
-                )
+              val newForm = FormErrors.error[RepositoryData](
+                createRepositoryForm.bindFromRequest(),
+                FormError("name", Messages("repository.create.error.alreadyexists"))
+              )
               Future(BadRequest(html.createRepository(newForm)))
           }
       )
@@ -64,7 +61,9 @@ class RzRepositoryController @Inject() (
    * Display list of repositories.
    */
   def list: Action[AnyContent] = authAction.async { implicit req =>
-    metaGitRepository.listRepositories(req.account).flatMap(list => Future(Ok(html.listRepositories(list))))
+    for {
+      list <- metaGitRepository.listRepositories(req.account)
+    } yield Ok(html.listRepositories(list))
   }
 
   def downloadArchive(
@@ -72,9 +71,11 @@ class RzRepositoryController @Inject() (
     repositoryName: String,
     rev: String
   ): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)) { implicit req =>
-      Ok.sendFile(
-        git.createArchive(req.repository, "", rev),
+    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
+      for {
+        file: File <- git.createArchive(req.repository, "", rev)
+      } yield Ok.sendFile(
+        content = file,
         inline = false,
         fileName = _ => Some(repositoryName + "-" + rev + ".zip")
       )
@@ -82,11 +83,14 @@ class RzRepositoryController @Inject() (
 
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
-      val commitLog = git.getCommitsLog(req.repository, rev, page, 20)
-      val (logs, hasNext) = commitLog match {
-        case Right((logs, hasNext)) => (logs, hasNext)
-        case Left(_)                => (Seq(), false)
+      for {
+        log <- git.commitsLog(req.repository, rev, page, 20)
+      } yield {
+        val (logs, hasNext) = log match {
+          case Right((logs, hasNext)) => (logs, hasNext)
+          case Left(_)                => (Seq(), false)
+        }
+        Ok(html.repository.log(logs, rev, hasNext, page))
       }
-      Future(Ok(html.repository.log(logs, rev, hasNext, page)))
     }
 }

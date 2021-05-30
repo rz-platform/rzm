@@ -1,4 +1,4 @@
-package encryption
+package services.encryption
 
 import play.api.http.{ JWTConfiguration, SecretConfiguration }
 import play.api.libs.json.Format
@@ -7,7 +7,7 @@ import play.api.mvc._
 import scala.concurrent.duration._
 
 /**
- * An encrypted cookie baker that serializes using the encryption service and JSON implicits.
+ * An encrypted cookie baker that serializes using the services.encryption service and JSON implicits.
  */
 abstract class EncryptedCookieBaker[A: Format](
   secretKey: Array[Byte],

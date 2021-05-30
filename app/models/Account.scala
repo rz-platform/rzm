@@ -1,7 +1,7 @@
 package models
 
 import play.api.libs.json.{ Format, Json }
-import repositories.{ ParsingError, RzError }
+import services.DateTimeService
 
 case class Account(
   userName: String,
@@ -29,7 +29,7 @@ case class Account(
       data.fullName.getOrElse(""),
       data.email,
       data.timezone,
-      DateTime.now,
+      DateTimeService.now,
       None
     )
 
@@ -47,7 +47,14 @@ object Account {
       email    <- data.get("email")
       created  <- data.get("created")
       tz       <- data.get("tz")
-    } yield Account(key.substring(3), fullName, email, tz, DateTime.parseTimestamp(created), data.get("picture"))) match {
+    } yield Account(
+      key.substring(3),
+      fullName,
+      email,
+      tz,
+      DateTimeService.parseTimestamp(created),
+      data.get("picture")
+    )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }

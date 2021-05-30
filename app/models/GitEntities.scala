@@ -1,11 +1,10 @@
 package models
 
 import org.eclipse.jgit.lib.ObjectId
-import repositories.{ ParsingError, RzError }
+import services.DateTimeService
 
 import java.io.InputStream
 import java.time.{ LocalDateTime, ZoneId }
-
 case class RzRepository(
   owner: Account,
   name: String,
@@ -17,9 +16,9 @@ case class RzRepository(
   val collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
   val configurationId: String     = IdTable.rzRepoConfPrefix + owner.userName + ":" + name
 
-  def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/${name}.git"
+  def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/$name.git"
 
-  def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/${name}.git"
+  def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/$name.git"
 
   val toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
@@ -27,7 +26,7 @@ case class RzRepository(
     (Seq("createdAt" -> createdAt.toString) ++ updatedAt).toMap
   }
 
-  def this(owner: Account, name: String) = this(owner, name, DateTime.now, None)
+  def this(owner: Account, name: String) = this(owner, name, DateTimeService.now, None)
 }
 
 object RzRepository {
@@ -46,8 +45,8 @@ object RzRepository {
     } yield RzRepository(
       owner,
       name,
-      DateTime.parseTimestamp(createdAt),
-      DateTime.parseTimestamp(data.get("updatedAt"))
+      DateTimeService.parseTimestamp(createdAt),
+      DateTimeService.parseTimestamp(data.get("updatedAt"))
     )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
@@ -81,9 +80,8 @@ object RzRepositoryConfig {
     (for {
       compilerId     <- data.get("compiler")
       bibliographyId <- data.get("bibliography")
-
-      compiler <- RzCompiler.make(compilerId)
-      bib      <- RzBib.make(bibliographyId)
+      compiler       <- RzCompiler.make(compilerId)
+      bib            <- RzBib.make(bibliographyId)
     } yield RzRepositoryConfig(
       repository,
       data.get("entrypoint"),
@@ -135,8 +133,7 @@ sealed trait RepositoryTreeContent
 
 case class Blob(
   content: ContentInfo,
-  latestCommit: CommitInfo,
-  isLfsFile: Boolean
+  latestCommit: CommitInfo
 ) extends RepositoryTreeContent
 
 case object EmptyBlob extends RepositoryTreeContent

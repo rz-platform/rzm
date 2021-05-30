@@ -1,4 +1,4 @@
-package repositories
+package infrastructure
 
 import com.redis._
 import play.api.Configuration

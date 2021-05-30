@@ -13,7 +13,8 @@ import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 import play.api.test.{ FakeRequest, Injecting }
 import play.api.{ Configuration, Logger }
-import repositories.{ AccountRepository, GitRepository, RzMetaGitRepository }
+import repositories.{ AccountRepository, RzMetaGitRepository }
+import services.{ DateTimeService, GitService }
 
 case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
@@ -44,7 +45,7 @@ class GenericControllerTest
   def rzGitRepository: RzMetaGitRepository = app.injector.instanceOf[RzMetaGitRepository]
 
   def gitEntitiesController: RzRepositoryController = app.injector.instanceOf[RzRepositoryController]
-  def git: GitRepository                            = app.injector.instanceOf[GitRepository]
+  def git: GitService                            = app.injector.instanceOf[GitService]
 
   def authAction: AuthenticatedAction = app.injector.instanceOf[AuthenticatedAction]
 
@@ -56,7 +57,7 @@ class GenericControllerTest
         getRandomString,
         Some(getRandomString),
         getRandomString,
-        DateTime.defaultTz.toString,
+        DateTimeService.defaultTz.toString,
         s"$getRandomString@rzm.dev"
       )
     val request = addCSRFToken(
@@ -65,14 +66,14 @@ class GenericControllerTest
           "userName"    -> data.userName,
           "fullName"    -> data.fullName.get,
           "password"    -> data.password,
-          "timezone"    -> DateTime.defaultTz.toString,
+          "timezone"    -> DateTimeService.defaultTz.toString,
           "mailAddress" -> data.email
         )
     )
     await(accountController.saveAccount().apply(request))
 
     val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
-    val session             = (Auth.sessionId -> sessionId)
+    val session             = Auth.sessionId -> sessionId
     AuthorizedAccount(new Account(data), session, cookie)
   }
 

@@ -1,7 +1,8 @@
 package repositories
 
 import com.redis.RedisClient
-import models.{ Account, HashedString, SshKey }
+import infrastructure.Redis
+import models._
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

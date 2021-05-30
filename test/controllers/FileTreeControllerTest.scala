@@ -9,8 +9,9 @@ import play.api.test.Helpers.{ await, call, defaultAwaitTimeout, writeableOf_Any
 import scala.concurrent.Future
 
 class FileTreeControllerTest extends GenericControllerTest {
-  def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData =
-    git.fileList(repository, path = path).getOrElse(RepositoryGitData(List(), None))
+  def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData = {
+    await(git.fileList(repository, path = path)).getOrElse(RepositoryGitData(List(), None))
+  }
 
   def createNewItem(
     name: String,

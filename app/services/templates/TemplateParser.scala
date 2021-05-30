@@ -1,8 +1,7 @@
-package templates
+package services.templates
 
-import models.Template
+import models.{ FileNotFound, JsonParseError, RzError, Template }
 import play.api.libs.json.{ JsValue, Json }
-import repositories.{ FileNotFound, JsonParseError, RzError }
 
 import java.io.File
 import java.nio.file.Paths

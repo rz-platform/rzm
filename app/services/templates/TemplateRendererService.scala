@@ -1,4 +1,4 @@
-package templates
+package services.templates
 
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.cache.ConcurrentMapTemplateCache
@@ -14,7 +14,7 @@ import scala.collection.immutable.Map
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
-class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
+class TemplateRendererService @Inject() (templateRepository: TemplateRepository) {
   private val logger = play.api.Logger(this.getClass)
 
   private val loader     = new FileTemplateLoader(templateRepository.dir.toString, "")
@@ -24,7 +24,7 @@ class TemplateRenderer @Inject() (templateRepository: TemplateRepository) {
   val supportedTextExtensions = List("txt", "tex", "json", "bib")
 
   /*
-   * Compile templates.
+   * Compile services.templates.
    * The implementation uses a cache for previously compiled Templates. By default,
    * if the resource has been compiled previously, and no changes have occurred
    * since in the resource, compilation will be skipped and the previously created

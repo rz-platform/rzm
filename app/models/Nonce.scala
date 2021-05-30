@@ -3,7 +3,8 @@ package models
 import org.abstractj.kalium.crypto.Random
 
 /**
- * Nonces are used to ensure that encryption is completely random.  They should be generated once per encryption.
+ * Nonces are used to ensure that services.encryption is completely random.
+ * They should be generated once per services.encryption.
  *
  * You can store and display nonces -- they are not confidential -- but you must never reuse them, ever.
  */
