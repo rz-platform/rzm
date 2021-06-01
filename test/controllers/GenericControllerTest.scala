@@ -2,6 +2,7 @@ package controllers
 
 import actions.AuthenticatedAction
 import akka.actor.ActorSystem
+import infrastructure.RzDateTime
 import models._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{ Millis, Seconds, Span }
@@ -14,7 +15,7 @@ import play.api.test.Helpers.{ await, defaultAwaitTimeout }
 import play.api.test.{ FakeRequest, Injecting }
 import play.api.{ Configuration, Logger }
 import repositories.{ AccountRepository, RzMetaGitRepository }
-import services.{ DateTimeService, GitService }
+import services.GitService
 
 case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
@@ -57,7 +58,7 @@ class GenericControllerTest
         getRandomString,
         Some(getRandomString),
         getRandomString,
-        DateTimeService.defaultTz.toString,
+        RzDateTime.defaultTz.toString,
         s"$getRandomString@rzm.dev"
       )
     val request = addCSRFToken(
@@ -66,7 +67,7 @@ class GenericControllerTest
           "userName"    -> data.userName,
           "fullName"    -> data.fullName.get,
           "password"    -> data.password,
-          "timezone"    -> DateTimeService.defaultTz.toString,
+          "timezone"    -> RzDateTime.defaultTz.toString,
           "mailAddress" -> data.email
         )
     )

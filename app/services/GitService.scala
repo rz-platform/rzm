@@ -82,7 +82,6 @@ class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
     }
 
   def buildFileTree(repo: RzRepository, revstr: String): Future[FileTree] = Future {
-    println("building filetree")
     val fileTree = new FileTree(FileNode(".", "."))
 
     Using.resource(Git.open(storage.repositoryDir(repo))) { git =>

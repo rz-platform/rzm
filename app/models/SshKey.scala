@@ -1,6 +1,6 @@
 package models
 
-import services.DateTimeService
+import infrastructure.RzDateTime
 
 import java.security.MessageDigest
 import java.time.LocalDateTime
@@ -34,11 +34,11 @@ case class SshKey(
 
   lazy val email: String = publicKey.split(" ")(2).trim
 
-  lazy val createdAtDate: LocalDateTime = DateTimeService.fromTimestamp(createdAt)
+  lazy val createdAtDate: LocalDateTime = RzDateTime.fromTimestamp(createdAt)
 
   def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
 
-  def this(publicKey: String, owner: Account) = this(publicKey, DateTimeService.now, owner)
+  def this(publicKey: String, owner: Account) = this(publicKey, RzDateTime.now, owner)
 }
 
 object SshKey {
@@ -48,7 +48,7 @@ object SshKey {
     (for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
-    } yield SshKey(publicKey, DateTimeService.parseTimestamp(createdAt), account)) match {
+    } yield SshKey(publicKey, RzDateTime.parseTimestamp(createdAt), account)) match {
       case Some(m) => Right(m)
       case None    => Left(ParsingError)
     }

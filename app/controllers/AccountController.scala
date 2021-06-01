@@ -3,12 +3,12 @@ package controllers
 import actions.AuthenticatedAction
 import forms.AccountForms._
 import forms.FormErrors
+import infrastructure.RzDateTime
 import models._
 import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
 import repositories._
-import services.DateTimeService
 import views._
 
 import javax.inject.Inject
@@ -25,7 +25,7 @@ class AccountController @Inject() (
 
   private val logger = play.api.Logger(this.getClass)
 
-  private val zoneIds = DateTimeService.zoneIds
+  private val zoneIds = RzDateTime.zoneIds
 
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 

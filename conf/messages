@@ -80,6 +80,7 @@ repository.create.flash.success = Repository created
 
 repository.addNewItem.error.namereq = Name is required
 repository.addNewItem.success = Item is successfully created
+repository.addNewItem.git={0} created
 
 repository.edit.title=Edit file
 repository.edit.commitmessage=Edited in web version

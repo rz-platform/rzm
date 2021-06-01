@@ -1,9 +1,8 @@
 package repositories
 
 import com.redis.RedisClient
-import infrastructure.Redis
+import infrastructure.{ Redis, RzDateTime }
 import models._
-import services.DateTimeService
 
 import javax.inject.Inject
 import scala.concurrent.duration._
@@ -23,7 +22,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
   }
 
   def updateRepo(repo: RzRepository): Future[_] = Future {
-    redis.withClient(client => client.hset(repo.id, "updatedAt", DateTimeService.now))
+    redis.withClient(client => client.hset(repo.id, "updatedAt", RzDateTime.now))
   }
 
   def setRzRepoLastFile(account: Account, repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {

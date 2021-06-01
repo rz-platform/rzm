@@ -1,7 +1,7 @@
 package models
 
+import infrastructure.RzDateTime
 import play.api.libs.json.{ Format, Json }
-import services.DateTimeService
 
 case class Account(
   userName: String,
@@ -29,7 +29,7 @@ case class Account(
       data.fullName.getOrElse(""),
       data.email,
       data.timezone,
-      DateTimeService.now,
+      RzDateTime.now,
       None
     )
 
@@ -52,7 +52,7 @@ object Account {
       fullName,
       email,
       tz,
-      DateTimeService.parseTimestamp(created),
+      RzDateTime.parseTimestamp(created),
       data.get("picture")
     )) match {
       case Some(a) => Right(a)

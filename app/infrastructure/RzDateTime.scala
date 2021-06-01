@@ -1,4 +1,4 @@
-package services
+package infrastructure
 
 import java.time.format.DateTimeFormatter
 import java.time.{ Instant, LocalDateTime, ZoneId, ZoneOffset }
@@ -6,7 +6,7 @@ import java.util.TimeZone
 import scala.collection.SortedMap
 import scala.jdk.CollectionConverters.SetHasAsScala
 
-object DateTimeService {
+object RzDateTime {
   private val localDateTime: LocalDateTime = LocalDateTime.now
   private val zoneList = ZoneId.getAvailableZoneIds.asScala.map { zoneId: String =>
     val id = ZoneId.of(zoneId)
