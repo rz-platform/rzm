@@ -1,5 +1,7 @@
 package models
-import services.DateTimeService
+
+import infrastructure.RzDateTime
+
 sealed trait Role {
   def weight: Int
   def name: String
@@ -43,7 +45,7 @@ case class Collaborator(
 
   def toMap: Map[String, String] = Map("role" -> role.name, "createdAt" -> createdAt.toString)
 
-  def this(account: Account, accessLevel: Role) = this(account, accessLevel, DateTimeService.now)
+  def this(account: Account, accessLevel: Role) = this(account, accessLevel, RzDateTime.now)
 }
 
 object Collaborator {

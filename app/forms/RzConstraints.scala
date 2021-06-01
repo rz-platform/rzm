@@ -1,12 +1,12 @@
 package forms
 
+import infrastructure.RzDateTime
 import models.ForbiddenSymbols
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
-import services.DateTimeService
 
 object RzConstraints {
   val timeZoneConstraint: Constraint[String] = Constraint({ tz: String =>
-    if (DateTimeService.zoneIds.contains(tz)) {
+    if (RzDateTime.zoneIds.contains(tz)) {
       Valid
     } else {
       Invalid(Seq(ValidationError("")))

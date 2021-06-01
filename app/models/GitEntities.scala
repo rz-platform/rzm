@@ -1,7 +1,7 @@
 package models
 
+import infrastructure.RzDateTime
 import org.eclipse.jgit.lib.ObjectId
-import services.DateTimeService
 
 import java.io.InputStream
 import java.time.{ LocalDateTime, ZoneId }
@@ -26,7 +26,7 @@ case class RzRepository(
     (Seq("createdAt" -> createdAt.toString) ++ updatedAt).toMap
   }
 
-  def this(owner: Account, name: String) = this(owner, name, DateTimeService.now, None)
+  def this(owner: Account, name: String) = this(owner, name, RzDateTime.now, None)
 }
 
 object RzRepository {
@@ -45,8 +45,8 @@ object RzRepository {
     } yield RzRepository(
       owner,
       name,
-      DateTimeService.parseTimestamp(createdAt),
-      DateTimeService.parseTimestamp(data.get("updatedAt"))
+      RzDateTime.parseTimestamp(createdAt),
+      RzDateTime.parseTimestamp(data.get("updatedAt"))
     )) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)

@@ -7,13 +7,14 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder }
 import org.eclipse.jgit.lib.{ Repository => _, _ }
 import org.eclipse.jgit.treewalk.TreeWalk
+import play.api.cache.AsyncCacheApi
 
 import java.io.File
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Using
 
-class GitService @Inject() (storage: GitStorage)(
+class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
   implicit ec: ExecutionContext
 ) {
   def initRepo(repo: RzRepository): Future[_] = Future {
@@ -23,7 +24,7 @@ class GitService @Inject() (storage: GitStorage)(
     }
   }
 
-  def fileList(repo: RzRepository, revstr: String = "", path: String = "."): Future[Option[RepositoryGitData]] =
+  def fileList(repo: RzRepository, revstr: String, path: String): Future[Option[RepositoryGitData]] =
     Future {
       Using.resource(Git.open(storage.repositoryDir(repo))) { git =>
         if (storage.isEmpty(git)) {
@@ -75,7 +76,12 @@ class GitService @Inject() (storage: GitStorage)(
     }
   }
 
-  def fileTree(repo: RzRepository, revstr: String): Future[FileTree] = Future {
+  def fileTree(repo: RzRepository, revstr: String): Future[FileTree] =
+    cache.getOrElseUpdate[FileTree](s"${repo.owner.userName}.${repo.name}.filetree") {
+      buildFileTree(repo, revstr)
+    }
+
+  def buildFileTree(repo: RzRepository, revstr: String): Future[FileTree] = Future {
     val fileTree = new FileTree(FileNode(".", "."))
 
     Using.resource(Git.open(storage.repositoryDir(repo))) { git =>
@@ -235,4 +241,7 @@ class GitService @Inject() (storage: GitStorage)(
   ): Future[Either[String, (List[CommitInfo], Boolean)]] = Future {
     Using.resource(Git.open(storage.repositoryDir(repo)))(git => storage.getCommitLog(git, revision, page, limit, path))
   }
+
+  def invalidateCache(repo: RzRepository): Future[_] =
+    cache.remove(s"${repo.owner.userName}.${repo.name}.filetree")
 }
