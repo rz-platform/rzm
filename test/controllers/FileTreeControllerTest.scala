@@ -10,7 +10,7 @@ import scala.concurrent.Future
 
 class FileTreeControllerTest extends GenericControllerTest {
   def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData = {
-    await(git.fileList(repository, path = path)).getOrElse(RepositoryGitData(List(), None))
+    await(git.fileList(repository, RzRepository.defaultBranch ,path)).getOrElse(RepositoryGitData(List(), None))
   }
 
   def createNewItem(
