@@ -67,7 +67,7 @@ class CollaboratorsController @Inject() (
     }
 
   private def pageRedirect(req: RepositoryRequest[AnyContent]): Result =
-    Redirect(routes.CollaboratorsController.page(req.repository.owner.userName, req.repository.name))
+    Redirect(routes.CollaboratorsController.page(req.repository.owner.username, req.repository.name))
 
   private def pageRedirectWithError(messageId: String)(implicit req: RepositoryRequest[AnyContent]): Future[Result] =
     Future(

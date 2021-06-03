@@ -36,7 +36,7 @@ class RzRepositoryController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
         repository =>
-          metaGitRepository.getByOwnerAndName(req.account.userName, repository.name).flatMap {
+          metaGitRepository.getByOwnerAndName(req.account.username, repository.name).flatMap {
             case Left(NotFoundInRepository) =>
               val repo   = new RzRepository(req.account, repository.name)
               val author = new Collaborator(req.account, Role.Owner)
@@ -45,7 +45,7 @@ class RzRepositoryController @Inject() (
                 _ <- metaGitRepository.setRzRepo(repo, author, conf)
                 _ <- git.initRepo(repo)
               } yield Redirect(
-                routes.TemplateController.overview(req.account.userName, repo.name)
+                routes.TemplateController.overview(req.account.username, repo.name)
               )
             case _ =>
               val newForm = FormErrors.error[RepositoryData](

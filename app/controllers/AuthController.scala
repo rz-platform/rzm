@@ -30,7 +30,7 @@ class AuthController @Inject() (
       checkPassword(accountData.userName, accountData.password).flatMap {
         case Right(account) =>
           for {
-            (sessionId, encryptedCookie) <- authAction.createSession(UserInfo(account.userName))
+            (sessionId, encryptedCookie) <- authAction.createSession(AccountInfo(account.username))
             _                            <- accountRepository.setTimezone(account, accountData.timezone)
           } yield {
             val session = req.session + (Auth.sessionId -> sessionId)
@@ -75,4 +75,12 @@ class AuthController @Inject() (
         }
       case Left(e) => Future(Left(e))
     }
+}
+
+object AuthController {
+  val sessionId = "sessionId"
+
+  val userInfoCookie = "accountInfo"
+
+  val sessionName = "accountId"
 }

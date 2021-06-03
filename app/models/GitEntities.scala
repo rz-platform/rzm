@@ -10,15 +10,15 @@ case class RzRepository(
   name: String,
   createdAt: Long,
   updatedAt: Option[Long]
-) {
-  val id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
+) extends PersistentEntity {
+  val id: String = IdTable.rzRepoPrefix + owner.username + ":" + name
 
-  val collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
-  val configurationId: String     = IdTable.rzRepoConfPrefix + owner.userName + ":" + name
+  val collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.username + ":" + name
+  val configurationId: String     = IdTable.rzRepoConfPrefix + owner.username + ":" + name
 
-  def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/$name.git"
+  def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.username}/$name.git"
 
-  def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/$name.git"
+  def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.username}/$name.git"
 
   val toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
@@ -95,7 +95,7 @@ object RzRepositoryConfig {
 
 object LastOpenedFile {
   def id(account: Account, repo: RzRepository): String =
-    IdTable.lastOpenedFilePrefix + account.userName + ":" + repo.owner.userName + ":" + repo.name
+    IdTable.lastOpenedFilePrefix + account.username + ":" + repo.owner.username + ":" + repo.name
 }
 
 /**

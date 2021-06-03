@@ -56,7 +56,7 @@ class AccountController @Inject() (
   }
 
   def accountPage: Action[AnyContent] = authAction.async { implicit request =>
-    accountRepository.getById(request.account.id).flatMap {
+    accountRepository.getById(request.account.key).flatMap {
       case Right(account) => Future(Ok(html.profile(filledAccountEditForm(account), updatePasswordForm, zoneIds)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }

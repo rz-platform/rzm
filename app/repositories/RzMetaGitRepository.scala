@@ -15,7 +15,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
       client.pipeline { f: client.PipelineClient =>
         f.hmset(repo.id, repo.toMap)
         f.hmset(repoConfig.id, repoConfig.toMap)
-        f.zadd(repo.owner.projectListId, repo.createdAt.toDouble, repo.id)
+        f.zadd(repo.owner.projectListKey, repo.createdAt.toDouble, repo.id)
         f.hmset(author.keyAccessLevel(repo), author.toMap)
       }
     }
@@ -61,7 +61,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
 
   def listRepositories(account: Account): Future[List[RzRepository]] = Future {
     redis.withClient { client =>
-      client.zrange(account.projectListId) match {
+      client.zrange(account.projectListKey) match {
         case Some(r: List[String]) =>
           r.map { id: String => getByRepositoryId(id, client) }.collect {
             case Right(value) => value
@@ -74,8 +74,8 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
   def addCollaborator(c: Collaborator, repo: RzRepository): Future[_] = Future {
     redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
-        f.zadd(repo.collaboratorsListId, c.createdAt.toDouble, c.account.id)
-        f.zadd(c.account.projectListId, c.createdAt.toDouble, repo.id)
+        f.zadd(repo.collaboratorsListId, c.createdAt.toDouble, c.account.key)
+        f.zadd(c.account.projectListKey, c.createdAt.toDouble, repo.id)
         f.hmset(c.keyAccessLevel(repo), c.toMap)
       }
     }
@@ -85,8 +85,8 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
     Future {
       redis.withClient { client =>
         client.pipeline { f: client.PipelineClient =>
-          f.zrem(repo.collaboratorsListId, account.id)
-          f.zrem(account.projectListId, repo.id)
+          f.zrem(repo.collaboratorsListId, account.key)
+          f.zrem(account.projectListKey, repo.id)
           f.del(Collaborator.keyAccessLevel(account, repo))
         }
       }

@@ -48,7 +48,7 @@ class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
   def commitFiles(repo: RzRepository, branch: String, message: String, account: Account)(
     f: (Git, ObjectId, DirCacheBuilder, ObjectInserter) => Unit
   ): Future[ObjectId] = Future {
-    storage.lock(s"${repo.owner.userName}/${repo.name}") {
+    storage.lock(s"${repo.owner.username}/${repo.name}") {
       Using.resource(Git.open(storage.repositoryDir(repo))) { git =>
         val builder  = DirCache.newInCore.builder()
         val inserter = git.getRepository.newObjectInserter()
@@ -63,7 +63,7 @@ class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
           headTip,
           builder.getDirCache.writeTree(inserter),
           headName,
-          account.userName,
+          account.username,
           account.email,
           message
         )
@@ -77,7 +77,7 @@ class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
   }
 
   def fileTree(repo: RzRepository, revstr: String): Future[FileTree] =
-    cache.getOrElseUpdate[FileTree](s"${repo.owner.userName}.${repo.name}.filetree") {
+    cache.getOrElseUpdate[FileTree](s"${repo.owner.username}.${repo.name}.filetree") {
       buildFileTree(repo, revstr)
     }
 
@@ -243,5 +243,5 @@ class GitService @Inject() (storage: GitStorage, cache: AsyncCacheApi)(
   }
 
   def invalidateCache(repo: RzRepository): Future[_] =
-    cache.remove(s"${repo.owner.userName}.${repo.name}.filetree")
+    cache.remove(s"${repo.owner.username}.${repo.name}.filetree")
 }

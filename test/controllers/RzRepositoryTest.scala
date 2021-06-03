@@ -9,10 +9,10 @@ class RzRepositoryTest extends GenericControllerTest {
 
     val (result, _) = createRepository(repoName, account)
     result.header.headers(LOCATION) must equal(
-      routes.TemplateController.overview(account.a.userName, repoName).toString
+      routes.TemplateController.overview(account.a.username, repoName).toString
     )
 
-    val r = await(rzGitRepository.getByOwnerAndName(account.a.userName, repoName))
+    val r = await(rzGitRepository.getByOwnerAndName(account.a.username, repoName))
     r.isRight must equal(true)
   }
 }

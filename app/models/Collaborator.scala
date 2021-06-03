@@ -31,26 +31,31 @@ object Role {
       case _ if role == Owner.name  => Some(Owner)
       case _ if role == Editor.name => Some(Editor)
       case _ if role == Viewer.name => Some(Viewer)
-      case _                        => Option.empty[Role]
+
+      case _ => Option.empty[Role]
     }
 }
 
 case class Collaborator(
+  id: String,
   account: Account,
+  repo: RzRepository,
   role: Role,
   createdAt: Long
-) {
+) extends PersistentEntity {
   def keyAccessLevel(repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
+    IdTable.collaboratorPrefix + repo.owner.username + ":" + repo.name + ":" + account.username
 
-  def toMap: Map[String, String] = Map("role" -> role.name, "createdAt" -> createdAt.toString)
+  def toMap: Map[String, String] =
+    Map("account" -> account.id, "repo" -> repo.id, "role" -> role.name, "createdAt" -> createdAt.toString)
 
-  def this(account: Account, accessLevel: Role) = this(account, accessLevel, RzDateTime.now)
+  def this(account: Account, repo: RzRepository, role: Role) =
+    this(PersistentEntity.id, account, repo, role, RzDateTime.now)
 }
 
 object Collaborator {
   def keyAccessLevel(account: Account, repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
+    IdTable.collaboratorPrefix + repo.owner.username + ":" + repo.name + ":" + account.username
 
   def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
     (for {

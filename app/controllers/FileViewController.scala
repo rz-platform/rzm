@@ -46,7 +46,7 @@ class FileViewController @Inject() (
         case Some(path) =>
           Future(
             Redirect(
-              routes.FileViewController.blob(req.repository.owner.userName, req.repository.name, rev, path)
+              routes.FileViewController.blob(req.repository.owner.username, req.repository.name, rev, path)
             )
           )
         case _ =>

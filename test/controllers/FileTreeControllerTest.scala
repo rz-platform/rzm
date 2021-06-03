@@ -33,7 +33,7 @@ class FileTreeControllerTest extends GenericControllerTest {
         .withCookies(creator.c)
     )
 
-    val result: Future[Result] = call(fileEditController.addNewItem(creator.a.userName, repositoryName), newFileRequest)
+    val result: Future[Result] = call(fileEditController.addNewItem(creator.a.username, repositoryName), newFileRequest)
 
     await(result)
   }

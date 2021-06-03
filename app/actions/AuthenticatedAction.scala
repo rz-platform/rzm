@@ -1,7 +1,7 @@
 package actions
 
 import controllers.routes
-import models.{ Account, AccountRequest, Auth, UserInfo }
+import models.{ Account, AccountRequest, Auth, AccountInfo }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.{ AccountRepository, SessionRepository }
@@ -27,7 +27,7 @@ class AuthenticatedAction @Inject() (
 
   override def parser: BodyParser[AnyContent] = playBodyParsers.anyContent
 
-  def createSession(userInfo: UserInfo): Future[(String, Cookie)] = {
+  def createSession(userInfo: AccountInfo): Future[(String, Cookie)] = {
     // create a user info cookie with this specific secret key
     val secretKey      = encryptionService.newSecretKey
     val cookieBaker    = factory.createCookieBaker(secretKey)
@@ -38,7 +38,7 @@ class AuthenticatedAction @Inject() (
   }
 
   def authorize(account: Account, s: Session): Future[Result] = {
-    val userInfo = UserInfo(account.userName)
+    val userInfo = AccountInfo(account.username)
     createSession(userInfo).map {
       case (sessionId, encryptedCookie) =>
         val session: Session = s + (Auth.sessionId -> sessionId)
@@ -57,7 +57,7 @@ class AuthenticatedAction @Inject() (
     }
   }
 
-  private def getAccountByCookie(user: Option[UserInfo]): Future[Option[Account]] = user match {
+  private def getAccountByCookie(user: Option[AccountInfo]): Future[Option[Account]] = user match {
     case Some(info) =>
       accountService.getByUsernameOrEmail(info.username).map {
         case Right(account: Account) => Some(account)

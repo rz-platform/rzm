@@ -49,7 +49,7 @@ object AccountForms {
 
   def filledAccountEditForm(account: Account): Form[AccountData] =
     accountEditForm.fill(
-      AccountData(account.userName, Some(account.fullName), account.email)
+      AccountData(account.username, Some(account.fullname), account.email)
     )
 
 }

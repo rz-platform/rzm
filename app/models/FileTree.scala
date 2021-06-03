@@ -55,4 +55,7 @@ case class FileTree(root: FileNode) {
 object FileTree {
   val excluded: Array[String] = Array(FileNames.keep, FileNames.root)
   val maxDepth                = 4
+
+  val root = "."
+  val keep = ".gitkeep"
 }

@@ -73,7 +73,7 @@ class GenericControllerTest
     )
     await(accountController.saveAccount().apply(request))
 
-    val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
+    val (sessionId, cookie) = await(authAction.createSession(AccountInfo(data.userName)))
     val session             = Auth.sessionId -> sessionId
     AuthorizedAccount(new Account(data), session, cookie)
   }

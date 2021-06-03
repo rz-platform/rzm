@@ -6,10 +6,11 @@ import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64
 case class SshKey(
+  id: String,
   publicKey: String,
   createdAt: Long,
   owner: Account
-) {
+) extends PersistentEntity {
   val id: String = IdTable.sshKeyPrefix + MD5.fromString(publicKey)
 
   lazy val fingerprint: String = {
@@ -36,7 +37,7 @@ case class SshKey(
 
   lazy val createdAtDate: LocalDateTime = RzDateTime.fromTimestamp(createdAt)
 
-  def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.userName, "key" -> publicKey)
+  def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.username, "key" -> publicKey)
 
   def this(publicKey: String, owner: Account) = this(publicKey, RzDateTime.now, owner)
 }

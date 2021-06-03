@@ -72,7 +72,7 @@ class AccountPictureController @Inject() (
 
   def removeAccountPicture(): Action[AnyContent] = authAction.async { implicit req =>
     for {
-      _ <- deleteProfileImage(req.account.userName)
+      _ <- deleteProfileImage(req.account.username)
       _ <- accountRepository.removePicture(req.account)
     } yield Redirect(routes.AccountController.accountPage())
       .flashing("success" -> Messages("profile.picture.delete.success"))
@@ -90,7 +90,7 @@ class AccountPictureController @Inject() (
   private def makeThumbnail(
     picture: MultipartFormData.FilePart[Files.TemporaryFile]
   )(req: AccountRequest[_]): Future[Thumbnail] = Future {
-    Thumbnail.make(picture.ref, thumbSize, picturesDir.getAbsolutePath, req.account.userName)
+    Thumbnail.make(picture.ref, thumbSize, picturesDir.getAbsolutePath, req.account.username)
   }
 
   private def accountPictureFile(account: String): File = {

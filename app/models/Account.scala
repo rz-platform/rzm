@@ -4,27 +4,31 @@ import infrastructure.RzDateTime
 import play.api.libs.json.{ Format, Json }
 
 case class Account(
-  userName: String,
-  fullName: String,
+  id: String,
+  username: String,
+  fullname: String,
   email: String,
   tz: String,
   created: Long,
   picture: Option[String]
-) {
-  def id: String            = IdTable.accountPrefix + userName
-  def emailId: String       = IdTable.userEmailId + email
-  def passwordId: String    = IdTable.accountPasswordPrefix + userName
-  def sshKeysListId: String = IdTable.accountSshPrefix + userName
-  def projectListId: String = IdTable.accountAccessListPrefix + userName
+) extends PersistentEntity {
+  val keyPrefix: String = RedisKeyPrefix.accountPrefix
+
+  def key: String           = prefix(RedisKeyPrefix.accountPrefix, id)
+  def emailKey: String      = prefix(RedisKeyPrefix.userEmailId, id)
+  def passwordKey: String   = prefix(RedisKeyPrefix.accountPasswordPrefix, id)
+  def sshKeysListKey: String = prefix(RedisKeyPrefix.accountSshPrefix, id)
+  def projectListKey: String = prefix(RedisKeyPrefix.accountAccessListPrefix, id)
 
   def toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
     val picture = if (this.picture.nonEmpty) Some("picture" -> this.picture.get) else None
-    (Seq("fullName" -> fullName, "email" -> email, "created" -> created.toString, "tz" -> tz) ++ picture).toMap
+    (Seq("username" -> username, "fullname" -> fullname, "email" -> email, "created" -> created.toString, "tz" -> tz) ++ picture).toMap
   }
 
   def this(data: AccountRegistrationData) =
     this(
+      PersistentEntity.id,
       data.userName,
       data.fullName.getOrElse(""),
       data.email,
@@ -33,23 +37,25 @@ case class Account(
       None
     )
 
-  def fromForm(data: AccountData): Account =
-    Account(userName, data.fullName.getOrElse(""), data.email, tz, created, picture)
+  def fromForm(id: String, data: AccountData): Account =
+    Account(id, username, data.fullName.getOrElse(""), data.email, tz, created, picture)
 }
 
 object Account {
-  def id(username: String): String   = IdTable.accountPrefix + username
-  def emailId(email: String): String = IdTable.userEmailId + email
+  def key(username: String): String   = s"${RedisKeyPrefix.accountPrefix}$username"
+  def emailKey(email: String): String = s"${RedisKeyPrefix.userEmailId}$email"
 
   def make(key: String, data: Map[String, String]): Either[RzError, Account] =
     (for {
-      fullName <- data.get("fullName")
+      username <- data.get("username")
+      fullname <- data.get("fullName")
       email    <- data.get("email")
       created  <- data.get("created")
       tz       <- data.get("tz")
     } yield Account(
       key.substring(3),
-      fullName,
+      username,
+      fullname,
       email,
       tz,
       RzDateTime.parseTimestamp(created),
@@ -60,9 +66,9 @@ object Account {
     }
 }
 
-case class UserInfo(username: String)
+case class AccountInfo(username: String)
 
-object UserInfo {
+object AccountInfo {
   // Use a JSON format to automatically convert between case class and JsObject
-  implicit val format: Format[UserInfo] = Json.format[UserInfo]
+  implicit val format: Format[AccountInfo] = Json.format[AccountInfo]
 }
