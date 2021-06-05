@@ -6,12 +6,12 @@ import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64
 case class SshKey(
-  id: String,
   publicKey: String,
   createdAt: Long,
   owner: Account
-) extends PersistentEntity {
-  val id: String = IdTable.sshKeyPrefix + MD5.fromString(publicKey)
+) extends PersistentEntityMap {
+  val prefix     = RedisKeyPrefix.sshKeyPrefix
+  val id: String = MD5.fromString(publicKey)
 
   lazy val fingerprint: String = {
     val derFormat            = publicKey.split(" ")(1).trim
@@ -43,7 +43,7 @@ case class SshKey(
 }
 
 object SshKey {
-  def id(key: String): String = IdTable.sshKeyPrefix + MD5.fromString(key)
+  def id(key: String): String = PersistentEntity.key(RedisKeyPrefix.sshKeyPrefix, MD5.fromString(key))
 
   def make(m: Map[String, String], account: Account): Either[RzError, SshKey] =
     (for {

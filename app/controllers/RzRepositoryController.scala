@@ -42,7 +42,7 @@ class RzRepositoryController @Inject() (
               val author = new Collaborator(req.account, Role.Owner)
               val conf   = RzRepositoryConfig.makeDefault(repo, None, None, None)
               for {
-                _ <- metaGitRepository.setRzRepo(repo, author, conf)
+                _ <- metaGitRepository.createRepo(repo, author, conf)
                 _ <- git.initRepo(repo)
               } yield Redirect(
                 routes.TemplateController.overview(req.account.username, repo.name)

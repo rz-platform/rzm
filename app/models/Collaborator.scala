@@ -39,30 +39,27 @@ object Role {
 case class Collaborator(
   id: String,
   account: Account,
-  repo: RzRepository,
   role: Role,
   createdAt: Long
-) extends PersistentEntity {
-  def keyAccessLevel(repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.username + ":" + repo.name + ":" + account.username
+) extends PersistentEntityMap {
+  val prefix = RedisKeyPrefix.collaboratorPrefix
 
   def toMap: Map[String, String] =
-    Map("account" -> account.id, "repo" -> repo.id, "role" -> role.name, "createdAt" -> createdAt.toString)
+    Map("account" -> account.id, "role" -> role.name, "createdAt" -> createdAt.toString)
 
-  def this(account: Account, repo: RzRepository, role: Role) =
-    this(PersistentEntity.id, account, repo, role, RzDateTime.now)
+  def this(account: Account, role: Role) =
+    this(PersistentEntity.id, account, role, RzDateTime.now)
 }
 
 object Collaborator {
-  def keyAccessLevel(account: Account, repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.username + ":" + repo.name + ":" + account.username
+  def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.collaboratorPrefix, id)
 
-  def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
+  def make(id: String, account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
     (for {
       role      <- data.get("role")
       role      <- Role.fromString(role)
       createdAt <- data.get("createdAt")
-    } yield Collaborator(account, role, createdAt.toInt)) match {
+    } yield Collaborator(id, account, role, createdAt.toInt)) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }

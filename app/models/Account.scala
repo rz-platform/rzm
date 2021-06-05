@@ -11,14 +11,8 @@ case class Account(
   tz: String,
   created: Long,
   picture: Option[String]
-) extends PersistentEntity {
-  val keyPrefix: String = RedisKeyPrefix.accountPrefix
-
-  def key: String           = prefix(RedisKeyPrefix.accountPrefix, id)
-  def emailKey: String      = prefix(RedisKeyPrefix.userEmailId, id)
-  def passwordKey: String   = prefix(RedisKeyPrefix.accountPasswordPrefix, id)
-  def sshKeysListKey: String = prefix(RedisKeyPrefix.accountSshPrefix, id)
-  def projectListKey: String = prefix(RedisKeyPrefix.accountAccessListPrefix, id)
+) extends PersistentEntityMap {
+  val prefix: String = RedisKeyPrefix.accountPrefix
 
   def toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
@@ -42,9 +36,6 @@ case class Account(
 }
 
 object Account {
-  def key(username: String): String   = s"${RedisKeyPrefix.accountPrefix}$username"
-  def emailKey(email: String): String = s"${RedisKeyPrefix.userEmailId}$email"
-
   def make(key: String, data: Map[String, String]): Either[RzError, Account] =
     (for {
       username <- data.get("username")
@@ -64,6 +55,31 @@ object Account {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }
+}
+
+object AccountUsername {
+  def asEntity(account: Account) = PersistentEntityString(RedisKeyPrefix.userEmailId, account.username, account.id)
+
+  def asKey(username: String) = PersistentEntity.key(RedisKeyPrefix.accountUsername, username)
+}
+
+object AccountEmail {
+  def asEntity(account: Account) = PersistentEntityString(RedisKeyPrefix.userEmailId, account.email, account.id)
+
+  def asKey(email: String) = PersistentEntity.key(RedisKeyPrefix.userEmailId, email)
+}
+
+object AccountPassword {
+  def asEntity(account: Account, passwordHash: String) =
+    PersistentEntityString(RedisKeyPrefix.userEmailId, account.id, passwordHash)
+}
+
+object AccountSshKeys {
+  def key(account: Account) = PersistentEntity.key(RedisKeyPrefix.accountSshPrefix, account.id)
+}
+
+object AccountProjects {
+  def key(account: Account) = PersistentEntity.key(RedisKeyPrefix.accountAccessListPrefix, account.id)
 }
 
 case class AccountInfo(username: String)

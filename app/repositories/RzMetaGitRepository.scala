@@ -10,29 +10,29 @@ import scala.concurrent.{ ExecutionContext, Future }
 class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRepository)(
   implicit ec: ExecutionContext
 ) {
-  def setRzRepo(repo: RzRepository, author: Collaborator, repoConfig: RzRepositoryConfig): Future[_] = Future {
+  def createRepo(repo: RzRepository, author: Collaborator, repoConfig: RzRepositoryConfig): Future[_] = Future {
     redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
-        f.hmset(repo.id, repo.toMap)
-        f.hmset(repoConfig.id, repoConfig.toMap)
-        f.zadd(repo.owner.projectListKey, repo.createdAt.toDouble, repo.id)
+        f.hmset(repo.key, repo.toMap)
+        f.hmset(repoConfig.key, repoConfig.toMap)
+        f.zadd(AccountProjects.key(repo.owner), repo.createdAt.toDouble, repo.id)
         f.hmset(author.keyAccessLevel(repo), author.toMap)
       }
     }
   }
 
   def updateRepo(repo: RzRepository): Future[_] = Future {
-    redis.withClient(client => client.hset(repo.id, "updatedAt", RzDateTime.now))
+    redis.withClient(client => client.hset(repo.key, "updatedAt", RzDateTime.now))
   }
 
-  def setRzRepoLastFile(account: Account, repo: RzRepository, lastOpenedFile: String): Future[Boolean] = Future {
+  def setRzRepoLastFile(lastOpenedFile: PersistentEntityString): Future[Boolean] = Future {
     redis.withClient(client =>
-      client.set(LastOpenedFile.id(account, repo), lastOpenedFile, expire = Duration(30, "days"))
+      client.set(lastOpenedFile.key, lastOpenedFile.value, expire = Duration(30, "days"))
     )
   }
 
   def getRzRepoLastFile(account: Account, repo: RzRepository): Future[Option[String]] = Future {
-    redis.withClient(client => client.get(LastOpenedFile.id(account, repo)))
+    redis.withClient(client => client.get(LastOpenedFile.asKey(account, repo)))
   }
 
   def setRzRepoConf(config: RzRepositoryConfig): Future[Boolean] = Future {
@@ -85,9 +85,9 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
     Future {
       redis.withClient { client =>
         client.pipeline { f: client.PipelineClient =>
-          f.zrem(repo.collaboratorsListId, account.key)
-          f.zrem(account.projectListKey, repo.id)
-          f.del(Collaborator.keyAccessLevel(account, repo))
+          f.zrem(RepositoryCollaborators.asKey(repo), account.id)
+          f.zrem(AccountProjects.key(account), repo.id)
+          f.del(Collaborator.key(account, repo))
         }
       }
     }
