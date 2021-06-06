@@ -1,5 +1,5 @@
 package services.encryption
-import models.{ Auth, AccountInfo }
+import models.{ AccountInfo, Auth }
 import play.api.http.SecretConfiguration
 
 import javax.inject.Inject

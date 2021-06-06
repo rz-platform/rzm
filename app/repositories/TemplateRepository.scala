@@ -27,5 +27,5 @@ class TemplateRepository @Inject() (config: Configuration) {
     }
 
   private def filter(f: File): Boolean =
-    f.isDirectory && f.getName.take(1) != FileNames.root && f.getName.takeRight(1) != "~"
+    f.isDirectory && f.getName.take(1) != FileTree.root && f.getName.takeRight(1) != "~"
 }

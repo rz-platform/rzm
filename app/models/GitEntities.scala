@@ -33,8 +33,8 @@ object RzRepository {
 
   val defaultBranch = "master"
 
-  def make(id: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
-    (for {
+  def make(id: String, owner: Account, data: Map[String, String]): Option[RzRepository] =
+    for {
       createdAt <- data.get("createdAt")
       name      <- data.get("name")
     } yield RzRepository(
@@ -43,10 +43,7 @@ object RzRepository {
       name,
       RzDateTime.parseTimestamp(createdAt),
       RzDateTime.parseTimestamp(data.get("updatedAt"))
-    )) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+    )
 }
 
 case class RzRepositoryConfig(
@@ -74,8 +71,8 @@ object RzRepositoryConfig {
   ): RzRepositoryConfig =
     RzRepositoryConfig(repository, entrypoint, compiler.getOrElse(PdfLatex), bibliography.getOrElse(BibLatex))
 
-  def make(repository: RzRepository, data: Map[String, String]): Either[RzError, RzRepositoryConfig] =
-    (for {
+  def make(repository: RzRepository, data: Map[String, String]): Option[RzRepositoryConfig] =
+    for {
       compilerId     <- data.get("compiler")
       bibliographyId <- data.get("bibliography")
       compiler       <- RzCompiler.make(compilerId)
@@ -85,10 +82,7 @@ object RzRepositoryConfig {
       data.get("entrypoint"),
       compiler,
       bib
-    )) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+    )
 }
 
 object LastOpenedFile {

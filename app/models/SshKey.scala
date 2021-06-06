@@ -45,12 +45,9 @@ case class SshKey(
 object SshKey {
   def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.sshKeyPrefix, id)
 
-  def make(m: Map[String, String], account: Account): Either[RzError, SshKey] =
-    (for {
+  def make(m: Map[String, String], account: Account): Option[SshKey] =
+    for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
-    } yield SshKey(publicKey, RzDateTime.parseTimestamp(createdAt), account)) match {
-      case Some(m) => Right(m)
-      case None    => Left(ParsingError)
-    }
+    } yield SshKey(publicKey, RzDateTime.parseTimestamp(createdAt), account)
 }

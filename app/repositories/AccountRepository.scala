@@ -12,7 +12,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
 
   def getById(id: String, client: RedisClient): Either[RzError, Account] =
     client.hgetall[String, String](Account.key(id)) match {
-      case Some(account) => Account.make(id, account)
+      case Some(account) => Account.make(id, account).toRight(ParsingError)
       case None          => Left(NotFoundInRepository)
     }
 
@@ -20,10 +20,11 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     redis.withClient(client => getById(id, client))
   }
 
-  def getByName(username: String, client: RedisClient) = client.get(AccountUsername.asKey(username)) match {
-    case Some(id: String) => getById(id, client)
-    case None             => Left(NotFoundInRepository)
-  }
+  def getByName(username: String, client: RedisClient): Either[RzError, Account] =
+    client.get(AccountUsername.asKey(username)) match {
+      case Some(id: String) => getById(id, client)
+      case None             => Left(NotFoundInRepository)
+    }
 
   def getByName(username: String): Future[Either[RzError, Account]] = Future {
     redis.withClient(client => getByName(username, client))
@@ -119,14 +120,10 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     redis.withClient(client => client.hset(account.key, "picture", filename))
   }
 
-  private def getSshKey(id: String, account: Account, client: RedisClient) =
+  private def getSshKey(id: String, account: Account, client: RedisClient): Option[SshKey] =
     client.hgetall(SshKey.key(id)) match {
-      case Some(m) =>
-        SshKey.make(m, account) match {
-          case Right(s) => Some(s)
-          case Left(_)  => None
-        }
-      case None => None
+      case Some(m) => SshKey.make(m, account)
+      case None    => None
     }
 
   def listSshKeys(account: Account): Future[List[SshKey]] = Future {

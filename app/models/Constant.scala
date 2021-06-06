@@ -3,7 +3,6 @@ package models
 import java.io.File
 import scala.util.matching.Regex
 
-
 object ForbiddenSymbols {
   private val pathForbiddenSymbols: List[String]    = List("?", ":", "#", "&", "..", "$", "%")
   private val generalForbiddenSymbols: List[String] = pathForbiddenSymbols :+ "/"

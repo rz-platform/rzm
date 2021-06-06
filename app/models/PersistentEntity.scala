@@ -59,7 +59,6 @@ object RedisKeyPrefix {
 
   val sshKeyPrefix = "sk" // ssh key
 
-
   def parseId(id: String): (String, String) = {
     val s = id.split(":")
     (s(1), s(2))

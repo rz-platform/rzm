@@ -38,8 +38,8 @@ case class Account(
 object Account {
   def key(id: String) = PersistentEntity.key(RedisKeyPrefix.accountPrefix, id)
 
-  def make(key: String, data: Map[String, String]): Either[RzError, Account] =
-    (for {
+  def make(key: String, data: Map[String, String]): Option[Account] =
+    for {
       username <- data.get("username")
       fullname <- data.get("fullName")
       email    <- data.get("email")
@@ -53,10 +53,7 @@ object Account {
       tz,
       RzDateTime.parseTimestamp(created),
       data.get("picture")
-    )) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+    )
 }
 
 object AccountUsername {

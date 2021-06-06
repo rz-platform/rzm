@@ -1,7 +1,7 @@
 package actions
 
 import controllers.routes
-import models.{ Account, AccountRequest, Auth, AccountInfo }
+import models.{ Account, AccountInfo, AccountRequest, Auth }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.{ AccountRepository, SessionRepository }
