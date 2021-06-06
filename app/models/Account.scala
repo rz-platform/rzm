@@ -36,6 +36,8 @@ case class Account(
 }
 
 object Account {
+  def key(id: String) = PersistentEntity.key(RedisKeyPrefix.accountPrefix, id)
+
   def make(key: String, data: Map[String, String]): Either[RzError, Account] =
     (for {
       username <- data.get("username")
@@ -71,7 +73,9 @@ object AccountEmail {
 
 object AccountPassword {
   def asEntity(account: Account, passwordHash: String) =
-    PersistentEntityString(RedisKeyPrefix.userEmailId, account.id, passwordHash)
+    PersistentEntityString(RedisKeyPrefix.accountPasswordPrefix, account.id, passwordHash)
+
+  def asKey(account: Account) = PersistentEntity.key(RedisKeyPrefix.accountPasswordPrefix, account.id)
 }
 
 object AccountSshKeys {

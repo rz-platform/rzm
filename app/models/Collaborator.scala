@@ -39,13 +39,14 @@ object Role {
 case class Collaborator(
   id: String,
   account: Account,
+  repo: RzRepository,
   role: Role,
   createdAt: Long
 ) extends PersistentEntityMap {
   val prefix = RedisKeyPrefix.collaboratorPrefix
 
   def toMap: Map[String, String] =
-    Map("account" -> account.id, "role" -> role.name, "createdAt" -> createdAt.toString)
+    Map("account" -> account.id, "role" -> role.name, "repo" -> repo.id, "createdAt" -> createdAt.toString)
 
   def this(account: Account, role: Role) =
     this(PersistentEntity.id, account, role, RzDateTime.now)
@@ -54,12 +55,12 @@ case class Collaborator(
 object Collaborator {
   def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.collaboratorPrefix, id)
 
-  def make(id: String, account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
+  def make(id: String, account: Account, repo: RzRepository, data: Map[String, String]): Either[RzError, Collaborator] =
     (for {
       role      <- data.get("role")
       role      <- Role.fromString(role)
       createdAt <- data.get("createdAt")
-    } yield Collaborator(id, account, role, createdAt.toInt)) match {
+    } yield Collaborator(id, account, repo, role, createdAt.toInt)) match {
       case Some(a) => Right(a)
       case None    => Left(ParsingError)
     }

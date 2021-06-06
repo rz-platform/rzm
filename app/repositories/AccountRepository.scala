@@ -11,7 +11,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
   private val logger = play.api.Logger(this.getClass)
 
   def getById(id: String, client: RedisClient): Either[RzError, Account] =
-    client.hgetall[String, String](id) match {
+    client.hgetall[String, String](Account.key(id)) match {
       case Some(account) => Account.make(id, account)
       case None          => Left(NotFoundInRepository)
     }
@@ -20,9 +20,18 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     redis.withClient(client => getById(id, client))
   }
 
-  def getByEmailId(emailId: String): Future[Either[RzError, Account]] = Future {
+  def getByName(username: String, client: RedisClient) = client.get(AccountUsername.asKey(username)) match {
+    case Some(id: String) => getById(id, client)
+    case None             => Left(NotFoundInRepository)
+  }
+
+  def getByName(username: String): Future[Either[RzError, Account]] = Future {
+    redis.withClient(client => getByName(username, client))
+  }
+
+  def getByEmail(email: String): Future[Either[RzError, Account]] = Future {
     redis.withClient { client =>
-      client.get(emailId) match {
+      client.get(AccountEmail.asKey(email)) match {
         case Some(id: String) => getById(id, client)
         case None             => Left(NotFoundInRepository)
       }
@@ -30,17 +39,23 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
   }
 
   def getByUsernameOrEmail(s: String): Future[Either[RzError, Account]] =
-    getById(Account.id(s)).flatMap {
+    getByName(s).flatMap {
       case Right(account) => Future(Right(account))
-      case _              => getByEmailId(Account.emailKey(s))
+      case _              => getByEmail(s)
     }
 
-  def set(account: Account, password: HashedString): Future[_] = Future {
+  def set(
+    account: Account,
+    username: PersistentEntityString,
+    email: PersistentEntityString,
+    password: PersistentEntityString
+  ): Future[_] = Future {
     redis.withClient(client =>
       client.pipeline { f =>
         f.hmset(account.key, account.toMap)
-        f.set(account.emailKey, account.key)
-        f.set(account.passwordId, password.toString)
+        f.set(email.key, email.value)
+        f.set(username.key, username.value)
+        f.set(password.key, password.value)
       }
     )
   }
@@ -54,20 +69,24 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
       client.pipeline { f =>
         f.hmset(account.key, account.toMap)
         if (oldAccount.email != account.email) {
-          f.del(oldAccount.emailKey)
-          f.set(account.emailKey, account.key)
+          f.del(AccountEmail.asKey(oldAccount.email))
+          f.set(AccountEmail.asKey(account.email), account.key)
+        }
+        if (oldAccount.username != account.username) {
+          f.del(AccountUsername.asKey(oldAccount.username))
+          f.set(AccountUsername.asKey(account.username), account.key)
         }
       }
     }
   }
 
-  def setPassword(account: Account, hash: String): Future[Boolean] = Future {
-    redis.withClient(client => client.set(account.passwordId, hash))
+  def setPassword(password: PersistentEntityString): Future[Boolean] = Future {
+    redis.withClient(client => client.set(password.key, password.value))
   }
 
   def getPassword(account: Account): Future[Either[RzError, String]] = Future {
     redis.withClient { client =>
-      client.get(account.passwordId) match {
+      client.get(AccountPassword.asKey(account)) match {
         case Some(s) => Right(s)
         case None    => Left(NotFoundInRepository)
       }
@@ -78,7 +97,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     redis.withClient { client =>
       client.pipeline { f =>
         f.hmset(key.id, key.toMap)
-        f.zadd(account.sshKeysListKey, key.createdAt.toDouble, key.id)
+        f.zadd(AccountSshKeys.key(account), key.createdAt.toDouble, key.id)
       }
     }
   }
@@ -86,7 +105,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
   def deleteSshKey(account: Account, keyId: String): Future[Option[List[Any]]] = Future {
     redis.withClient { client =>
       client.pipeline { f =>
-        f.zrem(account.sshKeysListKey, keyId)
+        f.zrem(AccountSshKeys.key(account), keyId)
         f.del(keyId)
       }
     }
@@ -100,18 +119,19 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
     redis.withClient(client => client.hset(account.key, "picture", filename))
   }
 
-  private def getSshKey(id: String, account: Account, client: RedisClient) = client.hgetall(id) match {
-    case Some(m) =>
-      SshKey.make(m, account) match {
-        case Right(s) => Some(s)
-        case Left(_)  => None
-      }
-    case None => None
-  }
+  private def getSshKey(id: String, account: Account, client: RedisClient) =
+    client.hgetall(SshKey.key(id)) match {
+      case Some(m) =>
+        SshKey.make(m, account) match {
+          case Right(s) => Some(s)
+          case Left(_)  => None
+        }
+      case None => None
+    }
 
   def listSshKeys(account: Account): Future[List[SshKey]] = Future {
     redis.withClient { client =>
-      client.zrange(account.sshKeysListKey) match {
+      client.zrange(AccountSshKeys.key(account)) match {
         case Some(l: List[String]) => l.flatMap(id => getSshKey(id, account, client))
         case None                  => List()
       }
@@ -123,7 +143,7 @@ class AccountRepository @Inject() (redis: Redis)(implicit ec: ExecutionContext) 
    * */
   def cardinalitySshKey(account: Account): Future[Either[RzError, Long]] = Future {
     redis.withClient { client =>
-      client.zcard(account.sshKeysListKey) match {
+      client.zcard(AccountSshKeys.key(account)) match {
         case Some(s: Long) => Right(s)
         case None          => Left(NotFoundInRepository)
       }

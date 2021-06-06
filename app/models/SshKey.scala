@@ -43,7 +43,7 @@ case class SshKey(
 }
 
 object SshKey {
-  def id(key: String): String = PersistentEntity.key(RedisKeyPrefix.sshKeyPrefix, MD5.fromString(key))
+  def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.sshKeyPrefix, id)
 
   def make(m: Map[String, String], account: Account): Either[RzError, SshKey] =
     (for {

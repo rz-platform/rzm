@@ -22,7 +22,7 @@ case class RzRepository(
   val toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
     val updatedAt = if (this.updatedAt.nonEmpty) Some("updatedAt" -> this.updatedAt.get.toString) else None
-    (Seq("createdAt" -> createdAt.toString) ++ updatedAt).toMap
+    (Seq("createdAt" -> createdAt.toString, "name" -> name, "owner" -> owner.id) ++ updatedAt).toMap
   }
 
   def this(owner: Account, name: String) = this(PersistentEntity.id, owner, name, RzDateTime.now, None)
@@ -33,9 +33,10 @@ object RzRepository {
 
   val defaultBranch = "master"
 
-  def make(id: String, name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
+  def make(id: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
     (for {
       createdAt <- data.get("createdAt")
+      name      <- data.get("name")
     } yield RzRepository(
       id,
       owner,
@@ -95,9 +96,8 @@ object LastOpenedFile {
     val id = PersistentEntity.key(account.id, repo.owner.id, repo.id)
     PersistentEntityString(RedisKeyPrefix.lastOpenedFilePrefix, id, fileName)
   }
-  def asKey(account: Account, repo: RzRepository) = {
+  def asKey(account: Account, repo: RzRepository) =
     PersistentEntity.key(account.id, repo.owner.id, repo.id)
-  }
 
 }
 
@@ -106,8 +106,11 @@ object RepositoryCollaborators {
 }
 
 object RepositoryName {
-  def asEntity(repo: RzRepository) = PersistentEntityString(RedisKeyPrefix.rzRepoNamePrefix, repo.name, repo.id)
-  def asKey(name: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoNamePrefix, name)
+  def asEntity(repo: RzRepository) = {
+    val id = PersistentEntity.key(repo.owner.username, repo.name)
+    PersistentEntityString(RedisKeyPrefix.rzRepoNamePrefix, id, repo.id)
+  }
+  def asKey(owner: String, name: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoNamePrefix, owner, name)
 }
 
 /**
