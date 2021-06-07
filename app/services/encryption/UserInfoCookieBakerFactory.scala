@@ -1,5 +1,6 @@
 package services.encryption
-import models.{ AccountInfo, Auth }
+import controllers.AuthController
+import models.AccountInfo
 import play.api.http.SecretConfiguration
 
 import javax.inject.Inject
@@ -16,6 +17,6 @@ class UserInfoCookieBakerFactory @Inject() (
     new EncryptedCookieBaker[AccountInfo](secretKey, encryptionService, secretConfiguration) {
       // This can also be set to the session expiration, but lets keep it around for example
       override val expirationDate: FiniteDuration = 365.days
-      override val COOKIE_NAME: String            = Auth.userInfoCookie
+      override val COOKIE_NAME: String            = AuthController.userInfoCookie
     }
 }

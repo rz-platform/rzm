@@ -25,8 +25,8 @@ class RepositoryAction @Inject() (
       private def checkAccess(account: Account): Future[Either[RzError, (RzRepository, Role)]] =
         gitEntitiesRepository.getByOwnerAndName(ownerName, repoName).flatMap {
           case Right(repo: RzRepository) =>
-            gitEntitiesRepository.getCollaborator(account, repo).map {
-              case Right(c: Collaborator) if c.role.weight >= minRole.weight => Right((repo, c.role))
+            gitEntitiesRepository.getCollaborator(account.id, repo).map {
+              case Some(c: Collaborator) if c.role.perm >= minRole.perm => Right((repo, c.role))
 
               case _ => Left(AccessDenied)
             }

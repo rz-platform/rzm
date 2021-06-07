@@ -23,7 +23,7 @@ logout = You are now logged out.
 
 signup.title=Sign up
 signup.head=Sign up
-signup.form.userName=Username
+signup.form.username=Username
 signup.form.password= Password
 signup.form.email=Email address
 signup.form.fullname=Full Name

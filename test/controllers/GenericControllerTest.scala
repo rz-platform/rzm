@@ -64,7 +64,7 @@ class GenericControllerTest
     val request = addCSRFToken(
       FakeRequest(routes.AccountController.saveAccount())
         .withFormUrlEncodedBody(
-          "userName"    -> data.userName,
+          "username"    -> data.username,
           "fullName"    -> data.fullName.get,
           "password"    -> data.password,
           "timezone"    -> RzDateTime.defaultTz.toString,
@@ -73,7 +73,7 @@ class GenericControllerTest
     )
     await(accountController.saveAccount().apply(request))
 
-    val (sessionId, cookie) = await(authAction.createSession(AccountInfo(data.userName)))
+    val (sessionId, cookie) = await(authAction.createSession(AccountInfo(data.username)))
     val session             = Auth.sessionId -> sessionId
     AuthorizedAccount(new Account(data), session, cookie)
   }

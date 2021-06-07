@@ -35,7 +35,7 @@ object PersistentEntity {
   def key(strings: String*): String = strings.mkString(":")
 }
 
-case class PersistentEntityString(id: String, prefix: String, value: String) extends PersistentEntity
+case class PersistentEntityString(prefix: String, id: String, value: String) extends PersistentEntity
 
 trait PersistentEntityMap extends PersistentEntity {
   def toMap: Map[String, String]

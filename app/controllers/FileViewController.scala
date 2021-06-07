@@ -70,7 +70,7 @@ class FileViewController @Inject() (
     implicit req: RepositoryRequest[AnyContent]
   ): Future[Result] =
     for {
-      _ <- metaGitRepository.setRzRepoLastFile(req.account, req.repository, path)
+      _ <- metaGitRepository.setRzRepoLastFile(LastOpenedFile.asEntity(req.account, req.repository, path))
     } yield Ok(
       html.repository.view(
         editorForm.fill(

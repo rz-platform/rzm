@@ -23,7 +23,7 @@ case class Account(
   def this(data: AccountRegistrationData) =
     this(
       PersistentEntity.id,
-      data.userName,
+      data.username,
       data.fullName.getOrElse(""),
       data.email,
       data.timezone,
@@ -57,7 +57,7 @@ object Account {
 }
 
 object AccountUsername {
-  def asEntity(account: Account) = PersistentEntityString(RedisKeyPrefix.userEmailId, account.username, account.id)
+  def asEntity(account: Account) = PersistentEntityString(RedisKeyPrefix.accountUsername, account.username, account.id)
 
   def asKey(username: String) = PersistentEntity.key(RedisKeyPrefix.accountUsername, username)
 }
@@ -83,7 +83,7 @@ object AccountProjects {
   def key(account: Account) = PersistentEntity.key(RedisKeyPrefix.accountAccessListPrefix, account.id)
 }
 
-case class AccountInfo(username: String)
+case class AccountInfo(id: String)
 
 object AccountInfo {
   // Use a JSON format to automatically convert between case class and JsObject

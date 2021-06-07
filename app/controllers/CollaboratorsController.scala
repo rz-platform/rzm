@@ -41,7 +41,7 @@ class CollaboratorsController @Inject() (
                     case true => pageRedirectWithError("repository.collaborator.error.alreadycollab")
                     case false =>
                       for {
-                        _ <- metaGitRepository.addCollaborator(collaborator(account, data.role), req.repository)
+                        _ <- metaGitRepository.addCollaborator(account, data.role, req.repository)
                       } yield pageRedirect(req)
                   }
                 case _ => pageRedirectWithError("repository.collaborator.error.nosuchuser")
@@ -79,9 +79,4 @@ class CollaboratorsController @Inject() (
     for {
       list <- metaGitRepository.getCollaborators(req.repository)
     } yield BadRequest(html.repository.collaborators(form, list))
-
-  private def collaborator(account: Account, role: String) = {
-    val rzRole = Role.fromString(role).getOrElse(Role.Viewer)
-    new Collaborator(account, rzRole)
-  }
 }

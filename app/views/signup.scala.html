@@ -8,7 +8,7 @@
   @header.alerts()
   @form(routes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
-  @inputText(signupForm("userName"), Symbol("_label") -> req.messages("signup.form.userName"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
+  @inputText(signupForm("username"), Symbol("_label") -> req.messages("signup.form.username"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
   @inputPassword(signupForm("password"), Symbol("_label") ->
   req.messages("signup.form.password"), Symbol("_help") -> "") @inputText(signupForm("mailAddress"),
   Symbol("_label") -> req.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),

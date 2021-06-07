@@ -16,7 +16,7 @@ class AccountControllerTest extends GenericControllerTest {
         val request = addCSRFToken(
           FakeRequest(routes.AccountController.saveAccount())
             .withFormUrlEncodedBody(
-              "userName"    -> username,
+              "username"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
               "mailAddress" -> s"$getRandomString@rzm.dev"
@@ -39,7 +39,7 @@ class AccountControllerTest extends GenericControllerTest {
         val request = addCSRFToken(
           FakeRequest(routes.AccountController.saveAccount())
             .withFormUrlEncodedBody(
-              "userName"    -> username,
+              "username"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
               "timezone"    -> RzDateTime.defaultTz.toString,

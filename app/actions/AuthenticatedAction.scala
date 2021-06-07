@@ -1,7 +1,7 @@
 package actions
 
-import controllers.routes
-import models.{ Account, AccountInfo, AccountRequest, Auth }
+import controllers.{ routes, AuthController }
+import models.{ Account, AccountInfo, AccountRequest }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import repositories.{ AccountRepository, SessionRepository }
@@ -38,10 +38,10 @@ class AuthenticatedAction @Inject() (
   }
 
   def authorize(account: Account, s: Session): Future[Result] = {
-    val userInfo = AccountInfo(account.username)
+    val userInfo = AccountInfo(account.id)
     createSession(userInfo).map {
       case (sessionId, encryptedCookie) =>
-        val session: Session = s + (Auth.sessionId -> sessionId)
+        val session: Session = s + (AuthController.sessionId -> sessionId)
         Redirect(routes.RzRepositoryController.list())
           .withSession(session)
           .withCookies(encryptedCookie)
@@ -49,7 +49,7 @@ class AuthenticatedAction @Inject() (
   }
 
   def discardingSession(result: Result): Result =
-    result.withNewSession.discardingCookies(DiscardingCookie(Auth.userInfoCookie))
+    result.withNewSession.discardingCookies(DiscardingCookie(AuthController.userInfoCookie))
 
   def redirect: Future[Result] = Future.successful {
     discardingSession {
@@ -59,7 +59,7 @@ class AuthenticatedAction @Inject() (
 
   private def getAccountByCookie(user: Option[AccountInfo]): Future[Option[Account]] = user match {
     case Some(info) =>
-      accountService.getByUsernameOrEmail(info.username).map {
+      accountService.getById(info.id).map {
         case Right(account: Account) => Some(account)
         case _                       => None
       }
@@ -71,8 +71,8 @@ class AuthenticatedAction @Inject() (
     block: AccountRequest[A] => Future[Result]
   ): Future[Result] = {
     val maybeFutureResult: Option[Future[Result]] = for {
-      sessionId      <- request.session.get(Auth.sessionId)
-      userInfoCookie <- request.cookies.get(Auth.userInfoCookie)
+      sessionId      <- request.session.get(AuthController.sessionId)
+      userInfoCookie <- request.cookies.get(AuthController.userInfoCookie)
     } yield {
       sessionRepository.lookup(sessionId).flatMap {
         case Some(secretKey) =>

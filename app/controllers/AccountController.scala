@@ -37,18 +37,20 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signup(formWithErrors, zoneIds))),
         data =>
-          accountRepository.getByUsernameOrEmail(data.userName).flatMap { // TODO accountData.email
+          accountRepository.getByUsernameOrEmail(data.username).flatMap { // TODO accountData.email
             case Left(NotFoundInRepository) =>
               val account  = new Account(data)
-              val password = HashedString.fromString(data.password)
+              val username = AccountUsername.asEntity(account)
+              val email    = AccountEmail.asEntity(account)
+              val password = AccountPassword.asEntity(account, HashedString.fromString(data.password).toString)
               for {
-                _      <- accountRepository.set(account, password)
+                _      <- accountRepository.set(account, username, email, password)
                 result <- authAction.authorize(account, request.session)
               } yield result
             case _ =>
               val newForm = FormErrors.error[AccountRegistrationData](
                 signupForm.bindFromRequest(),
-                FormError("userName", Messages("signup.error.alreadyexists"))
+                FormError("username", Messages("signup.error.alreadyexists"))
               )
               Future(BadRequest(html.signup(newForm, zoneIds)))
           }
@@ -79,7 +81,7 @@ class AccountController @Inject() (
           isEmailAvailable(req.account.email, accountData.email).flatMap {
             case true =>
               for {
-                _ <- accountRepository.update(req.account, req.account.fromForm(accountData))
+                _ <- accountRepository.update(req.account, req.account.fromForm(req.account.id, accountData))
               } yield Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds))
             case false =>
               val newForm = FormErrors.error[AccountData](
@@ -113,8 +115,9 @@ class AccountController @Inject() (
           accountRepository.getPassword(req.account).flatMap {
             case Right(passwordHash: String) if HashedString(passwordHash).check(passwordData.newPassword) =>
               val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
+              val password        = AccountPassword.asEntity(req.account, newPasswordHash)
               for {
-                _ <- accountRepository.setPassword(req.account, newPasswordHash)
+                _ <- accountRepository.setPassword(password)
               } yield Redirect(routes.AccountController.accountPage())
                 .flashing("success" -> Messages("profile.flash.passupdated"))
             case _ =>

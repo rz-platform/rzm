@@ -3,7 +3,7 @@
 @creatorButton() = {
 <li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
 <a
-  href="@routes.TemplateController.overview(request.repository.owner.userName, request.repository.name)"
+  href="@routes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
   class="rz-menu-link"
   >@request.messages("repository.tree.creator")</a
 >
@@ -11,11 +11,11 @@
 }
 
 <div class="rz-menu rz-menu-horizontal">
-  <span class="repository-name">@request.repository.owner.userName / @request.repository.name → </span>
+  <span class="repository-name">@request.repository.owner.username / @request.repository.name → </span>
   <ul class="rz-menu-list">
     <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
       <a
-        href="@routes.FileViewController.emptyTree(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
+        href="@routes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
@@ -24,7 +24,7 @@
     case Role.Owner => {
     <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
       <a
-        href="@routes.CollaboratorsController.page(request.repository.owner.userName, request.repository.name)"
+        href="@routes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
         class="rz-menu-link"
         >@request.messages("repository.tree.collaborators")</a
       >
@@ -34,14 +34,14 @@
     }
     <li class="rz-menu-item">
       <a
-        href="@routes.RzRepositoryController.downloadArchive(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch)"
+        href="@routes.RzRepositoryController.downloadArchive(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
     <li class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }">
       <a
-        href="@routes.RzRepositoryController.commitLog(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, 1)"
+        href="@routes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
         class="rz-menu-link">
         @request.messages("repository.tree.commits")
       </a>
@@ -58,7 +58,7 @@
         
         <span id="git-http-url-block">
           <form class="rz-form rz-form-inline" onsubmit="return false;">
-            <input id="git-http-url" class="rz-input-inline" type="text" readonly value="@request.repository.httpUrl(request)" />
+            <input id="git-http-url" class="rz-input-inline" type="text" readonly value="@request.repository.http(request)" />
             <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-http-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>
@@ -66,7 +66,7 @@
         </span>
         <span id="git-ssh-url-block">
           <form class="rz-form rz-form-inline" onsubmit="return false;">
-            <input id="git-ssh-url" class="rz-input-inline" type="text" readonly value="@request.repository.sshUrl(request)" />
+            <input id="git-ssh-url" class="rz-input-inline" type="text" readonly value="@request.repository.ssh(request)" />
             <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-ssh-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>

@@ -27,13 +27,13 @@ class AuthController @Inject() (
 
   def login: Action[AnyContent] = Action.async { implicit req =>
     val successFunc: AccountLoginData => Future[Result] = { accountData: AccountLoginData =>
-      checkPassword(accountData.userName, accountData.password).flatMap {
+      checkPassword(accountData.username, accountData.password).flatMap {
         case Right(account) =>
           for {
-            (sessionId, encryptedCookie) <- authAction.createSession(AccountInfo(account.username))
+            (sessionId, encryptedCookie) <- authAction.createSession(AccountInfo(account.id))
             _                            <- accountRepository.setTimezone(account, accountData.timezone)
           } yield {
-            val session = req.session + (Auth.sessionId -> sessionId)
+            val session = req.session + (AuthController.sessionId -> sessionId)
             Redirect(routes.RzRepositoryController.list())
               .withSession(session)
               .withCookies(encryptedCookie)
@@ -41,7 +41,7 @@ class AuthController @Inject() (
         case _ =>
           val newForm = FormErrors.error[AccountLoginData](
             AuthForms.signin.bindFromRequest(),
-            FormError("userName", Messages("signin.error.wrongcred"))
+            FormError("username", Messages("signin.error.wrongcred"))
           )
           Future(BadRequest(html.signin(newForm)))
       }
@@ -59,15 +59,15 @@ class AuthController @Inject() (
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
     // When we delete the session id, removing the session id is enough to render the
     // user info cookie unusable.
-    req.session.get(Auth.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
+    req.session.get(AuthController.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
 
     authAction.discardingSession {
       Redirect(routes.AuthController.index())
     }
   }
 
-  private def checkPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountRepository.getByUsernameOrEmail(userName).flatMap {
+  private def checkPassword(id: String, passwordHash: String): Future[Either[RzError, Account]] =
+    accountRepository.getById(id).flatMap {
       case Right(account: Account) =>
         accountRepository.getPassword(account).map {
           case Right(password: String) if HashedString(password).check(passwordHash) => Right(account)

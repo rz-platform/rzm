@@ -8,7 +8,7 @@ import play.api.data.validation.Constraints.pattern
 object AccountForms {
   val signupForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "userName"    -> text(maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
+      "username"    -> text(maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
       "timezone"    -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint),
@@ -18,7 +18,7 @@ object AccountForms {
 
   val accountEditForm: Form[AccountData] = Form(
     mapping(
-      "userName"    -> nonEmptyText,
+      "username"    -> nonEmptyText,
       "fullName"    -> optional(text(maxLength = 25)),
       "mailAddress" -> email
     )(AccountData.apply)(AccountData.unapply)
@@ -41,7 +41,7 @@ object AccountForms {
     val form: Map[String, Seq[String]] = data.getOrElse(collection.immutable.Map[String, Seq[String]]())
     form.map {
       case (key, values) if key == "mailAddress" => (key, values.map(_.trim.toLowerCase()))
-      case (key, values) if key == "userName"    => (key, values.map(_.trim.toLowerCase()))
+      case (key, values) if key == "username"    => (key, values.map(_.trim.toLowerCase()))
       case (key, values) if key == "fullName"    => (key, values.map(_.trim.capitalize))
       case (key, values)                         => (key, values)
     }
