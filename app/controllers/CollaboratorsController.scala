@@ -22,9 +22,11 @@ class CollaboratorsController @Inject() (
 )(implicit ec: ExecutionContext) {
   def page(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
-      metaGitRepository.getCollaborators(req.repository).map { list =>
-        Ok(html.repository.collaborators(addCollaboratorForm, list))
-      }
+      for {
+        list <- metaGitRepository.getCollaborators(req.repository)
+
+        f = list.filter(c => c.role != Role.Owner)
+      } yield Ok(html.repository.collaborators(addCollaboratorForm, f))
     }
 
   def add(accountName: String, repositoryName: String): Action[AnyContent] =

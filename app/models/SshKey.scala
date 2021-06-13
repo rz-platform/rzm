@@ -5,6 +5,7 @@ import infrastructure.RzDateTime
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import java.util.Base64
+
 case class SshKey(
   publicKey: String,
   createdAt: Long,
@@ -37,7 +38,7 @@ case class SshKey(
 
   lazy val createdAtDate: LocalDateTime = RzDateTime.fromTimestamp(createdAt)
 
-  def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.username, "key" -> publicKey)
+  def toMap = Map("createdAt" -> createdAt.toString, "owner" -> owner.id, "key" -> publicKey)
 
   def this(publicKey: String, owner: Account) = this(publicKey, RzDateTime.now, owner)
 }
@@ -45,9 +46,9 @@ case class SshKey(
 object SshKey {
   def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.sshKeyPrefix, id)
 
-  def make(m: Map[String, String], account: Account): Option[SshKey] =
+  def make(m: Map[String, String], owner: Account): Option[SshKey] =
     for {
       publicKey <- m.get("key")
       createdAt <- m.get("createdAt")
-    } yield SshKey(publicKey, RzDateTime.parseTimestamp(createdAt), account)
+    } yield SshKey(publicKey, RzDateTime.parseTimestamp(createdAt), owner)
 }

@@ -10,11 +10,17 @@ import scala.concurrent.{ ExecutionContext, Future }
 class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRepository)(
   implicit ec: ExecutionContext
 ) {
-  def createRepo(repo: RzRepository, role: Role, repoConfig: RzRepositoryConfig): Future[_] = Future {
+  def createRepo(
+    repo: RzRepository,
+    role: Role,
+    repoConfig: RzRepositoryConfig,
+    name: PersistentEntityString
+  ): Future[_] = Future {
     redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
         f.hmset(repo.key, repo.toMap)
         f.hmset(repoConfig.key, repoConfig.toMap)
+        f.set(name.key, name.value)
         f.zadd(AccountProjects.key(repo.owner), repo.createdAt.toDouble, repo.id)
         f.hset(RepositoryCollaborators.asKey(repo), repo.owner.id, role.perm)
       }
@@ -38,9 +44,19 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
   }
 
   def getByRepositoryId(id: String, owner: Account, client: RedisClient): Either[RzError, RzRepository] =
-    client.hgetall[String, String](id) match {
+    client.hgetall[String, String](RzRepository.key(id)) match {
       case Some(data) if data.nonEmpty => RzRepository.make(id, owner, data).toRight(ParsingError)
 
+      case _ => Left(NotFoundInRepository)
+    }
+
+  def getByRepositoryId(id: String, client: RedisClient): Either[RzError, RzRepository] =
+    client.hgetall[String, String](RzRepository.key(id)) match {
+      case Some(data) if data.nonEmpty && data.contains("owner") =>
+        accountRepository.getById(data.get("owner"), client) match {
+          case Right(owner) => RzRepository.make(id, owner, data).toRight(ParsingError)
+          case _            => Left(NotFoundInRepository)
+        }
       case _ => Left(NotFoundInRepository)
     }
 
@@ -61,7 +77,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
     redis.withClient { client =>
       client.zrange(AccountProjects.key(account)) match {
         case Some(r: List[String]) =>
-          r.map { id: String => getByRepositoryId(id, account, client) }.collect {
+          r.map { id: String => getByRepositoryId(id, client) }.collect {
             case Right(value) => value
           }
         case None => List()
@@ -72,7 +88,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
   def addCollaborator(collaborator: Account, role: String, repo: RzRepository): Future[_] = Future {
     redis.withClient { client =>
       client.pipeline { f: client.PipelineClient =>
-        f.hset(RepositoryCollaborators.asKey(repo), repo.owner.id, role)
+        f.hset(RepositoryCollaborators.asKey(repo), collaborator.id, role)
         f.zadd(AccountProjects.key(collaborator), RzDateTime.now.toDouble, repo.id)
       }
     }

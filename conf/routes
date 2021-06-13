@@ -80,7 +80,7 @@ GET /repositories/:account/:repository/:rev/archive controllers.RzRepositoryCont
 
 GET  /profile controllers.AccountController.accountPage()
 GET  /profile/image/:account controllers.AccountPictureController.accountPicture(account)
-POST /profile/image/ controllers.AccountPictureController.uploadAccountPicture()
+POST /profile/image controllers.AccountPictureController.uploadAccountPicture()
 POST /profile/image/delete controllers.AccountPictureController.removeAccountPicture()
 POST /profile controllers.AccountController.editAccount()
 POST /profile/password controllers.AccountController.updatePassword()

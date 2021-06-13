@@ -29,7 +29,7 @@ case class RzRepository(
 }
 
 object RzRepository {
-  def key(owner: Account, id: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoPrefix, owner.id, id)
+  def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoPrefix, id)
 
   val defaultBranch = "master"
 
@@ -86,25 +86,26 @@ object RzRepositoryConfig {
 }
 
 object LastOpenedFile {
-  def asEntity(account: Account, repo: RzRepository, fileName: String) = {
-    val id = PersistentEntity.key(account.id, repo.owner.id, repo.id)
+  def asEntity(account: Account, repo: RzRepository, fileName: String): PersistentEntityString = {
+    val id = PersistentEntity.key(account.id, repo.id)
     PersistentEntityString(RedisKeyPrefix.lastOpenedFilePrefix, id, fileName)
   }
-  def asKey(account: Account, repo: RzRepository) =
-    PersistentEntity.key(account.id, repo.owner.id, repo.id)
+  def asKey(account: Account, repo: RzRepository): String =
+    PersistentEntity.key(RedisKeyPrefix.lastOpenedFilePrefix, account.id, repo.id)
 
 }
 
 object RepositoryCollaborators {
-  def asKey(repo: RzRepository) = PersistentEntity.key(RedisKeyPrefix.rzRepoCollaboratorsPrefix, repo.id)
+  def asKey(repo: RzRepository): String = PersistentEntity.key(RedisKeyPrefix.rzRepoCollaboratorsPrefix, repo.id)
 }
 
 object RepositoryName {
-  def asEntity(repo: RzRepository) = {
-    val id = PersistentEntity.key(repo.owner.username, repo.name)
+  def asEntity(repo: RzRepository): PersistentEntityString = {
+    val id = PersistentEntity.key(repo.owner.id, repo.name)
     PersistentEntityString(RedisKeyPrefix.rzRepoNamePrefix, id, repo.id)
   }
-  def asKey(owner: String, name: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoNamePrefix, owner, name)
+  def asKey(ownerId: String, name: String): String =
+    PersistentEntity.key(RedisKeyPrefix.rzRepoNamePrefix, ownerId, name)
 }
 
 /**

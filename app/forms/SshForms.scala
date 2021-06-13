@@ -1,6 +1,6 @@
 package forms
 
-import models.{ RzRegex, SshKeyData, SshRemoveData }
+import models.{ SshKeyData, SshRemoveData }
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText }
 import play.api.data.validation.Constraints.pattern

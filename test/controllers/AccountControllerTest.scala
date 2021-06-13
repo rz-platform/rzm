@@ -1,7 +1,6 @@
 package controllers
 
 import infrastructure.RzDateTime
-import models.Account
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ await, defaultAwaitTimeout }
@@ -19,6 +18,7 @@ class AccountControllerTest extends GenericControllerTest {
               "username"    -> username,
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
+              "timezone"    -> RzDateTime.defaultTz.toString,
               "mailAddress" -> s"$getRandomString@rzm.dev"
             )
         )
@@ -50,7 +50,7 @@ class AccountControllerTest extends GenericControllerTest {
         val result = await(accountController.saveAccount().apply(request))
         result.header.status must equal(303)
 
-        val a = await(accountRepository.getById(Account.id(username.toLowerCase)))
+        val a = await(accountRepository.getByName(username.toLowerCase))
         a.isRight must equal(true)
       }
     }

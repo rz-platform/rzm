@@ -1,6 +1,6 @@
 package controllers
 
-import models.{ Role, RzRepository }
+import models.Role
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -39,26 +39,25 @@ class CollaboratorControllerTest extends GenericControllerTest {
   }
 
   "Add collaborator successfully" in {
-    val owner    = createAccount()
-    val repoName = getRandomString
-    createRepository(repoName, owner)
+    val owner        = createAccount()
+    val repoName     = getRandomString
+    val (_, repo)    = createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.name)
+    val result       = addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.perm.toString)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
-    r.isRight must equal(true)
-    // TODO: check
+    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    r.nonEmpty must equal(true)
   }
 
   "Add collaborator with wrong data" in {
-    val owner    = createAccount()
-    val repoName = getRandomString
-    createRepository(repoName, owner)
+    val owner        = createAccount()
+    val repoName     = getRandomString
+    val (_, repo)    = createRepository(repoName, owner)
     val collaborator = createAccount()
-    addCollaborator(repoName, owner, "nonexistentusername", Role.Editor.name)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
-    r.isRight must equal(false)
+    addCollaborator(repoName, owner, "nonexistentusername", Role.Editor.perm.toString)
+    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    r.nonEmpty must equal(false)
   }
 
   "Add collaborator that already exists" in {
@@ -66,27 +65,27 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val repoName = getRandomString
     createRepository(repoName, owner)
     val collaborator = createAccount()
-    val result       = addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.name)
+    val result       = addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.perm.toString)
 
     result.header.status must equal(303)
 
-    addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.name)
+    addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.perm.toString)
     result.header.status must equal(303)
   }
 
   "Remove collaborator" in {
-    val owner    = createAccount()
-    val repoName = getRandomString
-    createRepository(repoName, owner)
+    val owner        = createAccount()
+    val repoName     = getRandomString
+    val (_, repo)    = createRepository(repoName, owner)
     val collaborator = createAccount()
 
-    addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.name)
+    addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.perm.toString)
 
     val result = removeCollaborator(repoName, owner, collaborator.a.username)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a, new RzRepository(owner.a, repoName)))
-    r.isRight must equal(false)
+    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    r.nonEmpty must equal(false)
   }
 
   "Remove collaborator with non-existent userid" in {

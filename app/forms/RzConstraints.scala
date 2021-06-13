@@ -1,8 +1,18 @@
 package forms
 
 import infrastructure.RzDateTime
-import models.ForbiddenSymbols
 import play.api.data.validation.{ Constraint, Invalid, Valid, ValidationError }
+
+object ForbiddenSymbols {
+  private val pathForbiddenSymbols: List[String]    = List("?", ":", "#", "&", "..", "$", "%")
+  private val generalForbiddenSymbols: List[String] = pathForbiddenSymbols :+ "/"
+
+  def isPathValid(itemName: String): Boolean = pathForbiddenSymbols.exists(itemName contains _)
+
+  def isNameValid(itemName: String): Boolean = generalForbiddenSymbols.exists(itemName contains _)
+
+  override def toString: String = generalForbiddenSymbols.mkString("") // for testing purposes
+}
 
 object RzConstraints {
   val timeZoneConstraint: Constraint[String] = Constraint({ tz: String =>

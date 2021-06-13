@@ -1,6 +1,6 @@
 package controllers
 
-import play.api.test.Helpers.{ LOCATION, await, defaultAwaitTimeout }
+import play.api.test.Helpers.{ await, defaultAwaitTimeout, LOCATION }
 
 class RzRepositoryTest extends GenericControllerTest {
   "Create Repository" in {

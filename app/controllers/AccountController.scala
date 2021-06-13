@@ -29,6 +29,20 @@ class AccountController @Inject() (
 
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 
+  private def credentialsIsAvailable(data: AccountRegistrationData): Future[Boolean] =
+    for {
+      account: Either[RzError, Account] <- accountRepository.getByUsernameOrEmail(data.username)
+      email: Either[RzError, Account]   <- accountRepository.getByUsernameOrEmail(data.email)
+    } yield account.isLeft && email.isLeft
+
+  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
+    if (currentEmail != newEmail) {
+      accountRepository.getByEmail(newEmail).flatMap {
+        case Right(_) => Future(false)
+        case _        => Future(true)
+      }
+    } else Future(true)
+
   def saveAccount: Action[AnyContent] = Action.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
     val cleanData    = clear(incomingData)
@@ -37,8 +51,8 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signup(formWithErrors, zoneIds))),
         data =>
-          accountRepository.getByUsernameOrEmail(data.username).flatMap { // TODO accountData.email
-            case Left(NotFoundInRepository) =>
+          credentialsIsAvailable(data).flatMap {
+            case true =>
               val account  = new Account(data)
               val username = AccountUsername.asEntity(account)
               val email    = AccountEmail.asEntity(account)
@@ -58,19 +72,11 @@ class AccountController @Inject() (
   }
 
   def accountPage: Action[AnyContent] = authAction.async { implicit request =>
-    accountRepository.getById(request.account.key).flatMap {
+    accountRepository.getById(request.account.id).flatMap {
       case Right(account) => Future(Ok(html.profile(filledAccountEditForm(account), updatePasswordForm, zoneIds)))
       case _              => Future(errorHandler.clientError(request, msg = request.messages("error.notfound")))
     }
   }
-
-  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
-    if (currentEmail != newEmail) {
-      accountRepository.getById(newEmail).flatMap { // TODO
-        case Right(_) => Future(false)
-        case _        => Future(true)
-      }
-    } else Future(true)
 
   def editAccount: Action[AnyContent] = authAction.async { implicit req =>
     accountEditForm

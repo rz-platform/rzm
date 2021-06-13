@@ -5,10 +5,14 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints.pattern
 
+import scala.util.matching.Regex
+
 object AccountForms {
+  val onlyAlphabet: Regex = "^[A-Za-z\\d_\\-]+$".r
+
   val signupForm: Form[AccountRegistrationData] = Form(
     mapping(
-      "username"    -> text(maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
+      "username"    -> text(maxLength = 36).verifying(pattern(onlyAlphabet)),
       "fullName"    -> optional(text(maxLength = 36)),
       "password"    -> nonEmptyText(maxLength = 255),
       "timezone"    -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint),

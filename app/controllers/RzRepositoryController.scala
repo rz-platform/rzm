@@ -39,9 +39,10 @@ class RzRepositoryController @Inject() (
           metaGitRepository.getByOwnerAndName(req.account.username, repository.name).flatMap {
             case Left(NotFoundInRepository) =>
               val repo = new RzRepository(req.account, repository.name)
+              val name = RepositoryName.asEntity(repo)
               val conf = RzRepositoryConfig.makeDefault(repo, None, None, None)
               for {
-                _ <- metaGitRepository.createRepo(repo, Role.Owner, conf)
+                _ <- metaGitRepository.createRepo(repo, Role.Owner, conf, name)
                 _ <- git.initRepo(repo)
               } yield Redirect(
                 routes.TemplateController.overview(req.account.username, repo.name)

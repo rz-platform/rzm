@@ -2,7 +2,7 @@ package controllers
 
 import actions.AuthenticatedAction
 import forms.SshForms._
-import models.{ SshKey, SshRemoveData }
+import models.SshKey
 import play.api.Configuration
 import play.api.i18n.Messages
 import play.api.mvc.{ Action, AnyContent, MessagesAbstractController, MessagesControllerComponents }
@@ -16,7 +16,8 @@ class SshKeyController @Inject() (
   accountService: AccountRepository,
   authAction: AuthenticatedAction,
   config: Configuration,
-  cc: MessagesControllerComponents
+  cc: MessagesControllerComponents,
+  errorHandler: ErrorHandler
 )(
   implicit ec: ExecutionContext
 ) extends MessagesAbstractController(cc) {
@@ -59,11 +60,15 @@ class SshKeyController @Inject() (
           accountService.listSshKeys(request.account).map { list =>
             Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
           },
-        (sshKeyIdData: SshRemoveData) =>
-          for {
-            _ <- accountService.deleteSshKey(request.account, sshKeyIdData.id)
-          } yield Redirect(routes.SshKeyController.page())
-            .flashing("success" -> Messages("profile.ssh.notification.removed")) // TODO: check ownership
+        data =>
+          accountService.getSshKey(data.id).flatMap {
+            case Some(key) if key.owner.id == request.account.id =>
+              for {
+                _ <- accountService.deleteSshKey(request.account, data.id)
+              } yield Redirect(routes.SshKeyController.page())
+                .flashing("success" -> Messages("profile.ssh.notification.removed"))
+            case _ => Future(errorHandler.clientError(request, msg = request.messages("error.accessdenied")))
+          }
       )
   }
 
