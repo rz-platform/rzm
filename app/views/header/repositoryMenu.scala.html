@@ -1,7 +1,7 @@
-@(page: RepositoryPage)(implicit request: RepositoryRequestHeader)
+@(page: RzRepository.Page)(implicit request: RepositoryRequestHeader)
 
 @creatorButton() = {
-<li class="rz-menu-item @if(page == ConstructorPage) { rz-menu-selected }">
+<li class="rz-menu-item @if(page == RzRepository.Page.Constructor) { rz-menu-selected }">
 <a
   href="@routes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
   class="rz-menu-link"
@@ -13,7 +13,7 @@
 <div class="rz-menu rz-menu-horizontal">
   <span class="repository-name">@request.repository.owner.username / @request.repository.name → </span>
   <ul class="rz-menu-list">
-    <li class="rz-menu-item @if(page == FileViewPage) { rz-menu-selected }">
+    <li class="rz-menu-item @if(page == RzRepository.Page.FileView) { rz-menu-selected }">
       <a
         href="@routes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
@@ -22,7 +22,7 @@
     </li>
     @request.role match { 
     case Role.Owner => {
-    <li class="rz-menu-item @if(page == CollaboratorsPage) { rz-menu-selected }">
+    <li class="rz-menu-item @if(page == RzRepository.Page.Collaborators) { rz-menu-selected }">
       <a
         href="@routes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
         class="rz-menu-link"
@@ -39,7 +39,7 @@
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
-    <li class="rz-menu-item @if(page == CommitHistoryPage) { rz-menu-selected }">
+    <li class="rz-menu-item @if(page == RzRepository.Page.CommitHistory) { rz-menu-selected }">
       <a
         href="@routes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
         class="rz-menu-link">

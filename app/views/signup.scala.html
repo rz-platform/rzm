@@ -10,8 +10,10 @@
   @CSRF.formField 
   @inputText(signupForm("username"), Symbol("_label") -> req.messages("signup.form.username"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
   @inputPassword(signupForm("password"), Symbol("_label") ->
-  req.messages("signup.form.password"), Symbol("_help") -> "") @inputText(signupForm("mailAddress"),
-  Symbol("_label") -> req.messages("signup.form.email"), Symbol("_help") -> "") @inputText(signupForm("fullName"),
+  req.messages("signup.form.password"), Symbol("_help") -> "") 
+  @inputText(signupForm("mailAddress"),
+  Symbol("_label") -> req.messages("signup.form.email"), Symbol("_help") -> "") 
+  @inputText(signupForm("fullName"),
   Symbol("_label") -> req.messages("signup.form.fullname"), Symbol("_help") -> "")
 
   <input type="hidden" name="timezone" id="timezone" value="@RzDateTime.defaultTz.toString" />

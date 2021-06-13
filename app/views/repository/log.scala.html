@@ -1,7 +1,7 @@
 @(commitLog: Seq[CommitInfo], rev:String, hasNext:Boolean, page:Int)(implicit request: RepositoryRequestHeader)
 
 @base.auth(request.messages("repository.log.title")){
-@header.repositoryMenu(CommitHistoryPage)
+@header.repositoryMenu(RzRepository.Page.CommitHistory)
 
 <h2>@request.messages("repository.log.header")</h2>
 

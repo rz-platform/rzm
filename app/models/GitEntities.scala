@@ -44,6 +44,17 @@ object RzRepository {
       RzDateTime.parseTimestamp(createdAt),
       RzDateTime.parseTimestamp(data.get("updatedAt"))
     )
+
+  sealed trait Page
+  object Page {
+    case object FileView      extends Page
+    case object Collaborators extends Page
+    case object CommitHistory extends Page
+    case object FileUpload    extends Page
+    case object NewFile       extends Page
+    case object Constructor   extends Page
+  }
+
 }
 
 case class RzRepositoryConfig(

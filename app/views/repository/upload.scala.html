@@ -2,7 +2,7 @@
 @import views.html.helper._
 
 @base.auth(request.messages("repository.upload.title")){
-@header.repositoryMenu(FileUploadPage)
+@header.repositoryMenu(RzRepository.Page.FileUpload)
 <div class="upload-page">
   <h1> @request.messages("repository.upload.title") </h1>
   @if(!path.isEmpty) {
