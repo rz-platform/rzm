@@ -2,7 +2,7 @@
 @import views.html.helper._
 
 @base.auth(request.messages("repository.upload.title")){
-@header.repositoryMenu(FileUploadPage)
+@header.repositoryMenu(RzRepository.Page.FileUpload)
 <div class="upload-page">
   <h1> @request.messages("repository.upload.title") </h1>
   @if(!path.isEmpty) {
@@ -10,7 +10,7 @@
   } else {
   <p> @request.messages("repository.upload.messageRoot") </p>
   } 
-  @form(routes.FileUploadController.upload(request.repository.owner.userName, request.repository.name,
+  @form(routes.FileUploadController.upload(request.repository.owner.username, request.repository.name,
   rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ 
   @CSRF.formField
 

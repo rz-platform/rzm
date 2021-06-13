@@ -46,11 +46,11 @@ class GenericControllerTest
   def rzGitRepository: RzMetaGitRepository = app.injector.instanceOf[RzMetaGitRepository]
 
   def gitEntitiesController: RzRepositoryController = app.injector.instanceOf[RzRepositoryController]
-  def git: GitService                            = app.injector.instanceOf[GitService]
+  def git: GitService                               = app.injector.instanceOf[GitService]
 
   def authAction: AuthenticatedAction = app.injector.instanceOf[AuthenticatedAction]
 
-  val sessionName: String = Auth.sessionName
+  val sessionName: String = AuthController.sessionName
 
   def createAccount(): AuthorizedAccount = {
     val data =
@@ -64,18 +64,22 @@ class GenericControllerTest
     val request = addCSRFToken(
       FakeRequest(routes.AccountController.saveAccount())
         .withFormUrlEncodedBody(
-          "userName"    -> data.userName,
-          "fullName"    -> data.fullName.get,
+          "username"    -> data.username,
+          "fullname"    -> data.fullName.get,
           "password"    -> data.password,
           "timezone"    -> RzDateTime.defaultTz.toString,
           "mailAddress" -> data.email
         )
     )
     await(accountController.saveAccount().apply(request))
-
-    val (sessionId, cookie) = await(authAction.createSession(UserInfo(data.userName)))
-    val session             = Auth.sessionId -> sessionId
-    AuthorizedAccount(new Account(data), session, cookie)
+    val account: Either[RzError, Account] = await(accountRepository.getByName(data.username))
+    account match {
+      case Right(account) =>
+        val (sessionId, cookie) = await(authAction.createSession(AccountInfo(account.id)))
+        val session             = AuthController.sessionId -> sessionId
+        AuthorizedAccount(account, session, cookie)
+      case _ => AuthorizedAccount(new Account(data), AuthController.sessionId -> "", null)
+    }
   }
 
   def createRepository(
@@ -88,8 +92,12 @@ class GenericControllerTest
         .withSession(owner.s)
         .withCookies(owner.c)
     )
-    val result = await(gitEntitiesController.save().apply(request))
-    (result, new RzRepository(owner.a, name))
+    val result                              = await(gitEntitiesController.save().apply(request))
+    val repo: Either[RzError, RzRepository] = await(rzGitRepository.getByOwnerAndName(owner.a.username, name))
+    repo match {
+      case Right(repo) => (result, repo)
+      case _           => (result, new RzRepository(owner.a, name))
+    }
   }
 
 }

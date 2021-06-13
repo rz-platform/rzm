@@ -1,10 +1,11 @@
 package models
 
+import org.abstractj.kalium.NaCl.Sodium.CRYPTO_SECRETBOX_XSALSA20POLY1305_NONCEBYTES
 import org.abstractj.kalium.crypto.Random
 
 /**
- * Nonces are used to ensure that services.encryption is completely random.
- * They should be generated once per services.encryption.
+ * Nonces are used to ensure that encryption is completely random.
+ * They should be generated once per encryption.
  *
  * You can store and display nonces -- they are not confidential -- but you must never reuse them, ever.
  */
@@ -18,10 +19,8 @@ object Nonce {
   /**
    * Creates a random nonce value.
    */
-  def createNonce(): Nonce = {
-    import org.abstractj.kalium.NaCl.Sodium.CRYPTO_SECRETBOX_XSALSA20POLY1305_NONCEBYTES
+  def createNonce(): Nonce =
     new Nonce(random.randomBytes(CRYPTO_SECRETBOX_XSALSA20POLY1305_NONCEBYTES))
-  }
 
   /**
    * Reconstitute a nonce that has been stored with a ciphertext.

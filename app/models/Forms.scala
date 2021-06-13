@@ -10,20 +10,20 @@ import java.nio.file.Path
 // Forms related to auth
 
 case class AccountRegistrationData(
-  userName: String,
+  username: String,
   fullName: Option[String],
   password: String,
   timezone: String,
   email: String
 )
 
-case class AccountData(userName: String, fullName: Option[String], email: String)
+case class AccountData(username: String, fullName: Option[String], email: String)
 
 case class RepositoryData(name: String, description: Option[String])
 
 case class PasswordData(oldPassword: String, newPassword: String)
 
-case class AccountLoginData(userName: String, password: String, timezone: String)
+case class AccountLoginData(username: String, password: String, timezone: String)
 
 case class TimeZoneData(tz: String)
 

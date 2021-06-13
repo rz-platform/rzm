@@ -48,7 +48,7 @@
         @tpl.description.map { text =>
           <p> @{text} </p>
         }
-        @form(routes.TemplateController.build(req.repository.owner.userName, req.repository.name), Symbol("class")->"rz-form rz-form-stacked rz-form-template") {
+        @form(routes.TemplateController.build(req.repository.owner.username, req.repository.name), Symbol("class")->"rz-form rz-form-stacked rz-form-template") {
           @CSRF.formField
             <div class="rz-controls">
                 <button type="submit" class="rz-button rz-button-primary">Create</button>
@@ -63,7 +63,7 @@
 }
 
 @base.auth(req.messages("repository.creator.title")){
-@header.repositoryMenu(ConstructorPage)
+@header.repositoryMenu(RzRepository.Page.Constructor)
 @header.alerts()
 
 <div class="template-page">
@@ -73,7 +73,7 @@
       <li class="rz-menu-item">
         <a 
           class='rz-menu-link @if(currentKey.getOrElse("").equals(key)) { rz-menu-selected }'
-          href="@routes.TemplateController.view(req.repository.owner.userName, req.repository.name, key)">@template.name</a>
+          href="@routes.TemplateController.view(req.repository.owner.username, req.repository.name, key)">@template.name</a>
       </li>
       }
     </ul>

@@ -12,7 +12,7 @@ case class FileNode(data: String, incrementalPath: String) {
 
   val hash: String = incrementalPath.hashCode.toString
 
-  val isRoot: Boolean = data == FileNames.root
+  val isRoot: Boolean = data == FileTree.root
 
   def isFile: Boolean = folders.isEmpty && files.isEmpty
 
@@ -53,6 +53,10 @@ case class FileTree(root: FileNode) {
 }
 
 object FileTree {
-  val excluded: Array[String] = Array(FileNames.keep, FileNames.root)
-  val maxDepth                = 4
+  val root = "."
+  val keep = ".gitkeep"
+
+  val excluded: Array[String] = Array(keep, root)
+
+  val maxDepth = 4
 }

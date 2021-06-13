@@ -1,6 +1,7 @@
 package controllers
 
-import models.{ ForbiddenSymbols, RepositoryGitData, RzRepository }
+import forms.ForbiddenSymbols
+import models.{ RepositoryGitData, RzRepository }
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -9,9 +10,8 @@ import play.api.test.Helpers.{ await, call, defaultAwaitTimeout, writeableOf_Any
 import scala.concurrent.Future
 
 class FileTreeControllerTest extends GenericControllerTest {
-  def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData = {
-    await(git.fileList(repository, RzRepository.defaultBranch ,path)).getOrElse(RepositoryGitData(List(), None))
-  }
+  def listFileInRepo(repository: RzRepository, path: String): RepositoryGitData =
+    await(git.fileList(repository, RzRepository.defaultBranch, path)).getOrElse(RepositoryGitData(List(), None))
 
   def createNewItem(
     name: String,
@@ -33,7 +33,7 @@ class FileTreeControllerTest extends GenericControllerTest {
         .withCookies(creator.c)
     )
 
-    val result: Future[Result] = call(fileEditController.addNewItem(creator.a.userName, repositoryName), newFileRequest)
+    val result: Future[Result] = call(fileEditController.addNewItem(creator.a.username, repositoryName), newFileRequest)
 
     await(result)
   }

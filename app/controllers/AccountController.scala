@@ -29,6 +29,20 @@ class AccountController @Inject() (
 
   def signup: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signup(signupForm, zoneIds))))
 
+  private def credentialsIsAvailable(data: AccountRegistrationData): Future[Boolean] =
+    for {
+      account: Either[RzError, Account] <- accountRepository.getByUsernameOrEmail(data.username)
+      email: Either[RzError, Account]   <- accountRepository.getByUsernameOrEmail(data.email)
+    } yield account.isLeft && email.isLeft
+
+  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
+    if (currentEmail != newEmail) {
+      accountRepository.getByEmail(newEmail).flatMap {
+        case Right(_) => Future(false)
+        case _        => Future(true)
+      }
+    } else Future(true)
+
   def saveAccount: Action[AnyContent] = Action.async { implicit request =>
     val incomingData = request.body.asFormUrlEncoded
     val cleanData    = clear(incomingData)
@@ -37,18 +51,20 @@ class AccountController @Inject() (
       .fold(
         formWithErrors => Future(BadRequest(html.signup(formWithErrors, zoneIds))),
         data =>
-          accountRepository.getByUsernameOrEmail(data.userName).flatMap { // TODO accountData.email
-            case Left(NotFoundInRepository) =>
+          credentialsIsAvailable(data).flatMap {
+            case true =>
               val account  = new Account(data)
-              val password = HashedString.fromString(data.password)
+              val username = AccountUsername.asEntity(account)
+              val email    = AccountEmail.asEntity(account)
+              val password = AccountPassword.asEntity(account, HashedString.fromString(data.password).toString)
               for {
-                _      <- accountRepository.set(account, password)
+                _      <- accountRepository.set(account, username, email, password)
                 result <- authAction.authorize(account, request.session)
               } yield result
             case _ =>
               val newForm = FormErrors.error[AccountRegistrationData](
                 signupForm.bindFromRequest(),
-                FormError("userName", Messages("signup.error.alreadyexists"))
+                FormError("username", Messages("signup.error.alreadyexists"))
               )
               Future(BadRequest(html.signup(newForm, zoneIds)))
           }
@@ -62,14 +78,6 @@ class AccountController @Inject() (
     }
   }
 
-  private def isEmailAvailable(currentEmail: String, newEmail: String): Future[Boolean] =
-    if (currentEmail != newEmail) {
-      accountRepository.getById(newEmail).flatMap { // TODO
-        case Right(_) => Future(false)
-        case _        => Future(true)
-      }
-    } else Future(true)
-
   def editAccount: Action[AnyContent] = authAction.async { implicit req =>
     accountEditForm
       .bindFromRequest()
@@ -79,7 +87,7 @@ class AccountController @Inject() (
           isEmailAvailable(req.account.email, accountData.email).flatMap {
             case true =>
               for {
-                _ <- accountRepository.update(req.account, req.account.fromForm(accountData))
+                _ <- accountRepository.update(req.account, req.account.fromForm(req.account.id, accountData))
               } yield Ok(html.profile(accountEditForm.bindFromRequest(), updatePasswordForm, zoneIds))
             case false =>
               val newForm = FormErrors.error[AccountData](
@@ -113,8 +121,9 @@ class AccountController @Inject() (
           accountRepository.getPassword(req.account).flatMap {
             case Right(passwordHash: String) if HashedString(passwordHash).check(passwordData.newPassword) =>
               val newPasswordHash = HashedString.fromString(passwordData.newPassword).toString
+              val password        = AccountPassword.asEntity(req.account, newPasswordHash)
               for {
-                _ <- accountRepository.setPassword(req.account, newPasswordHash)
+                _ <- accountRepository.setPassword(password)
               } yield Redirect(routes.AccountController.accountPage())
                 .flashing("success" -> Messages("profile.flash.passupdated"))
             case _ =>

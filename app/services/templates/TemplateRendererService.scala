@@ -24,7 +24,7 @@ class TemplateRendererService @Inject() (templateRepository: TemplateRepository)
   val supportedTextExtensions = List("txt", "tex", "json", "bib")
 
   /*
-   * Compile services.templates.
+   * Compile templates.
    * The implementation uses a cache for previously compiled Templates. By default,
    * if the resource has been compiled previously, and no changes have occurred
    * since in the resource, compilation will be skipped and the previously created

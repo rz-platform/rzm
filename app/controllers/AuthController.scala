@@ -20,6 +20,8 @@ class AuthController @Inject() (
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
+  private val logger = play.api.Logger(this.getClass)
+
   def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(AuthForms.signin))))
 
   def index: Action[AnyContent] =
@@ -27,13 +29,13 @@ class AuthController @Inject() (
 
   def login: Action[AnyContent] = Action.async { implicit req =>
     val successFunc: AccountLoginData => Future[Result] = { accountData: AccountLoginData =>
-      checkPassword(accountData.userName, accountData.password).flatMap {
+      checkPassword(accountData.username, accountData.password).flatMap {
         case Right(account) =>
           for {
-            (sessionId, encryptedCookie) <- authAction.createSession(UserInfo(account.userName))
+            (sessionId, encryptedCookie) <- authAction.createSession(AccountInfo(account.id))
             _                            <- accountRepository.setTimezone(account, accountData.timezone)
           } yield {
-            val session = req.session + (Auth.sessionId -> sessionId)
+            val session = req.session + (AuthController.sessionId -> sessionId)
             Redirect(routes.RzRepositoryController.list())
               .withSession(session)
               .withCookies(encryptedCookie)
@@ -41,7 +43,7 @@ class AuthController @Inject() (
         case _ =>
           val newForm = FormErrors.error[AccountLoginData](
             AuthForms.signin.bindFromRequest(),
-            FormError("userName", Messages("signin.error.wrongcred"))
+            FormError("username", Messages("signin.error.wrongcred"))
           )
           Future(BadRequest(html.signin(newForm)))
       }
@@ -59,20 +61,28 @@ class AuthController @Inject() (
   def logout: Action[AnyContent] = Action { implicit req: Request[AnyContent] =>
     // When we delete the session id, removing the session id is enough to render the
     // user info cookie unusable.
-    req.session.get(Auth.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
+    req.session.get(AuthController.sessionId).foreach(sessionId => sessionRepository.delete(sessionId))
 
     authAction.discardingSession {
       Redirect(routes.AuthController.index())
     }
   }
 
-  private def checkPassword(userName: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountRepository.getByUsernameOrEmail(userName).flatMap {
+  private def checkPassword(nameOrEmail: String, password: String): Future[Either[RzError, Account]] =
+    accountRepository.getByUsernameOrEmail(nameOrEmail).flatMap {
       case Right(account: Account) =>
         accountRepository.getPassword(account).map {
-          case Right(password: String) if HashedString(password).check(passwordHash) => Right(account)
-          case _                                                                     => Left(AccessDenied)
+          case Right(passwordHash: String) if HashedString(passwordHash).check(password) => Right(account)
+          case _                                                                         => Left(AccessDenied)
         }
       case Left(e) => Future(Left(e))
     }
+}
+
+object AuthController {
+  val sessionId = "sessionId"
+
+  val userInfoCookie = "accountInfo"
+
+  val sessionName = "accountId"
 }

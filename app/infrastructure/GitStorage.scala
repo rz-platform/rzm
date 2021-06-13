@@ -28,7 +28,7 @@ class GitStorage @Inject() (config: Configuration) {
   private val logger  = play.api.Logger(this.getClass)
   private val gitHome = config.get[String]("play.server.git.path")
 
-  def repositoryDir(repo: RzRepository): File = new File(s"$gitHome/${repo.owner.userName}/${repo.name}.git")
+  def repositoryDir(repo: RzRepository): File = new File(s"$gitHome/${repo.owner.username}/${repo.name}.git")
 
   implicit val objectDatabaseReleasable: Releasable[ObjectDatabase] = (resource: ObjectDatabase) => resource.close()
   def isText(content: Array[Byte]): Boolean                         = !content.contains(0)
@@ -346,7 +346,7 @@ class GitStorage @Inject() (config: Configuration) {
         headId,
         builder.getDirCache.writeTree(inserter),
         Constants.HEAD,
-        account.userName,
+        account.username,
         account.email,
         commitName
       )

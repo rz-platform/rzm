@@ -8,7 +8,7 @@
   @header.alerts() 
   @form(routes.AuthController.login(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
-  @inputText(signinForm("userName"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("autofocus") -> "")
+  @inputText(signinForm("username"), Symbol("_label") -> "User login", Symbol("_help") -> "", Symbol("autofocus") -> "")
   @inputPassword(signinForm("password"), Symbol("_label") -> "Password", Symbol("_help") -> "")
   <input type="hidden" name="timezone" id="timezone" value="@RzDateTime.defaultTz.toString" />
 

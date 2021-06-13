@@ -1,6 +1,6 @@
 package forms
 
-import models.{ RepositoryData, RzRegex }
+import models.{ RepositoryData }
 import play.api.data.Form
 import play.api.data.Forms.{ mapping, nonEmptyText, optional, text }
 import play.api.data.validation.Constraints.pattern
@@ -8,7 +8,7 @@ import play.api.data.validation.Constraints.pattern
 object RzRepositoryForms {
   val createRepositoryForm: Form[RepositoryData] = Form(
     mapping(
-      "name"        -> nonEmptyText(minLength = 1, maxLength = 36).verifying(pattern(RzRegex.onlyAlphabet)),
+      "name"        -> nonEmptyText(minLength = 1, maxLength = 36).verifying(pattern(AccountForms.onlyAlphabet)),
       "description" -> optional(text(maxLength = 255))
     )(RepositoryData.apply)(RepositoryData.unapply)
   )

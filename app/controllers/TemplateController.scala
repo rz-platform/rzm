@@ -28,7 +28,9 @@ class TemplateController @Inject() (
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)
 
-  renderer.compile(templateRepository.list.values)
+  if (templateRepository.list.nonEmpty) {
+    renderer.compile(templateRepository.list.values)
+  }
 
   val createForm: Form[TemplateData] = Form(
     mapping(
@@ -49,7 +51,7 @@ class TemplateController @Inject() (
       templateRepository.list.keySet.headOption match {
         case Some(templateId) =>
           Future(
-            Redirect(routes.TemplateController.view(req.repository.owner.userName, req.repository.name, templateId))
+            Redirect(routes.TemplateController.view(req.repository.owner.username, req.repository.name, templateId))
           )
         case _ => Future(Ok(html.repository.creator(templateRepository.list, None, None)))
       }
@@ -87,7 +89,7 @@ class TemplateController @Inject() (
       val badRequest = Future(BadRequest(html.repository.creator(templateRepository.list, None, None)))
       val success = Redirect(
         routes.FileViewController
-          .emptyTree(req.repository.owner.userName, req.repository.name, RzRepository.defaultBranch)
+          .emptyTree(req.repository.owner.username, req.repository.name, RzRepository.defaultBranch)
       )
 
       val ctx: Map[String, Seq[String]] = req.body.asFormUrlEncoded.getOrElse(Map())

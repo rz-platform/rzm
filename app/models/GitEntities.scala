@@ -5,52 +5,56 @@ import org.eclipse.jgit.lib.ObjectId
 
 import java.io.InputStream
 import java.time.{ LocalDateTime, ZoneId }
+
 case class RzRepository(
+  id: String,
   owner: Account,
   name: String,
   createdAt: Long,
   updatedAt: Option[Long]
-) {
-  val id: String = IdTable.rzRepoPrefix + owner.userName + ":" + name
+) extends PersistentEntityMap {
+  val prefix: String = RedisKeyPrefix.rzRepoPrefix
 
-  val collaboratorsListId: String = IdTable.rzRepoCollaboratorsPrefix + owner.userName + ":" + name
-  val configurationId: String     = IdTable.rzRepoConfPrefix + owner.userName + ":" + name
+  def http(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.username}/$name.git"
 
-  def httpUrl(request: RepositoryRequestHeader): String = s"https://${request.host}/${owner.userName}/$name.git"
-
-  def sshUrl(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.userName}/$name.git"
+  def ssh(request: RepositoryRequestHeader): String = s"git@${request.host}:${owner.username}/$name.git"
 
   val toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
     val updatedAt = if (this.updatedAt.nonEmpty) Some("updatedAt" -> this.updatedAt.get.toString) else None
-    (Seq("createdAt" -> createdAt.toString) ++ updatedAt).toMap
+    (Seq("createdAt" -> createdAt.toString, "name" -> name, "owner" -> owner.id) ++ updatedAt).toMap
   }
 
-  def this(owner: Account, name: String) = this(owner, name, RzDateTime.now, None)
+  def this(owner: Account, name: String) = this(PersistentEntity.id, owner, name, RzDateTime.now, None)
 }
 
 object RzRepository {
-  def id(owner: String, name: String): String = IdTable.rzRepoPrefix + owner + ":" + name
+  def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.rzRepoPrefix, id)
 
   val defaultBranch = "master"
 
-  def parseId(id: String): (String, String) = {
-    val s = id.split(":")
-    (s(1), s(2))
-  }
-
-  def make(name: String, owner: Account, data: Map[String, String]): Either[RzError, RzRepository] =
-    (for {
+  def make(id: String, owner: Account, data: Map[String, String]): Option[RzRepository] =
+    for {
       createdAt <- data.get("createdAt")
+      name      <- data.get("name")
     } yield RzRepository(
+      id,
       owner,
       name,
       RzDateTime.parseTimestamp(createdAt),
       RzDateTime.parseTimestamp(data.get("updatedAt"))
-    )) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+    )
+
+  sealed trait Page
+  object Page {
+    case object FileView      extends Page
+    case object Collaborators extends Page
+    case object CommitHistory extends Page
+    case object FileUpload    extends Page
+    case object NewFile       extends Page
+    case object Constructor   extends Page
+  }
+
 }
 
 case class RzRepositoryConfig(
@@ -58,8 +62,10 @@ case class RzRepositoryConfig(
   entrypoint: Option[String],
   compiler: RzCompiler,
   bibliography: RzBib
-) {
-  val id: String = repo.configurationId
+) extends PersistentEntityMap {
+  val id: String     = repo.id
+  val prefix: String = RedisKeyPrefix.rzRepoConfPrefix
+
   val toMap: Map[String, String] = {
     // take advantage of the iterable nature of Option
     val entrypoint = if (this.entrypoint.nonEmpty) Some("entrypoint" -> this.entrypoint.get) else None
@@ -76,8 +82,8 @@ object RzRepositoryConfig {
   ): RzRepositoryConfig =
     RzRepositoryConfig(repository, entrypoint, compiler.getOrElse(PdfLatex), bibliography.getOrElse(BibLatex))
 
-  def make(repository: RzRepository, data: Map[String, String]): Either[RzError, RzRepositoryConfig] =
-    (for {
+  def make(repository: RzRepository, data: Map[String, String]): Option[RzRepositoryConfig] =
+    for {
       compilerId     <- data.get("compiler")
       bibliographyId <- data.get("bibliography")
       compiler       <- RzCompiler.make(compilerId)
@@ -87,15 +93,30 @@ object RzRepositoryConfig {
       data.get("entrypoint"),
       compiler,
       bib
-    )) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+    )
 }
 
 object LastOpenedFile {
-  def id(account: Account, repo: RzRepository): String =
-    IdTable.lastOpenedFilePrefix + account.userName + ":" + repo.owner.userName + ":" + repo.name
+  def asEntity(account: Account, repo: RzRepository, fileName: String): PersistentEntityString = {
+    val id = PersistentEntity.key(account.id, repo.id)
+    PersistentEntityString(RedisKeyPrefix.lastOpenedFilePrefix, id, fileName)
+  }
+  def asKey(account: Account, repo: RzRepository): String =
+    PersistentEntity.key(RedisKeyPrefix.lastOpenedFilePrefix, account.id, repo.id)
+
+}
+
+object RepositoryCollaborators {
+  def asKey(repo: RzRepository): String = PersistentEntity.key(RedisKeyPrefix.rzRepoCollaboratorsPrefix, repo.id)
+}
+
+object RepositoryName {
+  def asEntity(repo: RzRepository): PersistentEntityString = {
+    val id = PersistentEntity.key(repo.owner.id, repo.name)
+    PersistentEntityString(RedisKeyPrefix.rzRepoNamePrefix, id, repo.id)
+  }
+  def asKey(ownerId: String, name: String): String =
+    PersistentEntity.key(RedisKeyPrefix.rzRepoNamePrefix, ownerId, name)
 }
 
 /**

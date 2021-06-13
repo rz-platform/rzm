@@ -1,64 +1,44 @@
 package models
 
-import infrastructure.RzDateTime
+import scala.util.Try
 
 sealed trait Role {
-  def weight: Int
-  def name: String
+  def perm: Int
 }
 
 object Role {
-  case object Owner extends Role {
-    val weight = 100
+  val exec  = 1
+  val write = 2
+  val read  = 4
 
-    val name: String = "owner"
+  case object Owner extends Role {
+    val perm: Int = exec | write | read
   }
 
   case object Editor extends Role {
-    val weight = 90
-
-    val name: String = "editor"
+    val perm: Int = write | read
   }
 
   case object Viewer extends Role {
-    val weight = 80
-
-    val name: String = "viewer"
+    val perm: Int = exec
   }
 
-  def fromString(role: String): Option[Role] =
-    role match {
-      case _ if role == Owner.name  => Some(Owner)
-      case _ if role == Editor.name => Some(Editor)
-      case _ if role == Viewer.name => Some(Viewer)
-      case _                        => Option.empty[Role]
+  def fromPermission(perm: Int): Option[Role] =
+    perm match {
+      case _ if perm == Owner.perm  => Some(Owner)
+      case _ if perm == Editor.perm => Some(Editor)
+      case _ if perm == Viewer.perm => Some(Viewer)
+
+      case _ => Option.empty[Role]
     }
 }
 
-case class Collaborator(
-  account: Account,
-  role: Role,
-  createdAt: Long
-) {
-  def keyAccessLevel(repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
-
-  def toMap: Map[String, String] = Map("role" -> role.name, "createdAt" -> createdAt.toString)
-
-  def this(account: Account, accessLevel: Role) = this(account, accessLevel, RzDateTime.now)
-}
+case class Collaborator(account: Account, repo: RzRepository, role: Role)
 
 object Collaborator {
-  def keyAccessLevel(account: Account, repo: RzRepository): String =
-    IdTable.collaboratorPrefix + repo.owner.userName + ":" + repo.name + ":" + account.userName
-
-  def make(account: Account, data: Map[String, String]): Either[RzError, Collaborator] =
-    (for {
-      role      <- data.get("role")
-      role      <- Role.fromString(role)
-      createdAt <- data.get("createdAt")
-    } yield Collaborator(account, role, createdAt.toInt)) match {
-      case Some(a) => Right(a)
-      case None    => Left(ParsingError)
-    }
+  def make(account: Account, repo: RzRepository, permS: String): Option[Collaborator] =
+    for {
+      perm <- Try(permS.toInt).toOption
+      role <- Role.fromPermission(perm)
+    } yield Collaborator(account, repo, role)
 }

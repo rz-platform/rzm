@@ -7,7 +7,7 @@ import play.api.data.Forms.{ mapping, nonEmptyText }
 object AuthForms {
   val signin: Form[AccountLoginData] = Form(
     mapping(
-      "userName" -> nonEmptyText,
+      "username" -> nonEmptyText,
       "password" -> nonEmptyText,
       "timezone" -> nonEmptyText.verifying(RzConstraints.timeZoneConstraint)
     )(AccountLoginData.apply)(AccountLoginData.unapply)

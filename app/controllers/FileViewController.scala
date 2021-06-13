@@ -46,7 +46,7 @@ class FileViewController @Inject() (
         case Some(path) =>
           Future(
             Redirect(
-              routes.FileViewController.blob(req.repository.owner.userName, req.repository.name, rev, path)
+              routes.FileViewController.blob(req.repository.owner.username, req.repository.name, rev, path)
             )
           )
         case _ =>
@@ -70,7 +70,7 @@ class FileViewController @Inject() (
     implicit req: RepositoryRequest[AnyContent]
   ): Future[Result] =
     for {
-      _ <- metaGitRepository.setRzRepoLastFile(req.account, req.repository, path)
+      _ <- metaGitRepository.setRzRepoLastFile(LastOpenedFile.asEntity(req.account, req.repository, path))
     } yield Ok(
       html.repository.view(
         editorForm.fill(

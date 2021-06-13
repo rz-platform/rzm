@@ -24,18 +24,18 @@
         @if(request.role == Role.Owner || request.role == Role.Editor) {
         <div class="action-buttons">
           <a
-            href="@routes.FileUploadController.uploadPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+            href="@routes.FileUploadController.uploadPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
           >
             <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
           </a>
           <a
-            href="@routes.FileEditController.addNewItemPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+            href="@routes.FileEditController.addNewItemPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
             class="add-file-button" 
           >
           <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon file-tree-icon add-file-button" />
           </a>
           <a
-            href="@routes.FileEditController.addNewFolderPage(request.repository.owner.userName, request.repository.name, rev, node.pathAsUrl)"
+            href="@routes.FileEditController.addNewFolderPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
             class="add-folder-button"
           >
           <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon file-tree-icon add-folder-button"  />
@@ -61,7 +61,7 @@
       >
         <a
           class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-selected }"
-          href="@routes.FileViewController.blob(request.repository.owner.userName, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
+          href="@routes.FileViewController.blob(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
         >
           <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
             <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />
@@ -74,7 +74,7 @@
 } 
 
 @base.auth(breadcrumbs.last.getOrElse(request.repository.name), true) {
-@form(routes.FileEditController.addNewItem(request.repository.owner.userName,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
+@form(routes.FileEditController.addNewItem(request.repository.owner.username,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
 
 @CSRF.formField
 <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon" />
@@ -91,7 +91,7 @@
   </div>
 
   <div class="rz-editor-content">
-    @header.repositoryMenu(FileViewPage)
+    @header.repositoryMenu(RzRepository.Page.FileView)
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
         repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 

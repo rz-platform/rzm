@@ -3,16 +3,16 @@
 
 @linkToCreator(repository: RzRepository) = {
 <a
-  href="@routes.TemplateController.overview(repository.owner.userName, repository.name)"
+  href="@routes.TemplateController.overview(repository.owner.username, repository.name)"
   class="rz-menu-link"
-  >  @repository.owner.userName / @repository.name </a
+  >  @repository.owner.username / @repository.name </a
 >
 }
 @linkToFileTree(repository: RzRepository) = {
 <a
-  href="@routes.FileViewController.emptyTree(repository.owner.userName, repository.name, RzRepository.defaultBranch)"
+  href="@routes.FileViewController.emptyTree(repository.owner.username, repository.name, RzRepository.defaultBranch)"
   class="rz-menu-link"
-  >  @repository.owner.userName / @repository.name </a
+  >  @repository.owner.username / @repository.name </a
 >
 }
 
