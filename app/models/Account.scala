@@ -38,15 +38,15 @@ case class Account(
 object Account {
   def key(id: String) = PersistentEntity.key(RedisKeyPrefix.accountPrefix, id)
 
-  def make(key: String, data: Map[String, String]): Option[Account] =
+  def make(id: String, data: Map[String, String]): Option[Account] =
     for {
       username <- data.get("username")
-      fullname <- data.get("fullName")
+      fullname <- data.get("fullname")
       email    <- data.get("email")
       created  <- data.get("created")
       tz       <- data.get("tz")
     } yield Account(
-      key.substring(3),
+      id,
       username,
       fullname,
       email,

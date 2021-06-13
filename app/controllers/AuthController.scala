@@ -20,6 +20,8 @@ class AuthController @Inject() (
 )(implicit ec: ExecutionContext)
     extends MessagesAbstractController(cc) {
 
+  private val logger = play.api.Logger(this.getClass)
+
   def loginPage: Action[AnyContent] = Action.async(implicit request => Future(Ok(html.signin(AuthForms.signin))))
 
   def index: Action[AnyContent] =
@@ -66,12 +68,12 @@ class AuthController @Inject() (
     }
   }
 
-  private def checkPassword(id: String, passwordHash: String): Future[Either[RzError, Account]] =
-    accountRepository.getById(id).flatMap {
+  private def checkPassword(nameOrEmail: String, password: String): Future[Either[RzError, Account]] =
+    accountRepository.getByUsernameOrEmail(nameOrEmail).flatMap {
       case Right(account: Account) =>
         accountRepository.getPassword(account).map {
-          case Right(password: String) if HashedString(password).check(passwordHash) => Right(account)
-          case _                                                                     => Left(AccessDenied)
+          case Right(passwordHash: String) if HashedString(passwordHash).check(password) => Right(account)
+          case _                                                                         => Left(AccessDenied)
         }
       case Left(e) => Future(Left(e))
     }

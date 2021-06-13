@@ -47,7 +47,7 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
   def getByOwnerAndName(owner: String, name: String, client: RedisClient): Either[RzError, RzRepository] =
     accountRepository.getByName(owner, client) match {
       case Right(owner) =>
-        client.get(RepositoryName.asKey(owner.username, name)) match {
+        client.get(RepositoryName.asKey(owner.id, name)) match {
           case Some(id: String) => getByRepositoryId(id, owner, client)
           case _                => Left(NotFoundInRepository)
         }

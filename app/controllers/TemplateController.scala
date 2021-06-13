@@ -28,7 +28,9 @@ class TemplateController @Inject() (
     extends MessagesAbstractController(cc) {
   private val logger = play.api.Logger(this.getClass)
 
-  renderer.compile(templateRepository.list.values)
+  if (templateRepository.list.nonEmpty) {
+    renderer.compile(templateRepository.list.values)
+  }
 
   val createForm: Form[TemplateData] = Form(
     mapping(
