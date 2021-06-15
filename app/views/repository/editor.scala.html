@@ -48,9 +48,7 @@
 
 @if(blob.content.viewType == "text"){
   <div class="code-wrap">
-    <div id="backdrop">
-      <div id="highlights"></div>
-    </div>
+    <div id="backdrop"><div id="highlights"></div></div>
     <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon backdrop" id="current-line" style="display:none;"/>
     <textarea class="editor" id="code" name="content" spellcheck="false" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>

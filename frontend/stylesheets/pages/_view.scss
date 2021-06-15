@@ -38,7 +38,6 @@
   line-height: 1.5;
 }
 
-
 .file-tree-icon {
   cursor: pointer;
 }
@@ -107,14 +106,18 @@
     height: 100%;
     position: relative;
   }
+
   textarea.editor,
   textarea.editor:focus {
     @include editor-appearance;
+
     background-color: transparent;
     z-index: 1;
   }
+
   #backdrop {
     @include editor-appearance;
+
     background-color: $editor-background;
     overflow: auto;
     pointer-events: none;
