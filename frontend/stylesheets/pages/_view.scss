@@ -20,6 +20,25 @@
   }
 }
 
+@mixin editor-appearance {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 99%;
+  width: 80%;
+  font-size: 16px;
+  font-family: 'iA Writer Duospace', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  outline: none;
+  border: 0;
+  padding: 0 10% 0 10%;
+  line-height: 1.5;
+}
+
+
 .file-tree-icon {
   cursor: pointer;
 }
@@ -90,37 +109,12 @@
   }
   textarea.editor,
   textarea.editor:focus {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 99%;
-    width: 80%;
-    font-size: 16px;
-    font-family: 'iA Writer Duospace', monospace;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    outline: none;
-    border: 0;
-    padding: 0 10% 0 10%;
-    line-height: 1.5;
+    @include editor-appearance;
     background-color: transparent;
     z-index: 1;
   }
   #backdrop {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 99%;
-    width: 80%;
-    font-size: 16px;
-    font-family: 'iA Writer Duospace', monospace;
-    padding: 0 10% 0 10%;
-    line-height: 1.5;
-    z-index: 1;
+    @include editor-appearance;
     background-color: $editor-background;
     overflow: auto;
     pointer-events: none;
