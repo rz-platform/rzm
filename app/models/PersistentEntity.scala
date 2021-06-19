@@ -58,9 +58,4 @@ object RedisKeyPrefix {
   val collaboratorPrefix = "ci" // collaborator instance
 
   val sshKeyPrefix = "sk" // ssh key
-
-  def parseId(id: String): (String, String) = {
-    val s = id.split(":")
-    (s(1), s(2))
-  }
 }

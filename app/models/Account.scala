@@ -36,7 +36,7 @@ case class Account(
 }
 
 object Account {
-  def key(id: String) = PersistentEntity.key(RedisKeyPrefix.accountPrefix, id)
+  def key(id: String): String = PersistentEntity.key(RedisKeyPrefix.accountPrefix, id)
 
   def make(id: String, data: Map[String, String]): Option[Account] =
     for {
