@@ -1,21 +1,26 @@
 package controllers
 
-import actions.AuthenticatedAction
 import akka.actor.ActorSystem
-import infrastructure.RzDateTime
+import collaborators.controllers.CollaboratorsController
+import documents.controllers.{FileEditController, FileViewController, RzRepositoryController}
+import documents.models.RzRepository
+import documents.repositories.RzMetaGitRepository
+import documents.services.GitService
+import infrastructure.repositories.RzDateTime
 import models._
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{ Millis, Seconds, Span }
-import org.scalatest.{ BeforeAndAfterAll, PrivateMethodTester }
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.{BeforeAndAfterAll, PrivateMethodTester}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.mvc.{ Cookie, Result }
+import play.api.mvc.{Cookie, Result}
 import play.api.test.CSRFTokenHelper.addCSRFToken
-import play.api.test.Helpers.{ await, defaultAwaitTimeout }
-import play.api.test.{ FakeRequest, Injecting }
-import play.api.{ Configuration, Logger }
-import repositories.{ AccountRepository, RzMetaGitRepository }
-import services.GitService
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.{FakeRequest, Injecting}
+import play.api.{Configuration, Logger}
+import users.controllers.{AccountController, AuthenticatedAction}
+import users.models.{Account, AccountInfo}
+import users.repositories.AccountRepository
 
 case class AuthorizedAccount(a: Account, s: (String, String), c: Cookie)
 
@@ -54,7 +59,7 @@ class GenericControllerTest
 
   def createAccount(): AuthorizedAccount = {
     val data =
-      AccountRegistrationData(
+      UserRegistration(
         getRandomString,
         Some(getRandomString),
         getRandomString,

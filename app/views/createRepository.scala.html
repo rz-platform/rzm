@@ -1,4 +1,4 @@
-@(repositoryForm: Form[RepositoryData])(implicit request: AccountRequestHeader) 
+@(repositoryForm: Form[RepositoryDetails])(implicit request: AccountRequestHeader) 
 @import views.html.helper._
 @base.auth(request.messages("repository.create.title")){
 <h1> @request.messages("repository.create.head") </h1>

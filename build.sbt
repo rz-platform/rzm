@@ -22,5 +22,6 @@ lazy val root = (project in file("."))
       caffeine
     ),
     scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked", "-Xfatal-warnings"),
-    javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror")
+    javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror"),
+    TwirlKeys.templateImports ++= Seq("collaborators.models._", "authentication.models._", "documents.models._", "ssh.models._", "templates.models._", "users.models._")
   )

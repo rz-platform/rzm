@@ -1,11 +1,12 @@
 package controllers
 
-import forms.ForbiddenSymbols
-import models.{ RepositoryGitData, RzRepository }
+import documents.models.RzRepository
+import infrastructure.validations.ForbiddenSymbols
+import models.RepositoryGitData
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ await, call, defaultAwaitTimeout, writeableOf_AnyContentAsFormUrlEncoded }
+import play.api.test.Helpers.{await, call, defaultAwaitTimeout, writeableOf_AnyContentAsFormUrlEncoded}
 
 import scala.concurrent.Future
 

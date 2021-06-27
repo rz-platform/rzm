@@ -3,96 +3,96 @@
 # ~~~~
 
 # Default path
-GET     /                           controllers.AuthController.index()
+GET     /                           users.controllers.AuthController.index()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Login
-GET      /signin              controllers.AuthController.loginPage()
-POST     /signin              controllers.AuthController.login()
+GET      /signin              users.controllers.AuthController.loginPage()
+POST     /signin              users.controllers.AuthController.login()
 
 # Sign up
-GET      /signup              controllers.AccountController.signup()
-POST     /signup              controllers.AccountController.saveAccount()
+GET      /signup              users.controllers.AccountController.signup()
+POST     /signup              users.controllers.AccountController.saveAccount()
 
 # Log out
-GET /logout controllers.AuthController.logout()
+GET /logout users.controllers.AuthController.logout()
 
 # Repositories list
 
-GET /repositories      controllers.RzRepositoryController.list()
+GET /repositories      documents.controllers.RzRepositoryController.list()
 
 # Repositories creation
 
-GET  /repositories/create controllers.RzRepositoryController.createPage()
-POST /repositories/create controllers.RzRepositoryController.save()
+GET  /repositories/create documents.controllers.RzRepositoryController.createPage()
+POST /repositories/create documents.controllers.RzRepositoryController.save()
 
 # File view
 
 # Repository view
 
-GET /repositories/:account/:repository/tree/:rev controllers.FileViewController.emptyTree(account:String, repository:String, rev: String)
-GET /repositories/:account/:repository/tree/:rev/*path controllers.FileViewController.blob(account:String, repository:String, rev: String, path: String)
+GET /repositories/:account/:repository/tree/:rev documents.controllers.FileViewController.emptyTree(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/tree/:rev/*path documents.controllers.FileViewController.blob(account:String, repository:String, rev: String, path: String)
 
 # Raw view
 
-GET /repositories/:account/:repository/raw/:rev/*path controllers.FileViewController.raw(account:String, repository:String, rev: String, path: String)
+GET /repositories/:account/:repository/raw/:rev/*path documents.controllers.FileViewController.raw(account:String, repository:String, rev: String, path: String)
 
 # Creator
 
-GET /creator/:templateId/illustration controllers.TemplateController.templatePdf(templateId: String)
+GET /creator/:templateId/illustration templates.controllers.TemplateController.templatePdf(templateId: String)
 
-GET  /repositories/:account/:repository/creator controllers.TemplateController.overview(account:String, repository:String)
-GET  /repositories/:account/:repository/creator/:templateId controllers.TemplateController.view(account:String, repository:String, templateId: String)
-POST /repositories/:account/:repository/creator/build controllers.TemplateController.build(account:String, repository:String)
+GET  /repositories/:account/:repository/creator templates.controllers.TemplateController.overview(account:String, repository:String)
+GET  /repositories/:account/:repository/creator/:templateId templates.controllers.TemplateController.view(account:String, repository:String, templateId: String)
+POST /repositories/:account/:repository/creator/build templates.controllers.TemplateController.build(account:String, repository:String)
 
 # File upload
 
-GET  /repositories/:account/:repository/upload/:rev controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String = "")
-GET  /repositories/:account/:repository/upload/:rev/*path controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String)
-POST /repositories/:account/:repository/upload/:rev controllers.FileUploadController.upload(account:String, repository:String, rev: String)
+GET  /repositories/:account/:repository/upload/:rev documents.controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/upload/:rev/*path documents.controllers.FileUploadController.uploadPage(account:String, repository:String, rev: String, path: String)
+POST /repositories/:account/:repository/upload/:rev documents.controllers.FileUploadController.upload(account:String, repository:String, rev: String)
 
 
 # Collaborators
 
-GET  /repositories/:account/:repository/collaborators controllers.CollaboratorsController.page(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators controllers.CollaboratorsController.add(account:String, repository:String)
-POST /repositories/:account/:repository/collaborators/remove controllers.CollaboratorsController.remove(account:String, repository:String)
+GET  /repositories/:account/:repository/collaborators collaborators.controllers.CollaboratorsController.page(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators collaborators.controllers.CollaboratorsController.add(account:String, repository:String)
+POST /repositories/:account/:repository/collaborators/remove collaborators.controllers.CollaboratorsController.remove(account:String, repository:String)
 
 # Creation / Editing
 
-POST /repositories/:account/:repository/edit          controllers.FileEditController.edit(account:String, repository:String)
+POST /repositories/:account/:repository/edit          documents.controllers.FileEditController.edit(account:String, repository:String)
 
-GET  /repositories/:account/:repository/create/file/:rev controllers.FileEditController.addNewItemPage(account:String, repository:String, rev: String, path: String = "")
-GET  /repositories/:account/:repository/create/file/:rev/*path controllers.FileEditController.addNewItemPage(account:String, repository:String, rev: String, path: String)
+GET  /repositories/:account/:repository/create/file/:rev documents.controllers.FileEditController.addNewItemPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/create/file/:rev/*path documents.controllers.FileEditController.addNewItemPage(account:String, repository:String, rev: String, path: String)
 
-GET  /repositories/:account/:repository/create/folder/:rev controllers.FileEditController.addNewFolderPage(account:String, repository:String, rev: String, path: String = "")
-GET  /repositories/:account/:repository/create/folder/:rev/*path controllers.FileEditController.addNewFolderPage(account:String, repository:String, rev: String, path: String)
+GET  /repositories/:account/:repository/create/folder/:rev documents.controllers.FileEditController.addNewFolderPage(account:String, repository:String, rev: String, path: String = "")
+GET  /repositories/:account/:repository/create/folder/:rev/*path documents.controllers.FileEditController.addNewFolderPage(account:String, repository:String, rev: String, path: String)
 
-POST /repositories/:account/:repository/create/item   controllers.FileEditController.addNewItem(account: String, repository: String)
+POST /repositories/:account/:repository/create/item   documents.controllers.FileEditController.addNewItem(account: String, repository: String)
 
 # Repository archive
 
-GET /repositories/:account/:repository/:rev/archive controllers.RzRepositoryController.downloadArchive(account:String, repository:String, rev: String)
+GET /repositories/:account/:repository/:rev/archive documents.controllers.RzRepositoryController.downloadArchive(account:String, repository:String, rev: String)
 
 # Profile editing page
 
-GET  /profile controllers.AccountController.accountPage()
-GET  /profile/image/:account controllers.AccountPictureController.accountPicture(account)
-POST /profile/image controllers.AccountPictureController.uploadAccountPicture()
-POST /profile/image/delete controllers.AccountPictureController.removeAccountPicture()
-POST /profile controllers.AccountController.editAccount()
-POST /profile/password controllers.AccountController.updatePassword()
-POST /profile/tz controllers.AccountController.setTimeZone()
+GET  /profile users.controllers.AccountController.accountPage()
+GET  /profile/image/:account users.controllers.AccountPictureController.accountPicture(account)
+POST /profile/image users.controllers.AccountPictureController.uploadAccountPicture()
+POST /profile/image/delete users.controllers.AccountPictureController.removeAccountPicture()
+POST /profile users.controllers.AccountController.editAccount()
+POST /profile/password users.controllers.AccountController.updatePassword()
+POST /profile/tz users.controllers.AccountController.setTimeZone()
 
 # SSH Keys
 
-GET  /profile/keys controllers.SshKeyController.page()
-POST /profile/keys/add controllers.SshKeyController.addKey()
-POST /profile/keys/delete controllers.SshKeyController.deleteKey()
+GET  /profile/keys ssh.controllers.SshKeyController.page()
+POST /profile/keys/add ssh.controllers.SshKeyController.addKey()
+POST /profile/keys/delete ssh.controllers.SshKeyController.deleteKey()
 
 # Commit log
 
-GET /repositories/:account/:repository/commits/:rev controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
-GET /repositories/:account/:repository/commits/:rev/:page controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int)
+GET /repositories/:account/:repository/commits/:rev documents.controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int = 1)
+GET /repositories/:account/:repository/commits/:rev/:page documents.controllers.RzRepositoryController.commitLog(account:String, repository:String, rev: String, page: Int)

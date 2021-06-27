@@ -1,9 +1,9 @@
 package controllers
 
-import infrastructure.RzDateTime
+import infrastructure.repositories.RzDateTime
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ await, defaultAwaitTimeout }
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
 class AccountControllerTest extends GenericControllerTest {
 

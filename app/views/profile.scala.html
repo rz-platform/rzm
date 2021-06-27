@@ -1,4 +1,4 @@
-@(userEditForm: Form[AccountData], passwordUpdateForm: Form[PasswordData], zoneIds: scala.collection.SortedMap[String, String])(implicit req:AccountRequestHeader)
+@(userEditForm: Form[UserUpdate], passwordUpdateForm: Form[PasswordUpdate], zoneIds: scala.collection.SortedMap[String, String])(implicit req:AccountRequestHeader)
 
 @import views.html.helper._
 @base.auth(req.messages("profile.title")) {
