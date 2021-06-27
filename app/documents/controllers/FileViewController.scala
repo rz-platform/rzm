@@ -2,22 +2,11 @@ package documents.controllers
 
 import akka.stream.scaladsl.StreamConverters
 import collaborators.models.Role
-import documents.models.{
-  Blob,
-  EditedItem,
-  EmptyBlob,
-  FilePath,
-  FileTree,
-  LastOpenedFile,
-  NewItem,
-  RepositoryRequest,
-  RzPathUrl
-}
+import documents.models._
 import documents.repositories.RzMetaGitRepository
 import documents.services.GitService
 import documents.validations.EditorForms.{ addNewItemForm, editorForm }
 import infrastructure.controllers.ErrorHandler
-import models._
 import play.api.http.HttpEntity
 import play.api.i18n.Messages
 import play.api.mvc._

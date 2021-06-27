@@ -9,17 +9,16 @@ import documents.validations.RzRepositoryForms.createRepositoryForm
 import infrastructure.controllers.ErrorHandler
 import infrastructure.errors.NotFoundInRepository
 import infrastructure.validations.FormErrors
-import models._
 import play.api.data.FormError
 import play.api.i18n.Messages
 import play.api.mvc.{ Action, AnyContent, MessagesAbstractController, MessagesControllerComponents }
+import templates.controllers.{ routes => templatesRoutes }
 import users.controllers.AuthenticatedAction
 import views.html
 
 import java.io.File
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }
-import templates.controllers.{routes => templatesRoutes}
 
 class RzRepositoryController @Inject() (
   git: GitService,

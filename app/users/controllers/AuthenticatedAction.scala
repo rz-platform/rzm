@@ -2,11 +2,11 @@ package users.controllers
 
 import authentication.repositories.SessionRepository
 import authentication.services.{ EncryptionService, UserInfoCookieBakerFactory }
+import documents.controllers.{ routes => documentsRoutes }
 import play.api.i18n.MessagesApi
 import play.api.mvc._
 import users.models.{ Account, AccountInfo, AccountRequest }
 import users.repositories.AccountRepository
-import documents.controllers.{routes => documentsRoutes}
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

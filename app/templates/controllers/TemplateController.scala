@@ -1,8 +1,8 @@
 package templates.controllers
 
 import collaborators.models.Role
-import documents.controllers.RepositoryAction
-import documents.models.{ RepositoryRequest, RzBib, RzCompiler, RzRepository, RzRepositoryConfig }
+import documents.controllers.{ RepositoryAction, routes => documentsRoutes }
+import documents.models._
 import documents.repositories.RzMetaGitRepository
 import documents.services.GitService
 import play.api.Configuration
@@ -15,7 +15,6 @@ import templates.repositories.TemplateRepository
 import templates.services.TemplateRendererService
 import users.controllers.AuthenticatedAction
 import views.html
-import documents.controllers.{routes => documentsRoutes}
 
 import javax.inject.Inject
 import scala.collection.immutable.Map

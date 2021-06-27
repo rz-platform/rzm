@@ -2,6 +2,7 @@ package users.controllers
 
 import authentication.models.{ EmailAndPasswordCredentials, Password }
 import authentication.repositories.SessionRepository
+import documents.controllers.{ routes => documentsRoutes }
 import infrastructure.errors.{ AccessDenied, RepositoryError }
 import infrastructure.validations.FormErrors
 import play.api.data._
@@ -11,7 +12,6 @@ import users.models.{ Account, AccountInfo }
 import users.repositories.AccountRepository
 import users.validations.AuthForms
 import views.html
-import documents.controllers.{routes => documentsRoutes}
 
 import javax.inject.Inject
 import scala.concurrent.{ ExecutionContext, Future }

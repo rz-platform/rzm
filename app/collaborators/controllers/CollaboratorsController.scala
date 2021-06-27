@@ -1,8 +1,8 @@
 package collaborators.controllers
 
-import collaborators.models.{NewCollaboratorDetails, Role}
+import collaborators.models.{ NewCollaboratorDetails, Role }
 import collaborators.repositories.CollaboratorRepository
-import collaborators.validations.CollaboratorForms.{addCollaboratorForm, removeCollaboratorForm}
+import collaborators.validations.CollaboratorForms.{ addCollaboratorForm, removeCollaboratorForm }
 import documents.controllers.RepositoryAction
 import documents.models.RepositoryRequest
 import documents.repositories.RzMetaGitRepository
@@ -10,14 +10,14 @@ import play.api.data.Form
 import play.api.data.FormBinding.Implicits.formBinding
 import play.api.i18n.Messages
 import play.api.mvc.Results._
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{ Action, AnyContent, Result }
 import users.controllers.AuthenticatedAction
 import users.models.Account
 import users.repositories.AccountRepository
 import views.html
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 class CollaboratorsController @Inject() (
   metaGitRepository: RzMetaGitRepository,

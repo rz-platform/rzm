@@ -8,7 +8,6 @@ import documents.models.{ CommitFile, RepositoryRequest, RzPathUrl, RzRepository
 import documents.repositories.RzMetaGitRepository
 import documents.services.GitService
 import documents.validations.UploadForms._
-import models._
 import play.api.i18n.Messages
 import play.api.libs.streams.Accumulator
 import play.api.mvc.MultipartFormData.FilePart

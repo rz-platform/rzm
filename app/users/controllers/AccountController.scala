@@ -5,19 +5,10 @@ import infrastructure.controllers.ErrorHandler
 import infrastructure.errors.RepositoryError
 import infrastructure.repositories.RzDateTime
 import infrastructure.validations.FormErrors
-import models._
 import play.api.data._
 import play.api.i18n.Messages
 import play.api.mvc._
-import users.models.{
-  Account,
-  AccountEmail,
-  AccountPassword,
-  AccountUsername,
-  PasswordUpdate,
-  UserRegistration,
-  UserUpdate
-}
+import users.models._
 import users.repositories.AccountRepository
 import users.validations.AccountForms._
 import views._

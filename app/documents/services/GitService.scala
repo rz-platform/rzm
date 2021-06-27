@@ -1,19 +1,7 @@
 package documents.services
 
-import documents.models.{
-  Blob,
-  CommitFile,
-  CommitInfo,
-  FileNode,
-  FileTree,
-  NewItem,
-  RawFile,
-  RepositoryGitData,
-  RzPathUrl,
-  RzRepository
-}
+import documents.models._
 import infrastructure.repositories.{ FileSystem, GitStorage }
-import models._
 import org.apache.commons.compress.archivers.zip.{ ZipArchiveEntry, ZipArchiveOutputStream }
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.dircache.{ DirCache, DirCacheBuilder }

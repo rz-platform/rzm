@@ -2,7 +2,6 @@ package users.models
 
 import infrastructure.models.{ PersistentEntity, PersistentEntityMap, PersistentEntityString, RedisKeyPrefix }
 import infrastructure.repositories.RzDateTime
-import models._
 import play.api.libs.json.{ Format, Json }
 
 case class Account(
