@@ -1,12 +1,12 @@
 @(signupForm: Form[UserRegistration], zoneIds: scala.collection.SortedMap[String, String])(implicit req: MessagesRequestHeader) 
 @import views.html.helper._ 
-@import infrastructure.RzDateTime
+@import infrastructure.repositories.RzDateTime
 
 @html = {
 <div class="rz-auth">
   <h1> @req.messages("signup.head") </h1>
   @header.alerts()
-  @form(routes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
+  @form(usersRoutes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
   @CSRF.formField 
   @inputText(signupForm("username"), Symbol("_label") -> req.messages("signup.form.username"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
   @inputPassword(signupForm("password"), Symbol("_label") ->
@@ -20,7 +20,7 @@
 
   <input type="submit" value='@req.messages("signup.submit")' class="rz-button rz-button-primary" />
   or
-  <a class="rz-button" href="@routes.AuthController.loginPage()">@req.messages("signup.signInLink")</a>
+  <a class="rz-button" href="@usersRoutes.AuthController.loginPage()">@req.messages("signup.signInLink")</a>
   }
 }
 
@@ -31,7 +31,7 @@
 @headerHtml = {
   <ul class="rz-menu-list">
     <li class="rz-menu-item">
-    <a href="@routes.RzRepositoryController.list()" class="rz-menu-link">
+    <a href="@documentsRoutes.RzRepositoryController.list()" class="rz-menu-link">
       <span class="rz-logo"> RZM </span>
       @req.messages("signin.title")</a>
     </a>

@@ -23,5 +23,19 @@ lazy val root = (project in file("."))
     ),
     scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked", "-Xfatal-warnings"),
     javacOptions ++= List("-Xlint:unchecked", "-Xlint:deprecation", "-Werror"),
-    TwirlKeys.templateImports ++= Seq("collaborators.models._", "authentication.models._", "documents.models._", "ssh.models._", "templates.models._", "users.models._")
+    TwirlKeys.templateImports ++= Seq(
+      /* models */
+      "collaborators.models._",
+      "authentication.models._",
+      "documents.models._",
+      "ssh.models._",
+      "templates.models._",
+      "users.models._",
+      /* routes */
+      "collaborators.controllers.{routes => collaboratorsRoutes}",
+      "documents.controllers.{routes => documentsRoutes}",
+      "ssh.controllers.{routes => sshRoutes}",
+      "templates.controllers.{routes => templatesRoutes}",
+      "users.controllers.{routes => usersRoutes}"
+    )
   )

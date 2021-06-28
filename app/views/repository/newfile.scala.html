@@ -19,7 +19,7 @@
 }
 </p>
 
-@form(routes.FileEditController.addNewItem(req.repository.owner.username,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
+@form(documentsRoutes.FileEditController.addNewItem(req.repository.owner.username,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
 @CSRF.formField
 <input type="hidden" name="path" value=@if(path.isEmpty) {"."} else {"@rev"} /> 
 <input type="hidden" name="rev" value="@rev" /> 

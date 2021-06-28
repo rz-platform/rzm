@@ -3,12 +3,12 @@ package templates.services
 import play.api.libs.json.{ JsArray, JsString, JsValue }
 import templates.errors.JsonParseError
 import templates.models
-import templates.models.{ Checkbox, Choice, Field }
+import templates.models.{ Checkbox, Choice, RzField }
 
 import scala.util.{ Failure, Success, Try }
 
 object TemplateFieldParser {
-  def parseFields(js: JsValue): List[Field] =
+  def parseFields(js: JsValue): List[RzField] =
     (js \ "fields")
       .getOrElse(JsArray())
       .as[JsArray]
@@ -27,7 +27,7 @@ object TemplateFieldParser {
       }
     }
 
-  private def parseField(obj: JsValue): Try[Field] =
+  private def parseField(obj: JsValue): Try[RzField] =
     (obj \ "type").getOrElse(JsString("")).as[String] match {
       case models.Numeric.t => Try(obj.as[models.Numeric])
       case Choice.t         => Try(obj.as[Choice])

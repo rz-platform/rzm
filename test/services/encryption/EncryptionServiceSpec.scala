@@ -3,7 +3,7 @@ package services.encryption
 import authentication.services.EncryptionService
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{ Format, Json }
 
 case class Foo(name: String, age: Int)
 

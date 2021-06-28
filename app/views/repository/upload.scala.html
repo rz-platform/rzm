@@ -10,7 +10,7 @@
   } else {
   <p> @request.messages("repository.upload.messageRoot") </p>
   } 
-  @form(routes.FileUploadController.upload(request.repository.owner.username, request.repository.name,
+  @form(documentsRoutes.FileUploadController.upload(request.repository.owner.username, request.repository.name,
   rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ 
   @CSRF.formField
 

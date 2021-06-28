@@ -3,14 +3,14 @@ package templates.models
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{ JsPath, Reads }
 
-sealed trait Field {
+sealed trait RzField {
   def name: String
   def label: String
   def description: Option[String]
 }
 
 case class Numeric(name: String, label: String, description: Option[String], min: Int, max: Int, default: Int)
-    extends Field
+    extends RzField
 object Numeric {
   val t = "numeric"
 
@@ -25,7 +25,7 @@ object Numeric {
 }
 
 case class Choice(name: String, label: String, description: Option[String], choices: List[String], default: String)
-    extends Field
+    extends RzField
 object Choice {
   val t = "select"
 
@@ -38,7 +38,7 @@ object Choice {
   )(Choice.apply _)
 }
 
-case class Checkbox(name: String, label: String, description: Option[String], default: Boolean) extends Field
+case class Checkbox(name: String, label: String, description: Option[String], default: Boolean) extends RzField
 object Checkbox {
   val t = "checkbox"
 

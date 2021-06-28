@@ -9,7 +9,7 @@
 } 
 @collaboratorsList.map { 
 case (collaborator) => {
-@form(routes.CollaboratorsController.remove(request.repository.owner.username, request.repository.name)) {
+@form(collaboratorsRoutes.CollaboratorsController.remove(request.repository.owner.username, request.repository.name)) {
 @CSRF.formField
 <input type="hidden" name="email" value="@collaborator.account.email" />
 <div class="collaborator-row">
@@ -26,7 +26,7 @@ case (collaborator) => {
 } 
 }
 <h2>Add member</h2>
-@form(routes.CollaboratorsController.add(request.repository.owner.username, request.repository.name),Symbol("class") -> "rz-form") { 
+@form(collaboratorsRoutes.CollaboratorsController.add(request.repository.owner.username, request.repository.name),Symbol("class") -> "rz-form") { 
 @CSRF.formField 
 @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"), Symbol("_help") -> "", Symbol("autofocus") -> "")
 @select(field = addCollaboratorForm("role"), options = Seq(

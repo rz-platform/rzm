@@ -11,7 +11,7 @@ case class Template(
   entrypoint: Option[String],
   texCompiler: Option[String],
   bibCompiler: Option[String],
-  fields: List[Field]
+  fields: List[RzField]
 ) {
   val name: String = id.split('-').map(_.capitalize).mkString(" ")
 
