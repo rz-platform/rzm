@@ -1,4 +1,4 @@
 @(d: java.time.LocalDateTime)(implicit req: RequestWithAccount)
-@import infrastructure.RzDateTime
+@import infrastructure.repositories.RzDateTime
 
 <span class="full-date">@RzDateTime.formatDate(d, req.account.tz)</span>

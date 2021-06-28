@@ -3,7 +3,7 @@
 @creatorButton() = {
 <li class="rz-menu-item @if(page == RzRepository.Page.Constructor) { rz-menu-selected }">
 <a
-  href="@routes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
+  href="@templatesRoutes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
   class="rz-menu-link"
   >@request.messages("repository.tree.creator")</a
 >
@@ -15,7 +15,7 @@
   <ul class="rz-menu-list">
     <li class="rz-menu-item @if(page == RzRepository.Page.FileView) { rz-menu-selected }">
       <a
-        href="@routes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
+        href="@documentsRoutes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
@@ -24,7 +24,7 @@
     case Role.Owner => {
     <li class="rz-menu-item @if(page == RzRepository.Page.Collaborators) { rz-menu-selected }">
       <a
-        href="@routes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
+        href="@collaboratorsRoutes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
         class="rz-menu-link"
         >@request.messages("repository.tree.collaborators")</a
       >
@@ -34,14 +34,14 @@
     }
     <li class="rz-menu-item">
       <a
-        href="@routes.RzRepositoryController.downloadArchive(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
+        href="@documentsRoutes.RzRepositoryController.downloadArchive(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
         class="rz-menu-link"
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
     <li class="rz-menu-item @if(page == RzRepository.Page.CommitHistory) { rz-menu-selected }">
       <a
-        href="@routes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
+        href="@documentsRoutes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
         class="rz-menu-link">
         @request.messages("repository.tree.commits")
       </a>

@@ -1,7 +1,7 @@
 package controllers
 
-import forms.ForbiddenSymbols
-import models.{ RepositoryGitData, RzRepository }
+import documents.models.{ RepositoryGitData, RzRepository }
+import infrastructure.validations.ForbiddenSymbols
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest

@@ -3,14 +3,14 @@
 @headerHtml = {
 <ul class="rz-menu-list">
   <li class="rz-menu-item">
-      <a href="@routes.RzRepositoryController.list()" class="rz-menu-link">
+      <a href="@documentsRoutes.RzRepositoryController.list()" class="rz-menu-link">
       <span class="rz-logo"> RZM </span>
 
       @request.messages("common.myRepositories")</a>
   </li>
   <li class="rz-menu-item">
     <div class="auth-user">
-      <a href="@routes.AccountController.accountPage()" class="rz-menu-link">
+      <a href="@usersRoutes.AccountController.accountPage()" class="rz-menu-link">
         @request.account.username
       </a>
     </div>

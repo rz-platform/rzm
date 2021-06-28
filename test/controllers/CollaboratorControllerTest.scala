@@ -1,6 +1,7 @@
 package controllers
 
-import models.Role
+import collaborators.controllers.routes
+import collaborators.models.Role
 import play.api.mvc.Result
 import play.api.test.CSRFTokenHelper.addCSRFToken
 import play.api.test.FakeRequest
@@ -46,7 +47,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val result       = addCollaborator(repoName, owner, collaborator.a.username, Role.Editor.perm.toString)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    val r = await(collaboratorsRepository.getCollaborator(collaborator.a.id, repo))
     r.nonEmpty must equal(true)
   }
 
@@ -56,7 +57,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val (_, repo)    = createRepository(repoName, owner)
     val collaborator = createAccount()
     addCollaborator(repoName, owner, "nonexistentusername", Role.Editor.perm.toString)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    val r = await(collaboratorsRepository.getCollaborator(collaborator.a.id, repo))
     r.nonEmpty must equal(false)
   }
 
@@ -84,7 +85,7 @@ class CollaboratorControllerTest extends GenericControllerTest {
     val result = removeCollaborator(repoName, owner, collaborator.a.username)
 
     result.header.status must equal(303)
-    val r = await(rzGitRepository.getCollaborator(collaborator.a.id, repo))
+    val r = await(collaboratorsRepository.getCollaborator(collaborator.a.id, repo))
     r.nonEmpty must equal(false)
   }
 
