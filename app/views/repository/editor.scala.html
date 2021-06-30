@@ -2,14 +2,14 @@
 @import views.html.helper._
 @import print.date
 
-@form(documentsRoutes.FileEditController.edit(request.repository.owner.username,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form") {
+@form(documentsRoutes.FileEditController.edit(request.repository.owner.username,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form", Symbol("id")->"code-form") {
 
 @CSRF.formField
+<noscript>
 <div class="rz-editor-content-header">
   <div class="breadcrumbs">
     <span class="breadcrumbs-repo-name">@request.repository.name</span>
     <span class="breadcrumbs-divider">/</span>
-
     @for(breadcrumb <- breadcrumbs.path){
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
@@ -41,6 +41,7 @@
     @date(blob.latestCommit.commitTime)
   </div>
 </div>
+</noscript>
 
 @header.alerts()
 @inputText(editorForm("path"), Symbol("hidden")->"hidden", Symbol("_label") -> "",Symbol("_help") -> "", Symbol("_class")->"hidden")
@@ -50,7 +51,7 @@
   <div class="code-wrap">
     <div id="backdrop"><div id="highlights"></div></div>
     <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon backdrop" id="current-line" style="display:none;"/>
-    <textarea class="editor" id="code" name="content" spellcheck="false" autofocus>@blob.content.content.getOrElse("")</textarea>
+    <textarea class="editor" id="code" name="content" spellcheck="false" autocomplete="off" autofocus>@blob.content.content.getOrElse("")</textarea>
   </div>
 }
 @if(blob.content.viewType == "image"){

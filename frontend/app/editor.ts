@@ -56,6 +56,20 @@ function calculateNewLines(str: string) {
   }
 }
 
+function autosave(form: HTMLFormElement) {
+  const xhr = new XMLHttpRequest();
+  xhr.open(form.method, form.action, true);
+  xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+  xhr.onloadend = function (response: any) {
+    if (response && response.target && response.target.status === 200) {
+      console.log('form has been submitted successfully');
+    }
+  };
+  const queryString = new URLSearchParams(new FormData(form) as any).toString();
+  xhr.send(queryString);
+}
+
 function calculateCurrentLine(selection: number): number {
   let i = 0;
   const l = newLines.length;
@@ -70,6 +84,7 @@ function calculateCurrentLine(selection: number): number {
 
 let currentLine: number = 0;
 let maxHeight: number = 0;
+
 export function initializeEditor(textarea: HTMLInputElement, callback: () => void): void {
   textarea.focus();
   textarea.setSelectionRange(getDocOffset(), getDocOffset());
@@ -80,6 +95,12 @@ export function initializeEditor(textarea: HTMLInputElement, callback: () => voi
 
   const backdrop = <HTMLElement>document.getElementById('backdrop');
   const highlights = <HTMLElement>document.getElementById('highlights');
+
+  const form = document.getElementById('code-form');
+  if (form) {
+    // setInterval(function () { autosave(<HTMLFormElement>form) }, 10000);
+    autosave(<HTMLFormElement>form);
+  }
 
   calculateNewLines(textarea.value);
   currentLine = calculateCurrentLine(textarea.selectionEnd || 0);
