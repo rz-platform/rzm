@@ -1,9 +1,9 @@
 package documents.validations
 
-import documents.models.{ EditedItem, NewItem, RzPathUrl }
+import documents.models.{EditedItem, NewItem, RzPathUrl}
 import infrastructure.validations.RzConstraints
 import play.api.data.Form
-import play.api.data.Forms.{ boolean, mapping, nonEmptyText, text }
+import play.api.data.Forms.{boolean, mapping, nonEmptyText, optional, text}
 
 object EditorForms {
   val editorForm: Form[EditedItem] = Form(
@@ -11,7 +11,7 @@ object EditorForms {
       "content" -> text,
       "rev"     -> nonEmptyText,
       "path"    -> nonEmptyText.verifying(RzConstraints.checkPathForExcludedSymbols),
-      "name"    -> nonEmptyText.verifying(RzConstraints.checkNameForExcludedSymbols)
+      "name"    -> optional(text.verifying(RzConstraints.checkNameForExcludedSymbols))
     )(EditedItem.apply)(EditedItem.unapply)
   )
 
