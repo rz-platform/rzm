@@ -63,7 +63,7 @@ document.addEventListener('turbolinks:load', ((turboEvent: TurboEvent) => {
 }) as EventListener);
 
 // fires before Turbolinks issues a network request to fetch the next page
-document.addEventListener('turbolinks:request-start', ((turboEvent: TurboEvent) => {
+document.addEventListener('turbolinks:request-start', ((_: TurboEvent) => {
   if ((window as any).autosave) {
     (window as any).autosave();
   }

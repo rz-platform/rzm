@@ -1,9 +1,9 @@
 package documents.validations
 
-import documents.models.{EditedItem, NewItem, RzPathUrl}
+import documents.models.{ EditedItem, NewItem, RzPathUrl }
 import infrastructure.validations.RzConstraints
 import play.api.data.Form
-import play.api.data.Forms.{boolean, mapping, nonEmptyText, optional, text}
+import play.api.data.Forms.{ boolean, mapping, nonEmptyText, optional, text }
 
 object EditorForms {
   val editorForm: Form[EditedItem] = Form(

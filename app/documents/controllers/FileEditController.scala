@@ -43,7 +43,7 @@ class FileEditController @Inject() (
             val oldPath = RzPathUrl.make(edited.path)
             val newPath = edited.name match {
               case Some(name) if name.nonEmpty => RzPathUrl.make(oldPath.pathWithoutFilename, name, isFolder = false)
-              case _ => oldPath
+              case _                           => oldPath
             }
             val content = if (edited.content.nonEmpty) edited.content.getBytes() else Array.emptyByteArray
 
