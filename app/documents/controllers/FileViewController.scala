@@ -81,7 +81,7 @@ class FileViewController @Inject() (
             blob.content.content.getOrElse(""),
             rev,
             path,
-            rzPath.nameWithoutPath
+            Some(rzPath.nameWithoutPath)
           )
         ),
         blob,
