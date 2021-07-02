@@ -127,8 +127,10 @@ export function initializeEditor(textarea: HTMLInputElement, callback: () => voi
       autosave(<HTMLFormElement>form);
     };
     (window as any).autosaveInterval = setInterval(function () {
-      autosave(<HTMLFormElement>form);
-    }, 10000);
+      if ((window as any).unsaved) {
+        autosave(<HTMLFormElement>form);
+      }
+    }, 5000);
   }
 
   calculateNewLines(textarea.value);
