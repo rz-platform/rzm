@@ -126,7 +126,7 @@ export function initializeEditor(textarea: HTMLInputElement, callback: () => voi
     (window as any).autosave = function () {
       autosave(<HTMLFormElement>form);
     };
-    (window as any).autosaveInterval = setInterval(function () {
+    (window as any).autosaveInterval = setInterval(() => {
       if ((window as any).unsaved) {
         autosave(<HTMLFormElement>form);
       }
