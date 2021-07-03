@@ -1,6 +1,19 @@
 @(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String, breadcrumbs: FilePath, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
+
+@currentFile = {
+  <div class="breadcrumbs">
+    <span class="breadcrumbs-repo-name">@request.repository.name</span>
+    <span class="breadcrumbs-divider">/</span>
+    @for(breadcrumb <- breadcrumbs.path){
+      @breadcrumb.name
+      <span class="breadcrumbs-divider">/</span>
+    } 
+    @breadcrumbs.last
+  </div>
+}
+
 @printNode(node: FileNode, parentHash: String) = {
   <div
     class="rz-menu-item @if(node.isRoot) { menu-item-divided }"
@@ -19,15 +32,13 @@
           <img src='@routes.Assets.at("images/next.svg")' class="svg-icon file-tree-icon" />
           } 
         } 
-        @if(node.isRoot) { @request.repository.name } else { @node.data }
+        @if(node.isRoot) { 
+          <a href="@collaboratorsRoutes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"><img src='@routes.Assets.at("images/gear.svg")' class="svg-icon" /></a>
+          @request.repository.name 
+        } else { @node.data }
         </div>
         @if(request.role == Role.Owner || request.role == Role.Editor) {
         <div class="action-buttons">
-          <a
-            href="@documentsRoutes.FileUploadController.uploadPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
-          >
-            <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
-          </a>
           <a
             href="@documentsRoutes.FileEditController.addNewItemPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
             class="add-file-button" 
@@ -39,6 +50,11 @@
             class="add-folder-button"
           >
           <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon file-tree-icon add-folder-button"  />
+          </a>
+          <a
+            href="@documentsRoutes.FileUploadController.uploadPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
+          >
+            <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
           </a>
         </div>
         }
@@ -91,7 +107,6 @@
   </div>
 
   <div class="rz-editor-content">
-    @header.repositoryMenu(RzRepository.Page.FileView)
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
         repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
@@ -113,4 +128,4 @@
 }
 </style>
 <script src='@routes.Assets.at("dist/fileview.bundle.js")' type="text/javascript" defer></script>
-}
+}(currentFile)

@@ -10,9 +10,7 @@
     <script src='@routes.Assets.at("dist/turbo.bundle.js")' type="text/javascript"></script>
   </head>
   <body>
-    <header class="rz-header rz-menu rz-menu-horizontal">
-      @header
-    </header>
+    @header
     @if(!fluid) {
     <div class="container"> } @body @if(!fluid) { </div>
     }
