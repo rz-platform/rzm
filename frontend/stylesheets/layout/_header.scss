@@ -1,12 +1,21 @@
 .rz-header {
   border-bottom: 1px solid #ebebeb;
+  display: flex;
+  flex-direction: row;
 }
 .rz-logo {
   font-weight: bold;
   border-right: 1px gray solid;
   margin-right: 10px;
 }
-
+.current-file {
+  display: inline-block;
+  margin-right: auto;
+  padding-top: 0.5em;
+}
+.rz-my-documents {
+  width: $filetree-width;
+}
 .auth-user {
   margin-left: auto;
 }

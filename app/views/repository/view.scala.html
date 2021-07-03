@@ -1,6 +1,19 @@
 @(editorForm:Form[EditedItem],blob:RepositoryTreeContent, path:String, rev: String, breadcrumbs: FilePath, fileTree:FileTree,newItemForm: Form[NewItem])(implicit request: RepositoryRequestHeader)
 
 @import views.html.helper._
+
+@currentFile = {
+  <div class="breadcrumbs">
+    <span class="breadcrumbs-repo-name">@request.repository.name</span>
+    <span class="breadcrumbs-divider">/</span>
+    @for(breadcrumb <- breadcrumbs.path){
+      @breadcrumb.name
+      <span class="breadcrumbs-divider">/</span>
+    } 
+    @breadcrumbs.last
+  </div>
+}
+
 @printNode(node: FileNode, parentHash: String) = {
   <div
     class="rz-menu-item @if(node.isRoot) { menu-item-divided }"
@@ -115,4 +128,4 @@
 }
 </style>
 <script src='@routes.Assets.at("dist/fileview.bundle.js")' type="text/javascript" defer></script>
-}
+}(currentFile)
