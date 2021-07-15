@@ -18,8 +18,18 @@
 
 @base.auth(request.messages("repository.list.title")){
 <div class="repo-list-header">
-  <a class="tf-button" href="@documentsRoutes.RzRepositoryController.createPage()">
-    @request.messages("repository.list.createNew")
+  <a class="tf-card" href="@documentsRoutes.RzRepositoryController.createPage()">
+    <div>
+      <h3>@request.messages("repository.list.createNew")</h3>
+      <p></p>
+    </div>
+  </a>
+
+  <a class="tf-card" href="@documentsRoutes.RzRepositoryController.createPage()">
+    <div>
+      <h3>@request.messages("repository.list.createNew")</h3>
+      <p></p>
+    </div>
   </a>
 </div>
 

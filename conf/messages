@@ -6,7 +6,7 @@ error.pattern=Must not contain forbidden symbols
 
 common.done=Done
 common.error=Error
-common.myRepositories=My repositories
+common.myRepositories=Documents
 common.signout=Sign out
 
 error.notfound=Not Found
@@ -90,8 +90,8 @@ repository.edit.form.message = Commit message
 repository.edit.submit=Save
 repository.edit.invalid.name=File name contains invalid symbols
 
-repository.list.title=Repositories
-repository.list.createNew=Create a New Repository
+repository.list.title=Documents
+repository.list.createNew=New Documents
 repository.list.empty=Nothing to display
 
 repository.upload.title=Upload files

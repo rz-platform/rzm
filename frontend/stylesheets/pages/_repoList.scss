@@ -1,6 +1,9 @@
 .repo-list-header {
   margin-bottom: 20px;
   margin-top: 20px;
+
+  display: flex;
+  flex-direction: row;
 }
 
 .repo-list {
