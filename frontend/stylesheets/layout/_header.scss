@@ -1,9 +1,9 @@
-.rz-header {
+.tf-header {
   border-bottom: 1px solid #ebebeb;
   display: flex;
   flex-direction: row;
 }
-.rz-logo {
+.tf-logo {
   font-weight: bold;
   border-right: 1px gray solid;
   margin-right: 10px;
@@ -13,7 +13,7 @@
   margin-right: auto;
   padding-top: 0.5em;
 }
-.rz-my-documents {
+.tf-my-documents {
   width: $filetree-width;
 }
 .auth-user {

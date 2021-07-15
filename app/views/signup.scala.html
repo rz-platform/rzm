@@ -3,10 +3,10 @@
 @import infrastructure.repositories.RzDateTime
 
 @html = {
-<div class="rz-auth">
+<div class="tf-auth">
   <h1> @req.messages("signup.head") </h1>
   @header.alerts()
-  @form(usersRoutes.AccountController.saveAccount(), Symbol("class") -> "rz-form") {
+  @form(usersRoutes.AccountController.saveAccount(), Symbol("class") -> "tf-form") {
   @CSRF.formField 
   @inputText(signupForm("username"), Symbol("_label") -> req.messages("signup.form.username"), Symbol("_help") -> "", Symbol("autofocus") -> "") 
   @inputPassword(signupForm("password"), Symbol("_label") ->
@@ -18,9 +18,9 @@
 
   <input type="hidden" name="timezone" id="timezone" value="@RzDateTime.defaultTz.toString" />
 
-  <input type="submit" value='@req.messages("signup.submit")' class="rz-button rz-button-primary" />
+  <input type="submit" value='@req.messages("signup.submit")' class="tf-button tf-button-primary" />
   or
-  <a class="rz-button" href="@usersRoutes.AuthController.loginPage()">@req.messages("signup.signInLink")</a>
+  <a class="tf-button" href="@usersRoutes.AuthController.loginPage()">@req.messages("signup.signInLink")</a>
   }
 }
 
@@ -29,10 +29,10 @@
 }
 
 @headerHtml = {
-  <ul class="rz-menu-list">
-    <li class="rz-menu-item">
-    <a href="@documentsRoutes.RzRepositoryController.list()" class="rz-menu-link">
-      <span class="rz-logo"> RZM </span>
+  <ul class="tf-menu-list">
+    <li class="tf-menu-item">
+    <a href="@documentsRoutes.RzRepositoryController.list()" class="tf-menu-link">
+      <span class="tf-logo"> TexFlow </span>
       @req.messages("signin.title")</a>
     </a>
   </li>

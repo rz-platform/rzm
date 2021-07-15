@@ -5,22 +5,22 @@ dt {
   margin-right: 0;
 }
 
-.rz-form input[type='text'],
-.rz-form input[type='password'],
-.rz-form input[type='email'],
-.rz-form input[type='url'],
-.rz-form input[type='date'],
-.rz-form input[type='month'],
-.rz-form input[type='time'],
-.rz-form input[type='datetime'],
-.rz-form input[type='datetime-local'],
-.rz-form input[type='week'],
-.rz-form input[type='number'],
-.rz-form input[type='search'],
-.rz-form input[type='tel'],
-.rz-form input[type='color'],
-.rz-form select,
-.rz-form textarea {
+.tf-form input[type='text'],
+.tf-form input[type='password'],
+.tf-form input[type='email'],
+.tf-form input[type='url'],
+.tf-form input[type='date'],
+.tf-form input[type='month'],
+.tf-form input[type='time'],
+.tf-form input[type='datetime'],
+.tf-form input[type='datetime-local'],
+.tf-form input[type='week'],
+.tf-form input[type='number'],
+.tf-form input[type='search'],
+.tf-form input[type='tel'],
+.tf-form input[type='color'],
+.tf-form select,
+.tf-form textarea {
   padding: 0.5em 0.6em;
   display: inline-block;
   border: 1px solid #ccc;
@@ -30,7 +30,7 @@ dt {
   box-sizing: border-box;
 }
 
-.rz-form input:not([type]) {
+.tf-form input:not([type]) {
   padding: 0.5em 0.6em;
   display: inline-block;
   border: 1px solid #ccc;
@@ -39,26 +39,26 @@ dt {
   box-sizing: border-box;
 }
 
-.rz-form input[type='color'] {
+.tf-form input[type='color'] {
   padding: 0.2em 0.5em;
 }
 
-.rz-form input[type='text']:focus,
-.rz-form input[type='password']:focus,
-.rz-form input[type='email']:focus,
-.rz-form input[type='url']:focus,
-.rz-form input[type='date']:focus,
-.rz-form input[type='month']:focus,
-.rz-form input[type='time']:focus,
-.rz-form input[type='datetime']:focus,
-.rz-form input[type='datetime-local']:focus,
-.rz-form input[type='week']:focus,
-.rz-form input[type='number']:focus,
-.rz-form input[type='search']:focus,
-.rz-form input[type='tel']:focus,
-.rz-form input[type='color']:focus,
-.rz-form select:focus,
-.rz-form textarea:focus {
+.tf-form input[type='text']:focus,
+.tf-form input[type='password']:focus,
+.tf-form input[type='email']:focus,
+.tf-form input[type='url']:focus,
+.tf-form input[type='date']:focus,
+.tf-form input[type='month']:focus,
+.tf-form input[type='time']:focus,
+.tf-form input[type='datetime']:focus,
+.tf-form input[type='datetime-local']:focus,
+.tf-form input[type='week']:focus,
+.tf-form input[type='number']:focus,
+.tf-form input[type='search']:focus,
+.tf-form input[type='tel']:focus,
+.tf-form input[type='color']:focus,
+.tf-form select:focus,
+.tf-form textarea:focus {
   outline: 0;
   border-color: #129fea;
 }
@@ -67,39 +67,39 @@ dt {
 Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
 since IE8 won't execute CSS that contains a CSS3 selector.
 */
-.rz-form input:not([type]):focus {
+.tf-form input:not([type]):focus {
   outline: 0;
   border-color: #129fea;
 }
 
-.rz-form input[type='file']:focus,
-.rz-form input[type='radio']:focus,
-.rz-form input[type='checkbox']:focus {
+.tf-form input[type='file']:focus,
+.tf-form input[type='radio']:focus,
+.tf-form input[type='checkbox']:focus {
   outline: thin solid #129fea;
   outline: 1px auto #129fea;
 }
-.rz-form .rz-checkbox,
-.rz-form .rz-radio {
+.tf-form .tf-checkbox,
+.tf-form .tf-radio {
   margin: 0.5em 0;
   display: block;
 }
 
-.rz-form input[type='text'][disabled],
-.rz-form input[type='password'][disabled],
-.rz-form input[type='email'][disabled],
-.rz-form input[type='url'][disabled],
-.rz-form input[type='date'][disabled],
-.rz-form input[type='month'][disabled],
-.rz-form input[type='time'][disabled],
-.rz-form input[type='datetime'][disabled],
-.rz-form input[type='datetime-local'][disabled],
-.rz-form input[type='week'][disabled],
-.rz-form input[type='number'][disabled],
-.rz-form input[type='search'][disabled],
-.rz-form input[type='tel'][disabled],
-.rz-form input[type='color'][disabled],
-.rz-form select[disabled],
-.rz-form textarea[disabled] {
+.tf-form input[type='text'][disabled],
+.tf-form input[type='password'][disabled],
+.tf-form input[type='email'][disabled],
+.tf-form input[type='url'][disabled],
+.tf-form input[type='date'][disabled],
+.tf-form input[type='month'][disabled],
+.tf-form input[type='time'][disabled],
+.tf-form input[type='datetime'][disabled],
+.tf-form input[type='datetime-local'][disabled],
+.tf-form input[type='week'][disabled],
+.tf-form input[type='number'][disabled],
+.tf-form input[type='search'][disabled],
+.tf-form input[type='tel'][disabled],
+.tf-form input[type='color'][disabled],
+.tf-form select[disabled],
+.tf-form textarea[disabled] {
   cursor: not-allowed;
   background-color: #eaeded;
   color: #cad2d3;
@@ -109,47 +109,47 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
 since IE8 won't execute CSS that contains a CSS3 selector.
 */
-.rz-form input:not([type])[disabled] {
+.tf-form input:not([type])[disabled] {
   cursor: not-allowed;
   background-color: #eaeded;
   color: #cad2d3;
 }
-.rz-form input[readonly],
-.rz-form select[readonly],
-.rz-form textarea[readonly] {
+.tf-form input[readonly],
+.tf-form select[readonly],
+.tf-form textarea[readonly] {
   background-color: #eee; /* menu hover bg color */
   color: #777; /* menu text color */
   border-color: #ccc;
 }
 
-.rz-form input:focus:invalid,
-.rz-form textarea:focus:invalid,
-.rz-form select:focus:invalid {
+.tf-form input:focus:invalid,
+.tf-form textarea:focus:invalid,
+.tf-form select:focus:invalid {
   color: #b94a48;
   border-color: #e9322d;
 }
-.rz-form input[type='file']:focus:invalid:focus,
-.rz-form input[type='radio']:focus:invalid:focus,
-.rz-form input[type='checkbox']:focus:invalid:focus {
+.tf-form input[type='file']:focus:invalid:focus,
+.tf-form input[type='radio']:focus:invalid:focus,
+.tf-form input[type='checkbox']:focus:invalid:focus {
   outline-color: #e9322d;
 }
-.rz-form select {
+.tf-form select {
   height: 2.25em;
   border: 1px solid #ccc;
   background-color: white;
 }
-.rz-form select[multiple] {
+.tf-form select[multiple] {
   height: auto;
 }
-.rz-form label {
+.tf-form label {
   margin: 0.5em 0 0.2em;
 }
-.rz-form fieldset {
+.tf-form fieldset {
   margin: 0;
   padding: 0.35em 0 0.75em;
   border: 0;
 }
-.rz-form legend {
+.tf-form legend {
   display: block;
   width: 100%;
   padding: 0.3em 0;
@@ -158,71 +158,71 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   border-bottom: 1px solid #e5e5e5;
 }
 
-.rz-form-stacked input[type='text'],
-.rz-form-stacked input[type='password'],
-.rz-form-stacked input[type='email'],
-.rz-form-stacked input[type='url'],
-.rz-form-stacked input[type='date'],
-.rz-form-stacked input[type='month'],
-.rz-form-stacked input[type='time'],
-.rz-form-stacked input[type='datetime'],
-.rz-form-stacked input[type='datetime-local'],
-.rz-form-stacked input[type='week'],
-.rz-form-stacked input[type='number'],
-.rz-form-stacked input[type='search'],
-.rz-form-stacked input[type='tel'],
-.rz-form-stacked input[type='color'],
-.rz-form-stacked input[type='file'],
-.rz-form-stacked select,
-.rz-form-stacked label,
-.rz-form-stacked textarea {
+.tf-form-stacked input[type='text'],
+.tf-form-stacked input[type='password'],
+.tf-form-stacked input[type='email'],
+.tf-form-stacked input[type='url'],
+.tf-form-stacked input[type='date'],
+.tf-form-stacked input[type='month'],
+.tf-form-stacked input[type='time'],
+.tf-form-stacked input[type='datetime'],
+.tf-form-stacked input[type='datetime-local'],
+.tf-form-stacked input[type='week'],
+.tf-form-stacked input[type='number'],
+.tf-form-stacked input[type='search'],
+.tf-form-stacked input[type='tel'],
+.tf-form-stacked input[type='color'],
+.tf-form-stacked input[type='file'],
+.tf-form-stacked select,
+.tf-form-stacked label,
+.tf-form-stacked textarea {
   display: block;
   margin: 0.25em 0;
 }
 
-.rz-form-stacked input:not([type]) {
+.tf-form-stacked input:not([type]) {
   display: block;
   margin: 0.25em 0;
 }
-.rz-form-aligned input,
-.rz-form-aligned textarea,
-.rz-form-aligned select,
-.rz-form-message-inline {
+.tf-form-aligned input,
+.tf-form-aligned textarea,
+.tf-form-aligned select,
+.tf-form-message-inline {
   display: inline-block;
   vertical-align: middle;
 }
-.rz-form-aligned textarea {
+.tf-form-aligned textarea {
   vertical-align: top;
 }
 
 /* Aligned Forms */
-.rz-form-aligned .rz-control-group {
+.tf-form-aligned .tf-control-group {
   margin-bottom: 0.5em;
 }
-.rz-form-aligned .rz-control-group label {
+.tf-form-aligned .tf-control-group label {
   text-align: right;
   display: inline-block;
   vertical-align: middle;
   width: 10em;
   margin: 0 1em 0 0;
 }
-.rz-form-aligned .rz-controls {
+.tf-form-aligned .tf-controls {
   margin: 1.5em 0 0 11em;
 }
 
 /* Rounded Inputs */
-.rz-form input.rz-input-rounded,
-.rz-form .rz-input-rounded {
+.tf-form input.tf-input-rounded,
+.tf-form .tf-input-rounded {
   border-radius: 2em;
   padding: 0.5em 1em;
 }
 
 /* Grouped Inputs */
-.rz-form .rz-group fieldset {
+.tf-form .tf-group fieldset {
   margin-bottom: 10px;
 }
-.rz-form .rz-group input,
-.rz-form .rz-group textarea {
+.tf-form .tf-group input,
+.tf-form .tf-group textarea {
   display: block;
   padding: 10px;
   margin: 0 0 -1px;
@@ -230,53 +230,53 @@ since IE8 won't execute CSS that contains a CSS3 selector.
   position: relative;
   top: -1px;
 }
-.rz-form .rz-group input:focus,
-.rz-form .rz-group textarea:focus {
+.tf-form .tf-group input:focus,
+.tf-form .tf-group textarea:focus {
   z-index: 3;
 }
-.rz-form .rz-group input:first-child,
-.rz-form .rz-group textarea:first-child {
+.tf-form .tf-group input:first-child,
+.tf-form .tf-group textarea:first-child {
   top: 1px;
   border-radius: 4px 4px 0 0;
   margin: 0;
 }
-.rz-form .rz-group input:first-child:last-child,
-.rz-form .rz-group textarea:first-child:last-child {
+.tf-form .tf-group input:first-child:last-child,
+.tf-form .tf-group textarea:first-child:last-child {
   top: 1px;
   border-radius: 4px;
   margin: 0;
 }
-.rz-form .rz-group input:last-child,
-.rz-form .rz-group textarea:last-child {
+.tf-form .tf-group input:last-child,
+.tf-form .tf-group textarea:last-child {
   top: -2px;
   border-radius: 0 0 4px 4px;
   margin: 0;
 }
-.rz-form .rz-group button {
+.tf-form .tf-group button {
   margin: 0.35em 0;
 }
 
-.rz-form .rz-input-1 {
+.tf-form .tf-input-1 {
   width: 100%;
 }
-.rz-form .rz-input-3-4 {
+.tf-form .tf-input-3-4 {
   width: 75%;
 }
-.rz-form .rz-input-2-3 {
+.tf-form .tf-input-2-3 {
   width: 66%;
 }
-.rz-form .rz-input-1-2 {
+.tf-form .tf-input-1-2 {
   width: 50%;
 }
-.rz-form .rz-input-1-3 {
+.tf-form .tf-input-1-3 {
   width: 33%;
 }
-.rz-form .rz-input-1-4 {
+.tf-form .tf-input-1-4 {
   width: 25%;
 }
 
 /* Inline help for forms */
-.rz-form-message-inline {
+.tf-form-message-inline {
   display: inline-block;
   padding-left: 0.3em;
   color: #666;
@@ -285,68 +285,68 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 }
 
 /* Block help for forms */
-.rz-form-message {
+.tf-form-message {
   display: block;
   color: #666;
   font-size: 0.875em;
 }
 
 @media only screen and (max-width: 480px) {
-  .rz-form button[type='submit'] {
+  .tf-form button[type='submit'] {
     margin: 0.7em 0 0;
   }
 
-  .rz-form input:not([type]),
-  .rz-form input[type='text'],
-  .rz-form input[type='password'],
-  .rz-form input[type='email'],
-  .rz-form input[type='url'],
-  .rz-form input[type='date'],
-  .rz-form input[type='month'],
-  .rz-form input[type='time'],
-  .rz-form input[type='datetime'],
-  .rz-form input[type='datetime-local'],
-  .rz-form input[type='week'],
-  .rz-form input[type='number'],
-  .rz-form input[type='search'],
-  .rz-form input[type='tel'],
-  .rz-form input[type='color'],
-  .rz-form label {
+  .tf-form input:not([type]),
+  .tf-form input[type='text'],
+  .tf-form input[type='password'],
+  .tf-form input[type='email'],
+  .tf-form input[type='url'],
+  .tf-form input[type='date'],
+  .tf-form input[type='month'],
+  .tf-form input[type='time'],
+  .tf-form input[type='datetime'],
+  .tf-form input[type='datetime-local'],
+  .tf-form input[type='week'],
+  .tf-form input[type='number'],
+  .tf-form input[type='search'],
+  .tf-form input[type='tel'],
+  .tf-form input[type='color'],
+  .tf-form label {
     margin-bottom: 0.3em;
     display: block;
   }
 
-  .rz-group input:not([type]),
-  .rz-group input[type='text'],
-  .rz-group input[type='password'],
-  .rz-group input[type='email'],
-  .rz-group input[type='url'],
-  .rz-group input[type='date'],
-  .rz-group input[type='month'],
-  .rz-group input[type='time'],
-  .rz-group input[type='datetime'],
-  .rz-group input[type='datetime-local'],
-  .rz-group input[type='week'],
-  .rz-group input[type='number'],
-  .rz-group input[type='search'],
-  .rz-group input[type='tel'],
-  .rz-group input[type='color'] {
+  .tf-group input:not([type]),
+  .tf-group input[type='text'],
+  .tf-group input[type='password'],
+  .tf-group input[type='email'],
+  .tf-group input[type='url'],
+  .tf-group input[type='date'],
+  .tf-group input[type='month'],
+  .tf-group input[type='time'],
+  .tf-group input[type='datetime'],
+  .tf-group input[type='datetime-local'],
+  .tf-group input[type='week'],
+  .tf-group input[type='number'],
+  .tf-group input[type='search'],
+  .tf-group input[type='tel'],
+  .tf-group input[type='color'] {
     margin-bottom: 0;
   }
 
-  .rz-form-aligned .rz-control-group label {
+  .tf-form-aligned .tf-control-group label {
     margin-bottom: 0.3em;
     text-align: left;
     display: block;
     width: 100%;
   }
 
-  .rz-form-aligned .rz-controls {
+  .tf-form-aligned .tf-controls {
     margin: 1.5em 0 0 0;
   }
 
-  .rz-form-message-inline,
-  .rz-form-message {
+  .tf-form-message-inline,
+  .tf-form-message {
     display: block;
     font-size: 0.75em;
     padding: 0.2em 0 0.8em;

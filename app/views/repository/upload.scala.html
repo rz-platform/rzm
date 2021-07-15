@@ -11,15 +11,15 @@
   <p> @request.messages("repository.upload.messageRoot") </p>
   } 
   @form(documentsRoutes.FileUploadController.upload(request.repository.owner.username, request.repository.name,
-  rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"rz-form"){ 
+  rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"tf-form"){ 
   @CSRF.formField
 
-  <label for="single" class="rz-radio">
+  <label for="single" class="tf-radio">
     <input type="radio" name="inputtype" id="single" name="input-type" value="single" checked />
     @request.messages("repository.upload.singleFile")
   </label>
 
-  <label for="directory" class="rz-radio">
+  <label for="directory" class="tf-radio">
     <input type="radio" name="inputtype" id="directory" name="input-type" value="directory" />
     @request.messages("repository.upload.completeDirectory")
   </label>
@@ -28,7 +28,7 @@
 
   <input type="hidden" name="path" value="@path" />
 
-  <input type="submit" class="rz-button" value='@request.messages("repository.upload.submit")' />
+  <input type="submit" class="tf-button" value='@request.messages("repository.upload.submit")' />
   }
 </div>
 }{

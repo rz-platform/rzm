@@ -1,21 +1,21 @@
-.rz-menu-selected {
+.tf-menu-selected {
   background-color: #ebebeb;
 }
 
 @for $i from 0 through 4 {
-  .rz-menu-file-tree-depth-#{$i} {
+  .tf-menu-file-tree-depth-#{$i} {
     width: 100%;
     padding-left: $base-file-tree-padding * $i;
   }
 
-  .rz-menu-file-tree-depth-#{$i}-content {
+  .tf-menu-file-tree-depth-#{$i}-content {
     width: $filetree-width - ($base-file-tree-padding * $i)- 36px - 60px;
     overflow: hidden;
     display: inline-block;
     vertical-align: top;
   }
 
-  .rz-menu-file-tree-depth-#{$i}-content input {
+  .tf-menu-file-tree-depth-#{$i}-content input {
     width: $filetree-width - ($base-file-tree-padding * $i)- 36px - 100px;
   }
 }
@@ -71,20 +71,20 @@
   color: #6a737d;
 }
 @media (min-width: 992px) {
-  .rz-sidebar {
+  .tf-sidebar {
     display: flex;
     flex-direction: row;
     min-height: calc(100% - 52px);
   }
 
-  .rz-sidebar > div {
+  .tf-sidebar > div {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .rz-sidebar-filetree {
+  .tf-sidebar-filetree {
     max-width: $filetree-width;
     border-right: 1px solid #ebebeb;
     overflow-x: hidden;
@@ -92,7 +92,7 @@
     position: relative;
   }
 
-  .rz-editor-form {
+  .tf-editor-form {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -135,7 +135,7 @@
     }
   }
 
-  .rz-menu-file-tree {
+  .tf-menu-file-tree {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -144,14 +144,14 @@
     height: 100%;
   }
 }
-.rz-editor-content-header {
+.tf-editor-content-header {
   display: flex;
   flex-direction: row;
   padding-top: 10px;
   padding-bottom: 10px;
 }
 
-.rz-editor-content-header > div {
+.tf-editor-content-header > div {
   margin-right: 15px;
 }
 
@@ -167,6 +167,6 @@
   transition: all 0.1s ease;
 }
 
-.rz-content-image {
+.tf-content-image {
   max-width: 600px;
 }

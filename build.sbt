@@ -3,7 +3,7 @@ val JgitVersion = "5.7.0.202003110725-r"
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(
-    name := "rzm",
+    name := "texflow",
     version := "2.8.8",
     maintainer := "eugenebosyakov@gmail.com",
     scalaVersion := "2.13.5",

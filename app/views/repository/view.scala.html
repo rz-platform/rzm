@@ -16,15 +16,15 @@
 
 @printNode(node: FileNode, parentHash: String) = {
   <div
-    class="rz-menu-item @if(node.isRoot) { menu-item-divided }"
+    class="tf-menu-item @if(node.isRoot) { menu-item-divided }"
     depth="@node.depth"
     path="@node.pathAsUrl"
     hash="@node.hash"
     parent="@parentHash"
   >
-    <div class="rz-menu-link">
-      <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@node.depth">
-        <div class="rz-menu-file-tree-depth-@node.depth-content">
+    <div class="tf-menu-link">
+      <div class="tf-menu-file-tree-content tf-menu-file-tree-depth-@node.depth">
+        <div class="tf-menu-file-tree-depth-@node.depth-content">
         @if(!node.isRoot) { 
           @if(node.files.length > 0) {
           <img src='@routes.Assets.at("images/down.svg")' class="svg-icon file-tree-icon file-tree-show" id="icon-@node.hash" />
@@ -70,16 +70,16 @@
     @if(!(FileTree.excluded contains file.data)) {
       <div
         data-turbolinks="true"
-        class="rz-menu-item"
+        class="tf-menu-item"
         depth="@file.depth"
         parent="@node.hash"
-        @if(file.pathWithoutRoot.equals(path)) { id="rz-menu-file-tree-chosen" }
+        @if(file.pathWithoutRoot.equals(path)) { id="tf-menu-file-tree-chosen" }
       >
         <a
-          class="rz-menu-link @if(file.pathWithoutRoot == path) { rz-menu-selected }"
+          class="tf-menu-link @if(file.pathWithoutRoot == path) { tf-menu-selected }"
           href="@documentsRoutes.FileViewController.blob(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
         >
-          <div class="rz-menu-file-tree-content rz-menu-file-tree-depth-@file.depth">
+          <div class="tf-menu-file-tree-content tf-menu-file-tree-depth-@file.depth">
             <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />
             @file.data
           </div>
@@ -101,12 +101,12 @@
 @inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name") 
 }
 
-<div class="rz-sidebar">
-  <div class="rz-sidebar-filetree" id="rz-sidebar-filetree">
-    <div class="rz-menu-file-tree"> @printNode(fileTree.root, fileTree.root.hash) </div>
+<div class="tf-sidebar">
+  <div class="tf-sidebar-filetree" id="tf-sidebar-filetree">
+    <div class="tf-menu-file-tree"> @printNode(fileTree.root, fileTree.root.hash) </div>
   </div>
 
-  <div class="rz-editor-content">
+  <div class="tf-editor-content">
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
         repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 

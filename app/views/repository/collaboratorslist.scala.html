@@ -20,13 +20,13 @@ case (collaborator) => {
   request.messages("repository.collaborator.accessLevel.read") }
     case _ => () }}
 
-  <button class="rz-button" type="submit"> @request.messages("repository.collaborator.remove") </button>
+  <button class="tf-button" type="submit"> @request.messages("repository.collaborator.remove") </button>
 </div>
 } 
 } 
 }
 <h2>Add member</h2>
-@form(collaboratorsRoutes.CollaboratorsController.add(request.repository.owner.username, request.repository.name),Symbol("class") -> "rz-form") { 
+@form(collaboratorsRoutes.CollaboratorsController.add(request.repository.owner.username, request.repository.name),Symbol("class") -> "tf-form") { 
 @CSRF.formField 
 @inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("repository.collaborator.emailOrLogin"), Symbol("_help") -> "", Symbol("autofocus") -> "")
 @select(field = addCollaboratorForm("role"), options = Seq(
@@ -34,7 +34,7 @@ case (collaborator) => {
 	Role.Editor.perm.toString -> request.messages("repository.collaborator.accessLevel.write")),
 	Symbol("_label") -> request.messages("repository.collaborator.accessLevel"), Symbol("_help") -> "")
 <div class="actions">
-  <input type="submit" value='@request.messages("repository.collaborator.button")' class="rz-button" />
+  <input type="submit" value='@request.messages("repository.collaborator.button")' class="tf-button" />
 </div>
 }
 }()()

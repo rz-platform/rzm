@@ -71,7 +71,7 @@ class GenericControllerTest
         Some(getRandomString),
         getRandomString,
         RzDateTime.defaultTz.toString,
-        s"$getRandomString@rzm.dev"
+        s"$getRandomString@texflow.dev"
       )
     val request = addCSRFToken(
       FakeRequest(usersRoutes.AccountController.saveAccount())

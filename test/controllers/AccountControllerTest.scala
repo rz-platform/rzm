@@ -20,7 +20,7 @@ class AccountControllerTest extends GenericControllerTest {
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
               "timezone"    -> RzDateTime.defaultTz.toString,
-              "mailAddress" -> s"$getRandomString@rzm.dev"
+              "mailAddress" -> s"$getRandomString@texflow.dev"
             )
         )
 
@@ -44,7 +44,7 @@ class AccountControllerTest extends GenericControllerTest {
               "fullName"    -> getRandomString,
               "password"    -> getRandomString,
               "timezone"    -> RzDateTime.defaultTz.toString,
-              "mailAddress" -> s"$getRandomString@rzm.dev"
+              "mailAddress" -> s"$getRandomString@texflow.dev"
             )
         )
 
