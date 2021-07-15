@@ -2,11 +2,11 @@
 @import views.html.helper._
 @import print.date
 
-@form(documentsRoutes.FileEditController.edit(request.repository.owner.username,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"rz-editor-form", Symbol("id")->"code-form") {
+@form(documentsRoutes.FileEditController.edit(request.repository.owner.username,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"tf-editor-form", Symbol("id")->"code-form") {
 
 @CSRF.formField
 <noscript>
-<div class="rz-editor-content-header">
+<div class="tf-editor-content-header">
   <div class="breadcrumbs">
     <span class="breadcrumbs-repo-name">@request.repository.name</span>
     <span class="breadcrumbs-divider">/</span>
@@ -14,21 +14,21 @@
       @breadcrumb.name
       <span class="breadcrumbs-divider">/</span>
     } 
-    <div class="rz-form rz-form-inline">@inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")</div>
+    <div class="tf-form tf-form-inline">@inputText(editorForm("name"), Symbol("_label") -> "", Symbol("_help") -> "", Symbol("autocomplete") -> "off")</div>
   </div>
   <div class="actions">
     @if(request.role == Role.Owner || request.role == Role.Editor) {
     @if(blob.content.viewType == "text"){
     <input
       type="submit"
-      class="rz-button button-small"
+      class="tf-button button-small"
       value='@request.messages("repository.edit.submit")'
       id="file-save-submit"
     />
     }
     }
     <a
-      class="rz-button button-small"
+      class="tf-button button-small"
       href="@documentsRoutes.FileViewController.raw(request.repository.owner.username, request.repository.name, rev, path)"
     >
       <img src='@routes.Assets.at("images/download.svg")' class="svg-icon" />
@@ -56,7 +56,7 @@
 @if(blob.content.viewType == "image"){
   <img
     src="@documentsRoutes.FileViewController.raw(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, path)"
-    class="rz-content-image"
+    class="tf-content-image"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {

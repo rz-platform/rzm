@@ -1,7 +1,7 @@
-# RZM [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/rz-platform/rzm/blob/master/LICENSE) [![Build Status](https://github.com/rz-platform/rzm/workflows/test_backend/badge.svg)](https://github.com/rz-platform/rzm/actions)
+# TexFlow [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/texflow/texflow/blob/master/LICENSE) [![Build Status](https://github.com/texflow/texflow/workflows/test_backend/badge.svg)](https://github.com/texflow/texflow/actions)
 
 
-RZM is a TeX publishing platform.
+TexFlow is a TeX publishing platform.
 
 * Blazingly fast UI without JS-frameworks
 
@@ -9,21 +9,19 @@ RZM is a TeX publishing platform.
 
 * Git as storage
 
-Fully-functional Git Server with authentication against RZM implemented in [rz-gitserver](https://github.com/rz-platform/rz-gitserver).
+Fully-functional Git Server with TexFlow-authentication implemented in [tf-gitserver](https://github.com/texflow/tf-gitserver).
 
 ## Development
 
-This is Scala 2.13 application.
+TexFlow uses Git on top of the file system as a data master. User accounts and repositories meta-data persists in Redis. This is Scala 2.13 application.
 
 The front-end is implemented using Twirl template engine (https://github.com/playframework/twirl). CSS styles and separate per-page JS bundles are stored in [./frontend](./frontend).
 
-RZM uses Git on top of the file system as a data master. User accounts and repositories meta-data persists in Redis.
-
 ### Backend development
-
 
 * JDK 11+ required;
 * https://scala-sbt.org
+* libsodium
 * Redis 5+
 
 Run app in live-reload mode (from repository root):
@@ -70,14 +68,14 @@ npm run prettier && npm run check
 ```
 cd frontend && npm run build && cd -
 sbt dist
-target/universal/stage/bin/rzm -Dplay.http.secret.key=secret
+target/universal/stage/bin/texflow -Dplay.http.secret.key=secret
 ```
 
 ## Copyright
 
-Copyright 2020 Eugene Bosiakov (@bosiakov).
+Copyright 2021 Eugene Bosiakov (@bosiakov).
 
-RZM contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
+TexFlow contains parts of code inherited from [GitBucket](https://github.com/gitbucket/gitbucket) project.
 
 [Turbolinks license](./frontend/turbolinks/README.md).
 

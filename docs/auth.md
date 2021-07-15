@@ -1,6 +1,6 @@
 # Secure session management
 
-Play has a simple session cookie that is signed but not encrypted. RZM securely stores information in a client-side cookie without revealing it to the browser by encrypting the data with libsodium.
+Play has a simple session cookie that is signed but not encrypted. TexFlow securely stores information in a client-side cookie without revealing it to the browser by encrypting the data with libsodium.
 
 The only server-side state is a mapping of session ids to secret keys.  When the user logs out, the mapping is deleted, and the encrypted information cannot be retrieved using the client's session id. This prevents replay attacks after logout, even if the user saves off the cookies and replays them with the same browser and IP address.
 
@@ -44,4 +44,4 @@ Then finally, an `AuthenticatedAction`, an action builder, handles the work of r
 
 ### Session Store
 
-RZM uses Redis as a session store. Redis is extremely fast at retrieving simple values.
+TexFlow uses Redis as a session store. Redis is extremely fast at retrieving simple values.

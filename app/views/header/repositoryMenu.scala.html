@@ -1,48 +1,48 @@
 @(page: RzRepository.Page)(implicit request: RepositoryRequestHeader)
 
 @creatorButton() = {
-<li class="rz-menu-item @if(page == RzRepository.Page.Constructor) { rz-menu-selected }">
+<li class="tf-menu-item @if(page == RzRepository.Page.Constructor) { tf-menu-selected }">
 <a
   href="@templatesRoutes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
-  class="rz-menu-link"
+  class="tf-menu-link"
   >@request.messages("repository.tree.creator")</a
 >
 </li>
 }
 
-<div class="rz-menu rz-menu-horizontal">
+<div class="tf-menu tf-menu-horizontal">
   <span class="repository-name">@request.repository.owner.username / @request.repository.name → </span>
-  <ul class="rz-menu-list">
-    <li class="rz-menu-item @if(page == RzRepository.Page.FileView) { rz-menu-selected }">
+  <ul class="tf-menu-list">
+    <li class="tf-menu-item @if(page == RzRepository.Page.FileView) { tf-menu-selected }">
       <a
         href="@documentsRoutes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
-        class="rz-menu-link"
+        class="tf-menu-link"
         >@request.messages("repository.tree.fileview")</a
       >
     </li>
     @request.role match { 
     case Role.Owner => {
-    <li class="rz-menu-item @if(page == RzRepository.Page.Collaborators) { rz-menu-selected }">
+    <li class="tf-menu-item @if(page == RzRepository.Page.Collaborators) { tf-menu-selected }">
       <a
         href="@collaboratorsRoutes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
-        class="rz-menu-link"
+        class="tf-menu-link"
         >@request.messages("repository.tree.collaborators")</a
       >
     </li>
     }
     case _ => {}
     }
-    <li class="rz-menu-item">
+    <li class="tf-menu-item">
       <a
         href="@documentsRoutes.RzRepositoryController.downloadArchive(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
-        class="rz-menu-link"
+        class="tf-menu-link"
         >@request.messages("repository.tree.downloads")</a
       >
     </li>
-    <li class="rz-menu-item @if(page == RzRepository.Page.CommitHistory) { rz-menu-selected }">
+    <li class="tf-menu-item @if(page == RzRepository.Page.CommitHistory) { tf-menu-selected }">
       <a
         href="@documentsRoutes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
-        class="rz-menu-link">
+        class="tf-menu-link">
         @request.messages("repository.tree.commits")
       </a>
     </li>
@@ -50,24 +50,24 @@
       case (Role.Owner, None) => creatorButton()
       case _ => {}
     }}
-    <li class="rz-menu-item rz-clone-by">
+    <li class="tf-menu-item tf-clone-by">
         <input type="radio" id="show-http" name="radios" checked> 
         <label for="show-http" class="clone-label">HTTPS</label>
         <input type="radio" id="show-ssh" name="radios"> 
         <label for="show-ssh" class="clone-label">SSH</label>
         
         <span id="git-http-url-block">
-          <form class="rz-form rz-form-inline" onsubmit="return false;">
-            <input id="git-http-url" class="rz-input-inline" type="text" readonly value="@request.repository.http(request)" />
-            <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-http-url").select();document.execCommand("copy");'>
+          <form class="tf-form tf-form-inline" onsubmit="return false;">
+            <input id="git-http-url" class="tf-input-inline" type="text" readonly value="@request.repository.http(request)" />
+            <button class="tf-button ssh-copy-button tf-button-left" onclick='document.getElementById("git-http-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>
           </form>
         </span>
         <span id="git-ssh-url-block">
-          <form class="rz-form rz-form-inline" onsubmit="return false;">
-            <input id="git-ssh-url" class="rz-input-inline" type="text" readonly value="@request.repository.ssh(request)" />
-            <button class="rz-button ssh-copy-button rz-button-left" onclick='document.getElementById("git-ssh-url").select();document.execCommand("copy");'>
+          <form class="tf-form tf-form-inline" onsubmit="return false;">
+            <input id="git-ssh-url" class="tf-input-inline" type="text" readonly value="@request.repository.ssh(request)" />
+            <button class="tf-button ssh-copy-button tf-button-left" onclick='document.getElementById("git-ssh-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>
           </form>

@@ -1,9 +1,9 @@
 /** Constants */
 
 const maxDepthInFileTree = 4;
-const creationElId = 'rz-creation';
-const creationFormId = 'rz-creation-form';
-const creationInputId = 'rz-creation-form-input';
+const creationElId = 'tf-creation';
+const creationFormId = 'tf-creation-form';
+const creationInputId = 'tf-creation-form-input';
 
 /** Utilities */
 
@@ -50,19 +50,19 @@ function buildInlineInputField(iconSrc: string, depth: number): HTMLElement {
     creationElement.remove(); // remove if exists
   }
   const el = document.createElement('div');
-  el.className = 'rz-menu-item';
+  el.className = 'tf-menu-item';
   el.setAttribute('id', creationElId);
   el.innerHTML =
-    '<div class="rz-menu-link">' +
-    '<div class="rz-menu-file-tree-depth-' +
+    '<div class="tf-menu-link">' +
+    '<div class="tf-menu-file-tree-depth-' +
     d +
     '">' +
-    '<div class="rz-menu-file-tree-depth-' +
+    '<div class="tf-menu-file-tree-depth-' +
     d +
     '-content">' +
     '<form id="' +
     creationFormId +
-    '" class="rz-form">' +
+    '" class="tf-form">' +
     '<img class="svg-icon" src="' +
     iconSrc +
     '" />' +
@@ -147,7 +147,7 @@ function changeTogglerIcon(target: HTMLElement, src: string, isDown: boolean) {
 }
 
 function toggleSubTree(el: HTMLElement, isDown: boolean) {
-  const menuItems = document.getElementsByClassName('rz-menu-item');
+  const menuItems = document.getElementsByClassName('tf-menu-item');
   const hash = el.getAttribute('hash');
   if (hash) {
     for (let i = 0; i < menuItems.length; i++) {
@@ -187,8 +187,8 @@ export function handleFileTree(target: HTMLElement): void {
 }
 
 export function scrollToActiveFile(): void {
-  const fileTree = document.getElementById('rz-sidebar-filetree');
-  const fileTreeChosen = document.getElementById('rz-menu-file-tree-chosen');
+  const fileTree = document.getElementById('tf-sidebar-filetree');
+  const fileTreeChosen = document.getElementById('tf-menu-file-tree-chosen');
 
   if (fileTree && fileTreeChosen) {
     fileTree.scrollTo(0, getYOffset(fileTreeChosen) - fileTreeChosen.offsetHeight * 2);

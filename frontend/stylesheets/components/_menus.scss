@@ -1,43 +1,43 @@
-.rz-menu {
+.tf-menu {
   box-sizing: border-box;
 }
 
-.rz-menu-fixed {
+.tf-menu-fixed {
   position: fixed;
   left: 0;
   top: 0;
   z-index: 3;
 }
 
-.rz-menu-list,
-.rz-menu-item {
+.tf-menu-list,
+.tf-menu-item {
   position: relative;
 }
 
-.rz-menu-list {
+.tf-menu-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.rz-menu-item {
+.tf-menu-item {
   padding: 0;
   margin: 0;
 }
 
-.rz-menu-link,
-.rz-menu-heading {
+.tf-menu-link,
+.tf-menu-heading {
   display: block;
   text-decoration: none;
   white-space: nowrap;
 }
 
 /* Submenus should still be display: block; */
-.rz-menu-item .rz-menu-item {
+.tf-menu-item .tf-menu-item {
   display: block;
 }
 
-.rz-menu-children {
+.tf-menu-children {
   display: none;
   position: absolute;
   left: 100%;
@@ -48,99 +48,99 @@
   background-color: #fff;
 }
 
-.rz-menu-heading {
+.tf-menu-heading {
   text-transform: uppercase;
   color: #565d64;
 }
 
-.rz-menu-link {
+.tf-menu-link {
   color: #777;
 }
 
-.rz-menu-link,
-.rz-menu-disabled,
-.rz-menu-heading {
+.tf-menu-link,
+.tf-menu-disabled,
+.tf-menu-heading {
   padding: 0.5em 1em;
 }
 
-.rz-menu-horizontal .rz-menu-children {
+.tf-menu-horizontal .tf-menu-children {
   left: 0;
   top: auto;
   width: inherit;
 }
 
-.rz-menu-active > .rz-menu-children,
-.rz-menu-allow-hover:hover > .rz-menu-children {
+.tf-menu-active > .tf-menu-children,
+.tf-menu-allow-hover:hover > .tf-menu-children {
   display: block;
   position: absolute;
 }
 
 /* Vertical Menus - show the dropdown arrow */
-.rz-menu-has-children > .rz-menu-link::after {
+.tf-menu-has-children > .tf-menu-link::after {
   padding-left: 0.5em;
   content: '\25B8';
   font-size: small;
 }
 
 /* Horizontal Menus - show the dropdown arrow */
-.rz-menu-horizontal .rz-menu-has-children > .rz-menu-link::after {
+.tf-menu-horizontal .tf-menu-has-children > .tf-menu-link::after {
   content: '\25BE';
 }
 
 /* HORIZONTAL MENU */
 
 /* misc default styling */
-.rz-menu-horizontal .rz-menu-separator {
+.tf-menu-horizontal .tf-menu-separator {
   width: 1px;
   height: 1.3em;
   margin: 0 0.3em;
 }
 
-.rz-menu-separator,
-.rz-menu-horizontal .rz-menu-children .rz-menu-separator {
+.tf-menu-separator,
+.tf-menu-horizontal .tf-menu-children .tf-menu-separator {
   background-color: #ccc;
   height: 1px;
   margin: 0.3em 0;
 }
 
 /* Need to reset the separator since submenu is vertical */
-.rz-menu-horizontal .rz-menu-children .rz-menu-separator {
+.tf-menu-horizontal .tf-menu-children .tf-menu-separator {
   display: block;
   width: auto;
 }
 
-.rz-menu-horizontal {
+.tf-menu-horizontal {
   width: 100%;
   white-space: nowrap;
 }
 
-.rz-menu-horizontal .rz-menu-list {
+.tf-menu-horizontal .tf-menu-list {
   display: inline-block;
 }
 
 /* Initial menus should be inline-block so that they are horizontal */
-.rz-menu-horizontal .rz-menu-item,
-.rz-menu-horizontal .rz-menu-heading,
-.rz-menu-horizontal .rz-menu-separator {
+.tf-menu-horizontal .tf-menu-item,
+.tf-menu-horizontal .tf-menu-heading,
+.tf-menu-horizontal .tf-menu-separator {
   display: inline-block;
   vertical-align: middle;
 }
 
 /* scrollable menus */
-.rz-menu-scrollable {
+.tf-menu-scrollable {
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
-.rz-menu-scrollable .rz-menu-list {
+.tf-menu-scrollable .tf-menu-list {
   display: block;
 }
 
-.rz-menu-horizontal.rz-menu-scrollable .rz-menu-list {
+.tf-menu-horizontal.tf-menu-scrollable .tf-menu-list {
   display: inline-block;
 }
 
-.rz-menu-horizontal.rz-menu-scrollable {
+.tf-menu-horizontal.tf-menu-scrollable {
   white-space: nowrap;
   overflow-y: hidden;
   overflow-x: auto;
@@ -149,22 +149,22 @@
   padding: 0.5em 0;
 }
 
-.rz-menu-disabled {
+.tf-menu-disabled {
   opacity: 0.5;
 }
 
-.rz-menu-disabled .rz-menu-link:hover {
+.tf-menu-disabled .tf-menu-link:hover {
   background-color: transparent;
 }
 
-.rz-menu-active > .rz-menu-link,
-.rz-menu-link:hover,
-.rz-menu-link:focus {
+.tf-menu-active > .tf-menu-link,
+.tf-menu-link:hover,
+.tf-menu-link:focus {
   background-color: #eee;
 }
 
-.rz-menu-selected > .rz-menu-link,
-.rz-menu-selected > .rz-menu-link:visited {
+.tf-menu-selected > .tf-menu-link,
+.tf-menu-selected > .tf-menu-link:visited {
   color: #000;
 }
 
@@ -195,7 +195,7 @@ input[id='show-ssh']:checked ~ #git-http-url-block {
   display: none;
 }
 
-.rz-clone-by {
+.tf-clone-by {
   color: $base-gray-color;
   padding-left: 1em;
   input[type='radio'] {
@@ -216,15 +216,15 @@ input[id='show-ssh']:checked ~ #git-http-url-block {
   margin-left: -5px;
 }
 
-.rz-form-inline {
+.tf-form-inline {
   display: inline;
 }
 
-.rz-input-inline {
+.tf-input-inline {
   border-radius: 4px 0 0 4px !important;
 }
 
-.rz-button-left {
+.tf-button-left {
   border-radius: 0 4px 4px 0 !important;
 }
 

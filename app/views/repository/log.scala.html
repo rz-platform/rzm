@@ -20,7 +20,7 @@
 }
 @if(page > 1) {
   <a
-    class="rz-button"
+    class="tf-button"
     href="@documentsRoutes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, rev, page - 1)"
   >
     @request.messages("repository.log.previousPage")
@@ -28,7 +28,7 @@
 }
 @if(hasNext) {
   <a
-    class="rz-button"
+    class="tf-button"
     href="@documentsRoutes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, rev, page + 1)"
     >@request.messages("repository.log.nextPage")</a
   >

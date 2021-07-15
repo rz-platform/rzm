@@ -4,21 +4,21 @@
 @linkToCreator(repository: RzRepository) = {
 <a
   href="@templatesRoutes.TemplateController.overview(repository.owner.username, repository.name)"
-  class="rz-menu-link"
+  class="tf-menu-link"
   >  @repository.owner.username / @repository.name </a
 >
 }
 @linkToFileTree(repository: RzRepository) = {
 <a
   href="@documentsRoutes.FileViewController.emptyTree(repository.owner.username, repository.name, RzRepository.defaultBranch)"
-  class="rz-menu-link"
+  class="tf-menu-link"
   >  @repository.owner.username / @repository.name </a
 >
 }
 
 @base.auth(request.messages("repository.list.title")){
 <div class="repo-list-header">
-  <a class="rz-button" href="@documentsRoutes.RzRepositoryController.createPage()">
+  <a class="tf-button" href="@documentsRoutes.RzRepositoryController.createPage()">
     @request.messages("repository.list.createNew")
   </a>
 </div>

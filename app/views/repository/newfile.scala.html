@@ -19,7 +19,7 @@
 }
 </p>
 
-@form(documentsRoutes.FileEditController.addNewItem(req.repository.owner.username,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"rz-form"){ 
+@form(documentsRoutes.FileEditController.addNewItem(req.repository.owner.username,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"tf-form"){ 
 @CSRF.formField
 <input type="hidden" name="path" value=@if(path.isEmpty) {"."} else {"@rev"} /> 
 <input type="hidden" name="rev" value="@rev" /> 
@@ -28,7 +28,7 @@
 
 @inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name", Symbol("_label") -> "Name", Symbol("_help") -> "", Symbol("autofocus")->true)
 
-<input type="submit" value='@req.messages("repository.newfile.submit")' class="rz-button rz-button-primary" />
+<input type="submit" value='@req.messages("repository.newfile.submit")' class="tf-button tf-button-primary" />
 }
 
 }()()

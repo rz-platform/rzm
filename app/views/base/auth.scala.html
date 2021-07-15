@@ -1,19 +1,19 @@
 @(title:String, fluid:Boolean=false)(body:Html)(js:Html=Html(""))(currentFile:Html=Html(""))(implicit request:RequestWithAccount)
 
 @headerHtml = {
-<div class="rz-header">
-  <div class="rz-u rz-menu-item rz-my-documents" style="width: 300px;">
-      <a href="@documentsRoutes.RzRepositoryController.list()" class="rz-menu-link">
-      <span class="rz-logo"> RZM </span>
+<div class="tf-header">
+  <div class="tf-u tf-menu-item tf-my-documents" style="width: 300px;">
+      <a href="@documentsRoutes.RzRepositoryController.list()" class="tf-menu-link">
+      <span class="tf-logo"> TexFlow </span>
 
       @request.messages("common.myRepositories")</a>
   </div>
-  <div class="rz-u current-file">
+  <div class="tf-u current-file">
     @currentFile
   </div>
-  <div class="rz-u rz-menu-item">
+  <div class="tf-u tf-menu-item">
     <div class="auth-user">
-      <a href="@usersRoutes.AccountController.accountPage()" class="rz-menu-link">
+      <a href="@usersRoutes.AccountController.accountPage()" class="tf-menu-link">
         @request.account.username
       </a>
     </div>

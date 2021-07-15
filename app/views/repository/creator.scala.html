@@ -3,13 +3,13 @@
 @import views.html.helper._
 
 @renderNumeric(n: Numeric) = {
-  <label for="@n.name" class="rz-template-name">@n.label</label>
+  <label for="@n.name" class="tf-template-name">@n.label</label>
   <label for="@n.name">@n.description</label>
   <input id="@n.name" name="@n.name" type="number" value="@n.default" min="@n.min" max="@n.max" required />
 }
 
 @renderCheckbox(c: Checkbox) = {
-  <label for="@c.name" class="rz-checkbox">
+  <label for="@c.name" class="tf-checkbox">
     <p>@c.description</p>
     <input type="checkbox" id="@c.name" name="@c.name" /> 
       @c.label
@@ -17,7 +17,7 @@
 }
 
 @renderSelect(s: Choice) = {
-  <label for="@s.name" class="rz-template-name">@s.label</label>
+  <label for="@s.name" class="tf-template-name">@s.label</label>
   <label for="@s.name">@s.description</label>
   <select name="@s.name" id="@s.name">
     @s.choices.map { c =>
@@ -35,7 +35,7 @@
 }
 
 @renderTemplatePdf(tplId: String) = {
-  <embed src="@templatesRoutes.TemplateController.templatePdf(tplId)#zoom=75&pagemode=none&toolbar=0&view=FitH,top" type="application/pdf" class="rz-pdf-template"/>
+  <embed src="@templatesRoutes.TemplateController.templatePdf(tplId)#zoom=75&pagemode=none&toolbar=0&view=FitH,top" type="application/pdf" class="tf-pdf-template"/>
 }
 
 
@@ -48,14 +48,14 @@
         @tpl.description.map { text =>
           <p> @{text} </p>
         }
-        @form(templatesRoutes.TemplateController.build(req.repository.owner.username, req.repository.name), Symbol("class")->"rz-form rz-form-stacked rz-form-template") {
+        @form(templatesRoutes.TemplateController.build(req.repository.owner.username, req.repository.name), Symbol("class")->"tf-form tf-form-stacked tf-form-template") {
           @CSRF.formField
-            <div class="rz-controls">
-                <button type="submit" class="rz-button rz-button-primary">Create</button>
+            <div class="tf-controls">
+                <button type="submit" class="tf-button tf-button-primary">Create</button>
             </div>
             <input type="hidden" name="name" value="@tpl.id" />
             @tpl.fields.map { field =>
-              <div class="rz-control-group"> @renderField(field) </div>
+              <div class="tf-control-group"> @renderField(field) </div>
             }
         }
     </div>
@@ -67,12 +67,12 @@
 @header.alerts()
 
 <div class="template-page">
-  <div class="rz-menu rz-template-list">
-    <ul class="rz-menu-list">
+  <div class="tf-menu tf-template-list">
+    <ul class="tf-menu-list">
       @map.map { case(key, template) =>
-      <li class="rz-menu-item">
+      <li class="tf-menu-item">
         <a 
-          class='rz-menu-link @if(currentKey.getOrElse("").equals(key)) { rz-menu-selected }'
+          class='tf-menu-link @if(currentKey.getOrElse("").equals(key)) { tf-menu-selected }'
           href="@templatesRoutes.TemplateController.view(req.repository.owner.username, req.repository.name, key)">@template.name</a>
       </li>
       }
