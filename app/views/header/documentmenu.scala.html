@@ -3,30 +3,30 @@
 @creatorButton() = {
 <li class="tf-menu-item @if(page == RzRepository.Page.Constructor) { tf-menu-selected }">
 <a
-  href="@templatesRoutes.TemplateController.overview(request.repository.owner.username, request.repository.name)"
+  href="@templatesRoutes.TemplateController.overview(request.doc.owner.username, request.doc.name)"
   class="tf-menu-link"
-  >@request.messages("repository.tree.creator")</a
+  >@request.messages("doc.tree.creator")</a
 >
 </li>
 }
 
 <div class="tf-menu tf-menu-horizontal">
-  <span class="repository-name">@request.repository.owner.username / @request.repository.name → </span>
+  <span class="repository-name">@request.doc.owner.username / @request.doc.name → </span>
   <ul class="tf-menu-list">
     <li class="tf-menu-item @if(page == RzRepository.Page.FileView) { tf-menu-selected }">
       <a
-        href="@documentsRoutes.FileViewController.emptyTree(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
+        href="@documentsRoutes.FileViewController.emptyTree(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch)"
         class="tf-menu-link"
-        >@request.messages("repository.tree.fileview")</a
+        >@request.messages("doc.tree.fileview")</a
       >
     </li>
     @request.role match { 
     case Role.Owner => {
     <li class="tf-menu-item @if(page == RzRepository.Page.Collaborators) { tf-menu-selected }">
       <a
-        href="@collaboratorsRoutes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"
+        href="@collaboratorsRoutes.CollaboratorsController.page(request.doc.owner.username, request.doc.name)"
         class="tf-menu-link"
-        >@request.messages("repository.tree.collaborators")</a
+        >@request.messages("doc.tree.collaborators")</a
       >
     </li>
     }
@@ -34,19 +34,19 @@
     }
     <li class="tf-menu-item">
       <a
-        href="@documentsRoutes.RzRepositoryController.downloadArchive(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch)"
+        href="@documentsRoutes.RzRepositoryController.downloadArchive(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch)"
         class="tf-menu-link"
-        >@request.messages("repository.tree.downloads")</a
+        >@request.messages("doc.tree.downloads")</a
       >
     </li>
     <li class="tf-menu-item @if(page == RzRepository.Page.CommitHistory) { tf-menu-selected }">
       <a
-        href="@documentsRoutes.RzRepositoryController.commitLog(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, 1)"
+        href="@documentsRoutes.RzRepositoryController.commitLog(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch, 1)"
         class="tf-menu-link">
-        @request.messages("repository.tree.commits")
+        @request.messages("doc.tree.commits")
       </a>
     </li>
-    @{(request.role,request.repository.updatedAt)  match { 
+    @{(request.role,request.doc.updatedAt)  match { 
       case (Role.Owner, None) => creatorButton()
       case _ => {}
     }}
@@ -58,7 +58,7 @@
         
         <span id="git-http-url-block">
           <form class="tf-form tf-form-inline" onsubmit="return false;">
-            <input id="git-http-url" class="tf-input-inline" type="text" readonly value="@request.repository.http(request)" />
+            <input id="git-http-url" class="tf-input-inline" type="text" readonly value="@request.doc.http(request)" />
             <button class="tf-button ssh-copy-button tf-button-left" onclick='document.getElementById("git-http-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>
@@ -66,7 +66,7 @@
         </span>
         <span id="git-ssh-url-block">
           <form class="tf-form tf-form-inline" onsubmit="return false;">
-            <input id="git-ssh-url" class="tf-input-inline" type="text" readonly value="@request.repository.ssh(request)" />
+            <input id="git-ssh-url" class="tf-input-inline" type="text" readonly value="@request.doc.ssh(request)" />
             <button class="tf-button ssh-copy-button tf-button-left" onclick='document.getElementById("git-ssh-url").select();document.execCommand("copy");'>
               <img src='@routes.Assets.at("images/copy.svg")' class="svg-icon" />
             </button>

@@ -46,7 +46,7 @@ class GitStorage @Inject() (config: Configuration) {
   private val locks = new ConcurrentHashMap[String, Lock]()
 
   /**
-   * Returns the lock object for the specified repository.
+   * Returns the lock object for the specified doc.
    */
   private def getLockObject(key: String): Lock = synchronized {
     if (!locks.containsKey(key)) {
@@ -109,7 +109,7 @@ class GitStorage @Inject() (config: Configuration) {
   def getContentSize(loader: ObjectLoader): Long = loader.getSize
 
   /**
-   * Get objectLoader of the given object id from the Git repository.
+   * Get objectLoader of the given object id from the Git doc.
    *
    * @param git the Git object
    * @param id  the object id
@@ -124,7 +124,7 @@ class GitStorage @Inject() (config: Configuration) {
     }
 
   /**
-   * Get object content of the given object id as byte array from the Git repository.
+   * Get object content of the given object id as byte array from the Git doc.
    *
    * @param git            the Git object
    * @param id             the object id

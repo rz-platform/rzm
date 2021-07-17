@@ -5,29 +5,27 @@
 <a
   href="@templatesRoutes.TemplateController.overview(repository.owner.username, repository.name)"
   class="tf-menu-link"
-  >  @repository.owner.username / @repository.name </a
->
+  >  @repository.owner.username / @repository.name </a>
 }
 @linkToFileTree(repository: RzRepository) = {
 <a
   href="@documentsRoutes.FileViewController.emptyTree(repository.owner.username, repository.name, RzRepository.defaultBranch)"
   class="tf-menu-link"
-  >  @repository.owner.username / @repository.name </a
->
+  >  @repository.owner.username / @repository.name </a>
 }
 
-@base.auth(request.messages("repository.list.title")){
+@base.auth(request.messages("doc.list.title")){
 <div class="repo-list-header">
   <a class="tf-card" href="@documentsRoutes.RzRepositoryController.createPage()">
     <div>
-      <h3>@request.messages("repository.list.createNew")</h3>
+      <h3>@request.messages("doc.list.createNew")</h3>
       <p></p>
     </div>
   </a>
 
   <a class="tf-card" href="@documentsRoutes.RzRepositoryController.createPage()">
     <div>
-      <h3>@request.messages("repository.list.createNew")</h3>
+      <h3>@request.messages("doc.list.createNew")</h3>
       <p></p>
     </div>
   </a>
@@ -44,7 +42,7 @@
     </div>
     } 
   }.getOrElse {
-  <p> @request.messages("repository.list.empty") </p>
+  <p> @request.messages("doc.list.empty") </p>
   }
 </div>
 }()()

@@ -1,0 +1,40 @@
+@(addCollaboratorForm:Form[NewCollaboratorDetails],collaboratorsList:Seq[Collaborator])(implicit request:RepositoryRequestHeader) 
+@import views.html.helper._
+
+@base.auth(request.messages("doc.collaborator.title")){
+@header.documentmenu(RzRepository.Page.Collaborators)
+@header.alerts()
+@if(collaboratorsList.length > 0) {
+<h2> @request.messages("doc.collaborator.list") </h2>
+} 
+@collaboratorsList.map { 
+case (collaborator) => {
+@form(collaboratorsRoutes.CollaboratorsController.remove(request.doc.owner.username, request.doc.name)) {
+@CSRF.formField
+<input type="hidden" name="email" value="@collaborator.account.email" />
+<div class="collaborator-row">
+  @collaborator.account.username / @{collaborator.role match {
+    case Role.Editor => {
+  request.messages("doc.collaborator.accessLevel.write") }
+    case Role.Viewer => {
+  request.messages("doc.collaborator.accessLevel.read") }
+    case _ => () }}
+
+  <button class="tf-button" type="submit"> @request.messages("doc.collaborator.remove") </button>
+</div>
+} 
+} 
+}
+<h2>Add member</h2>
+@form(collaboratorsRoutes.CollaboratorsController.add(request.doc.owner.username, request.doc.name),Symbol("class") -> "tf-form") { 
+@CSRF.formField 
+@inputText(addCollaboratorForm("emailOrLogin"), Symbol("_label") -> request.messages("doc.collaborator.emailOrLogin"), Symbol("_help") -> "", Symbol("autofocus") -> "")
+@select(field = addCollaboratorForm("role"), options = Seq(
+	Role.Viewer.perm.toString -> request.messages("doc.collaborator.accessLevel.read"),
+	Role.Editor.perm.toString -> request.messages("doc.collaborator.accessLevel.write")),
+	Symbol("_label") -> request.messages("doc.collaborator.accessLevel"), Symbol("_help") -> "")
+<div class="actions">
+  <input type="submit" value='@request.messages("doc.collaborator.button")' class="tf-button" />
+</div>
+}
+}()()

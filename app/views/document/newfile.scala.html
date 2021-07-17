@@ -1,25 +1,25 @@
 @(newItemForm: Form[NewItem], rev: String, path: String, isFolder: Boolean)(implicit req: RepositoryRequestHeader) 
 @import views.html.helper._
 
-@base.auth(req.messages("repository.newfile.title")){
-@header.repositoryMenu(RzRepository.Page.NewFile)
+@base.auth(req.messages("doc.newfile.title")){
+@header.documentmenu(RzRepository.Page.NewFile)
 @header.alerts()
 
 
 <p> 
 @if(isFolder) {
-@req.messages("repository.newfile.newfolder") 
+@req.messages("doc.newfile.newfolder") 
 } else {
-@req.messages("repository.newfile.newfile") 
+@req.messages("doc.newfile.newfile") 
 }
 @if(path.isEmpty) {
-@req.messages("repository.newfile.root")
+@req.messages("doc.newfile.root")
 } else {
-@req.messages("repository.newfile.path", path)
+@req.messages("doc.newfile.path", path)
 }
 </p>
 
-@form(documentsRoutes.FileEditController.addNewItem(req.repository.owner.username,req.repository.name), Symbol("id")->"new-item-form", Symbol("class")->"tf-form"){ 
+@form(documentsRoutes.FileEditController.addNewItem(req.doc.owner.username,req.doc.name), Symbol("id")->"new-item-form", Symbol("class")->"tf-form"){ 
 @CSRF.formField
 <input type="hidden" name="path" value=@if(path.isEmpty) {"."} else {"@rev"} /> 
 <input type="hidden" name="rev" value="@rev" /> 
@@ -28,7 +28,7 @@
 
 @inputText(newItemForm("name"),Symbol("id")-> "new-item-form-name", Symbol("_label") -> "Name", Symbol("_help") -> "", Symbol("autofocus")->true)
 
-<input type="submit" value='@req.messages("repository.newfile.submit")' class="tf-button tf-button-primary" />
+<input type="submit" value='@req.messages("doc.newfile.submit")' class="tf-button tf-button-primary" />
 }
 
 }()()

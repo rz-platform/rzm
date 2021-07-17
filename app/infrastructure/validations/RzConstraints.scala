@@ -25,12 +25,12 @@ object RzConstraints {
 
   val checkNameForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
     if (!ForbiddenSymbols.isNameValid(itemName)) Valid
-    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
+    else Invalid(Seq(ValidationError("doc.edit.invalid.name")))
   }
 
   val checkPathForExcludedSymbols: Constraint[String] = Constraint[String] { itemName: String =>
     if (!ForbiddenSymbols.isPathValid(itemName)) Valid
-    else Invalid(Seq(ValidationError("repository.edit.invalid.name")))
+    else Invalid(Seq(ValidationError("doc.edit.invalid.name")))
   }
 
 }

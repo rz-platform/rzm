@@ -7,13 +7,13 @@ import users.models.{ Account, AccountRequest, RequestWithAccount }
 
 trait RepositoryRequestHeader extends PreferredMessagesProvider with MessagesRequestHeader with RequestWithAccount {
   def account: Account
-  def repository: RzRepository
+  def doc: RzRepository
   def role: Role
 }
 
 class RepositoryRequest[A](
   request: AccountRequest[A],
-  val repository: RzRepository,
+  val doc: RzRepository,
   val account: Account,
   val role: Role,
   val messagesApi: MessagesApi
