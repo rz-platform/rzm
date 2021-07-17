@@ -50,7 +50,7 @@ class RzRepositoryController @Inject() (
                 _ <- metaGitRepository.createRepo(repo, Role.Owner, conf, name)
                 _ <- git.initRepo(repo)
               } yield Redirect(
-                templatesRoutes.TemplateController.overview(req.account.username, repo.name)
+                templatesRoutes.TemplateController.overview()
               )
             case _ =>
               val newForm = FormErrors.error[RepositoryDetails](

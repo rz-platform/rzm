@@ -91,7 +91,10 @@ doc.edit.submit=Save
 doc.edit.invalid.name=File name contains invalid symbols
 
 doc.list.title=Documents
-doc.list.createNew=New Documents
+doc.list.newtex=New scientific document
+doc.list.newtex.description=Any form of publishing in LaTeX system
+doc.list.newmd=New raw writing
+doc.list.newmd.description=Raw text in markdown format
 doc.list.empty=Nothing to display
 
 doc.upload.title=Upload files

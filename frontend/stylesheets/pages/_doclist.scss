@@ -1,13 +1,17 @@
-.repo-list-header {
+.doc-list-header {
   margin-bottom: 20px;
   margin-top: 20px;
 
   display: flex;
   flex-direction: row;
+
+  .tf-card {
+    margin-right: 20px;
+  }
 }
 
-.repo-list {
-  .repo-list-row {
+.doc-list {
+  .doc-list-row {
     a {
       color: #0366d6;
       text-decoration: none;
@@ -17,4 +21,13 @@
       text-decoration: underline;
     }
   }
+}
+
+.doc-list-create-cont {
+  margin: auto;
+}
+
+.doc-list-create-icon {
+  width: 25px;
+  margin-right: 10px;
 }

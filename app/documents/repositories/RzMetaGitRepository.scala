@@ -90,4 +90,12 @@ class RzMetaGitRepository @Inject() (redis: Redis, accountRepository: AccountRep
     }
   }
 
+  def numberOfRepositories(account: Account): Future[Either[RepositoryError, Long]] = Future {
+    redis.withClient { client =>
+      client.zcard(AccountProjects.key(account)) match {
+        case Some(s: Long) => Right(s)
+        case None          => Left(NotFoundInRepository)
+      }
+    }
+  }
 }

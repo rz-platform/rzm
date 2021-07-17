@@ -1,15 +1,5 @@
 @(page: RzRepository.Page)(implicit request: RepositoryRequestHeader)
 
-@creatorButton() = {
-<li class="tf-menu-item @if(page == RzRepository.Page.Constructor) { tf-menu-selected }">
-<a
-  href="@templatesRoutes.TemplateController.overview(request.doc.owner.username, request.doc.name)"
-  class="tf-menu-link"
-  >@request.messages("doc.tree.creator")</a
->
-</li>
-}
-
 <div class="tf-menu tf-menu-horizontal">
   <span class="repository-name">@request.doc.owner.username / @request.doc.name → </span>
   <ul class="tf-menu-list">
@@ -46,10 +36,7 @@
         @request.messages("doc.tree.commits")
       </a>
     </li>
-    @{(request.role,request.doc.updatedAt)  match { 
-      case (Role.Owner, None) => creatorButton()
-      case _ => {}
-    }}
+
     <li class="tf-menu-item tf-clone-by">
         <input type="radio" id="show-http" name="radios" checked> 
         <label for="show-http" class="clone-label">HTTPS</label>
