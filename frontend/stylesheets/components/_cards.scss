@@ -1,22 +1,21 @@
 .tf-card {
-    color: #000; /* for browsers that don't support 'inherit' as a color value */
-    color: inherit;
+  color: #000; /* for browsers that don't support 'inherit' as a color value */
+  color: inherit;
 
-    display: block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+  display: block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 
-    padding-right: 1em;
-    padding-bottom: 0em;
-    padding-left: 1em;
-    text-decoration: none;
+  padding-right: 1em;
+  padding-bottom: 0em;
+  padding-left: 1em;
+  text-decoration: none;
 }
 
 .tf-card:hover {
-    background-color: #eee;
+  background-color: #eee;
 }
-
 
 .tf-card-row {
   display: flex;
