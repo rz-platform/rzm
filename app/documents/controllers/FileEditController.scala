@@ -49,7 +49,7 @@ class FileEditController @Inject() (
 
             for {
               _ <- saveChanges(oldPath, newPath, content)(req)
-              _ <- metaGitRepository.updateRepo(req.repository)
+              _ <- metaGitRepository.updateRepo(req.doc)
             } yield Redirect(
               routes.FileViewController.blob(accountName, repositoryName, edited.rev, newPath.encoded)
             )
@@ -65,7 +65,7 @@ class FileEditController @Inject() (
     isFolder: Boolean = false
   ): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Editor)).async { implicit req =>
-      Future(Ok(html.repository.newfile(addNewItemForm, rev, RzPathUrl.make(path).uri, isFolder)))
+      Future(Ok(html.document.newfile(addNewItemForm, rev, RzPathUrl.make(path).uri, isFolder)))
     }
 
   // Play cannot reverse url with boolean flag, so we do need separate method for folders
@@ -88,7 +88,7 @@ class FileEditController @Inject() (
             val fName: RzPathUrl = RzPathUrl.make(newItem.path, newItem.name, newItem.isFolder)
             for {
               _ <- commitNewFile(fName, newItem)(req)
-              _ <- metaGitRepository.updateRepo(req.repository)
+              _ <- metaGitRepository.updateRepo(req.doc)
             } yield Redirect(
               routes.FileViewController.blob(accountName, repositoryName, newItem.rev, fName.encoded)
             )
@@ -102,14 +102,14 @@ class FileEditController @Inject() (
     content: Array[Byte]
   )(req: RepositoryRequest[AnyContent]): Future[_] =
     for {
-      _ <- git.invalidateCache(req.repository)
+      _ <- git.invalidateCache(req.doc)
     } yield git.commitFile(
       req.account,
-      req.repository,
+      req.doc,
       oldPath,
       newPath,
       content,
-      req.messages("repository.viewFile.commitMessage", oldPath.nameWithoutPath)
+      req.messages("doc.viewFile.commitMessage", oldPath.nameWithoutPath)
     )
 
   private def errorFunc(form: Form[NewItem], accountName: String, repositoryName: String)(
@@ -123,17 +123,17 @@ class FileEditController @Inject() (
       case Some(_) => Redirect(routes.FileEditController.addNewFolderPage(accountName, repositoryName, rev, path))
       case _       => Redirect(routes.FileEditController.addNewItemPage(accountName, repositoryName, rev, path))
     }
-    Future(redirect.flashing("error" -> Messages("repository.addNewItem.error.namereq")))
+    Future(redirect.flashing("error" -> Messages("doc.addNewItem.error.namereq")))
   }
 
   private def commitNewFile(fName: RzPathUrl, newItem: NewItem)(req: RepositoryRequest[AnyContent]): Future[_] =
     for {
-      _ <- git.invalidateCache(req.repository)
+      _ <- git.invalidateCache(req.doc)
     } yield git.commitNewFile(
       req.account,
-      req.repository,
+      req.doc,
       fName,
       newItem,
-      req.messages("repository.addNewItem.git", fName.nameWithoutPath)
+      req.messages("doc.addNewItem.git", fName.nameWithoutPath)
     )
 }

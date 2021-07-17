@@ -1,28 +1,30 @@
 package templates.controllers
 
 import collaborators.models.Role
-import documents.controllers.{ RepositoryAction, routes => documentsRoutes }
+import documents.controllers.{RepositoryAction, routes => documentsRoutes}
 import documents.models._
-import documents.repositories.RzMetaGitRepository
+import documents.repositories.{DocumentsRepository, RzMetaGitRepository}
 import documents.services.GitService
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.Messages
 import play.api.mvc._
-import templates.models.{ Template, TemplateDetails }
+import templates.models.{Template, TemplateDetails}
 import templates.repositories.TemplateRepository
 import templates.services.TemplateRendererService
 import users.controllers.AuthenticatedAction
+import users.models.AccountRequest
 import views.html
 
 import javax.inject.Inject
 import scala.collection.immutable.Map
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 class TemplateController @Inject() (
   authAction: AuthenticatedAction,
   repoAction: RepositoryAction,
   config: Configuration,
+  documentsRepository: DocumentsRepository,
   metaGitRepository: RzMetaGitRepository,
   templateRepository: TemplateRepository,
   git: GitService,
@@ -42,22 +44,22 @@ class TemplateController @Inject() (
     )(TemplateDetails.apply)(TemplateDetails.unapply)
   )
 
-  def view(accountName: String, repositoryName: String, templateId: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
+  def view(templateId: String): Action[AnyContent] =
+    authAction.async { implicit req =>
       templateRepository.list.get(templateId) match {
-        case Some(tpl) => Future(Ok(html.repository.creator(templateRepository.list, Some(tpl), Some(tpl.id))))
-        case _         => Future(Ok(html.repository.creator(templateRepository.list, None, None)))
+        case Some(tpl) => Future(Ok(html.creator(templateRepository.list, Some(tpl), Some(tpl.id))))
+        case _         => Future(Ok(html.creator(templateRepository.list, None, None)))
       }
     }
 
-  def overview(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
+  def overview(): Action[AnyContent] =
+    authAction.async { implicit req =>
       templateRepository.list.keySet.headOption match {
         case Some(templateId) =>
           Future(
-            Redirect(routes.TemplateController.view(req.repository.owner.username, req.repository.name, templateId))
+            Redirect(routes.TemplateController.view(templateId))
           )
-        case _ => Future(Ok(html.repository.creator(templateRepository.list, None, None)))
+        case _ => Future(Ok(html.creator(templateRepository.list, None, None)))
       }
     }
 
@@ -65,16 +67,16 @@ class TemplateController @Inject() (
     case (key: String, values: Seq[String]) => (key, values.mkString(""))
   }
 
-  private def renderTemplate(ctx: Map[String, Seq[String]], tpl: Template)(
-    implicit req: RepositoryRequest[AnyContent]
+  private def renderTemplate(ctx: Map[String, Seq[String]], repo: RzRepository, tpl: Template)(
+    implicit req: AccountRequest[AnyContent]
   ): Future[_] = Future {
     val files = renderer.render(tpl, flattenMap(ctx))
     git.commitFiles(
-      req.repository,
+      repo,
       files,
       req.account,
       RzRepository.defaultBranch,
-      Messages("repository.creator.commit.message", tpl.name)
+      Messages("doc.creator.commit.message", tpl.name)
     )
   }
 
@@ -88,13 +90,9 @@ class TemplateController @Inject() (
     metaGitRepository.setRzRepoConf(config)
   }
 
-  def build(accountName: String, repositoryName: String): Action[AnyContent] =
-    authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
-      val badRequest = Future(BadRequest(html.repository.creator(templateRepository.list, None, None)))
-      val success = Redirect(
-        documentsRoutes.FileViewController
-          .emptyTree(req.repository.owner.username, req.repository.name, RzRepository.defaultBranch)
-      )
+  def build(): Action[AnyContent] =
+    authAction.async { implicit req =>
+      val badRequest = Future(BadRequest(html.creator(templateRepository.list, None, None)))
 
       val ctx: Map[String, Seq[String]] = req.body.asFormUrlEncoded.getOrElse(Map())
       createForm
@@ -105,10 +103,16 @@ class TemplateController @Inject() (
             templateRepository.get(data.id) match {
               case Some(tpl) =>
                 for {
-                  _ <- renderTemplate(ctx, tpl)(req)
-                  _ <- updateRepoConfig(req.repository, tpl)
-                  _ <- metaGitRepository.updateRepo(req.repository)
-                } yield success
+                  name <- documentsRepository.buildNewName(req.account, tpl.id)
+                  repo <- documentsRepository.create(req.account, name)
+                  _    <- renderTemplate(ctx, repo, tpl)(req)
+                  _    <- updateRepoConfig(repo, tpl)
+                  _    <- metaGitRepository.updateRepo(repo)
+                } yield
+                  Redirect(
+                    documentsRoutes.FileViewController
+                      .emptyTree(repo.owner.username, repo.name, RzRepository.defaultBranch)
+                  )
               case _ => badRequest
             }
         )

@@ -40,22 +40,22 @@ class RzRepositoryController @Inject() (
       .bindFromRequest(cleanData)
       .fold(
         formWithErrors => Future(BadRequest(html.createRepository(formWithErrors))),
-        repository =>
-          metaGitRepository.getByOwnerAndName(req.account.username, repository.name).flatMap {
+        data =>
+          metaGitRepository.getByOwnerAndName(req.account.username, data.name).flatMap {
             case Left(NotFoundInRepository) =>
-              val repo = new RzRepository(req.account, repository.name)
+              val repo = new RzRepository(req.account, data.name)
               val name = RepositoryName.asEntity(repo)
               val conf = RzRepositoryConfig.makeDefault(repo, None, None, None)
               for {
                 _ <- metaGitRepository.createRepo(repo, Role.Owner, conf, name)
                 _ <- git.initRepo(repo)
               } yield Redirect(
-                templatesRoutes.TemplateController.overview(req.account.username, repo.name)
+                templatesRoutes.TemplateController.overview()
               )
             case _ =>
               val newForm = FormErrors.error[RepositoryDetails](
                 createRepositoryForm.bindFromRequest(),
-                FormError("name", Messages("repository.create.error.alreadyexists"))
+                FormError("name", Messages("doc.create.error.alreadyexists"))
               )
               Future(BadRequest(html.createRepository(newForm)))
           }
@@ -68,7 +68,7 @@ class RzRepositoryController @Inject() (
   def list: Action[AnyContent] = authAction.async { implicit req =>
     for {
       list <- metaGitRepository.listRepositories(req.account)
-    } yield Ok(html.listRepositories(list))
+    } yield Ok(html.documentslist(list))
   }
 
   def downloadArchive(
@@ -78,7 +78,7 @@ class RzRepositoryController @Inject() (
   ): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       for {
-        file: File <- git.createArchive(req.repository, "", rev)
+        file: File <- git.createArchive(req.doc, "", rev)
       } yield Ok.sendFile(
         content = file,
         inline = false,
@@ -89,13 +89,13 @@ class RzRepositoryController @Inject() (
   def commitLog(accountName: String, repositoryName: String, rev: String, page: Int): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       for {
-        log <- git.commitsLog(req.repository, rev, page, 20)
+        log <- git.commitsLog(req.doc, rev, page, 20)
       } yield {
         val (logs, hasNext) = log match {
           case Right((logs, hasNext)) => (logs, hasNext)
           case Left(_)                => (Seq(), false)
         }
-        Ok(html.repository.log(logs, rev, hasNext, page))
+        Ok(html.document.log(logs, rev, hasNext, page))
       }
     }
 }

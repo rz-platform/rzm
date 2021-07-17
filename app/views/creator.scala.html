@@ -1,4 +1,4 @@
-@(map: scala.collection.SortedMap[String, Template], template: Option[Template], currentKey: Option[String])(implicit req: RepositoryRequestHeader)
+@(map: scala.collection.SortedMap[String, Template], template: Option[Template], currentKey: Option[String])(implicit req: AccountRequestHeader)
 @import models._
 @import views.html.helper._
 
@@ -48,7 +48,7 @@
         @tpl.description.map { text =>
           <p> @{text} </p>
         }
-        @form(templatesRoutes.TemplateController.build(req.repository.owner.username, req.repository.name), Symbol("class")->"tf-form tf-form-stacked tf-form-template") {
+        @form(templatesRoutes.TemplateController.build(), Symbol("class")->"tf-form tf-form-stacked tf-form-template") {
           @CSRF.formField
             <div class="tf-controls">
                 <button type="submit" class="tf-button tf-button-primary">Create</button>
@@ -62,8 +62,7 @@
   </div>
 }
 
-@base.auth(req.messages("repository.creator.title")){
-@header.repositoryMenu(RzRepository.Page.Constructor)
+@base.auth(req.messages("doc.creator.title")){
 @header.alerts()
 
 <div class="template-page">
@@ -73,7 +72,7 @@
       <li class="tf-menu-item">
         <a 
           class='tf-menu-link @if(currentKey.getOrElse("").equals(key)) { tf-menu-selected }'
-          href="@templatesRoutes.TemplateController.view(req.repository.owner.username, req.repository.name, key)">@template.name</a>
+          href="@templatesRoutes.TemplateController.view(key)">@template.name</a>
       </li>
       }
     </ul>
@@ -87,5 +86,4 @@
 </div>
 
 
-}{
-}()
+}()()

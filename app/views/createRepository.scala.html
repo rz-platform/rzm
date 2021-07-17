@@ -1,13 +1,13 @@
 @(repositoryForm: Form[RepositoryDetails])(implicit request: AccountRequestHeader) 
 @import views.html.helper._
-@base.auth(request.messages("repository.create.title")){
-<h1> @request.messages("repository.create.head") </h1>
+@base.auth(request.messages("doc.create.title")){
+<h1> @request.messages("doc.create.head") </h1>
 @header.alerts() 
 @form(documentsRoutes.RzRepositoryController.save(), Symbol("class")->"tf-form", Symbol("autocomplete")->"off") {
 @CSRF.formField
-@inputText(repositoryForm("name"), Symbol("_label")->request.messages("repository.create.name"), Symbol("_help")->"", Symbol("autofocus") -> "")
+@inputText(repositoryForm("name"), Symbol("_label")->request.messages("doc.create.name"), Symbol("_help")->"", Symbol("autofocus") -> "")
 <div class="actions">
-  <input type="submit" value='@request.messages("repository.create.submit")' class="tf-button tf-button-primary" />
+  <input type="submit" value='@request.messages("doc.create.submit")' class="tf-button tf-button-primary" />
 </div>
 }
 }()()

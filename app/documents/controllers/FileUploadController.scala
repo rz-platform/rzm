@@ -34,7 +34,7 @@ class FileUploadController @Inject() (
 
   def uploadPage(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repositoryAction.on(accountName, repositoryName, Role.Editor)).async { implicit request =>
-      Future(Ok(html.repository.upload(uploadForm, rev, RzPathUrl.make(path).uri)))
+      Future(Ok(html.document.upload(uploadForm, rev, RzPathUrl.make(path).uri)))
     }
 
   /**
@@ -51,7 +51,7 @@ class FileUploadController @Inject() (
             formWithErrors =>
               Future(
                 BadRequest(
-                  html.repository.upload(
+                  html.document.upload(
                     formWithErrors,
                     formWithErrors.data.getOrElse("rev", RzRepository.defaultBranch),
                     formWithErrors.data.getOrElse("path", ".")
@@ -64,10 +64,10 @@ class FileUploadController @Inject() (
 
               for {
                 _ <- commitFiles(files, branch, data.path)(req)
-                _ <- metaGitRepository.updateRepo(req.repository)
+                _ <- metaGitRepository.updateRepo(req.doc)
               } yield Redirect(
                 routes.FileViewController.emptyTree(accountName, repositoryName, rev)
-              ).flashing("success" -> Messages("repository.upload.success"))
+              ).flashing("success" -> Messages("doc.upload.success"))
             }
           )
       }
@@ -95,10 +95,10 @@ class FileUploadController @Inject() (
     implicit req: RepositoryRequest[_]
   ): Future[_] =
     git.commitFiles(
-      req.repository,
+      req.doc,
       files,
       req.account,
       rev,
-      Messages("repository.upload.message", files.length)
+      Messages("doc.upload.message", files.length)
     )
 }

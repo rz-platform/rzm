@@ -25,7 +25,7 @@ class SshKeyController @Inject() (
   private val maximumNumberPerUser: Int = config.get[String]("play.server.ssh.maximumNumberPerUser").toInt
 
   def page(): Action[AnyContent] = authAction.async { implicit req =>
-    sshRepository.listSshKeys(req.account).map(list => Ok(html.sshKeys(list, addSshKeyForm, deleteSshKeyForm)))
+    sshRepository.listSshKeys(req.account).map(list => Ok(html.sshkeys(list, addSshKeyForm, deleteSshKeyForm)))
   }
 
   def addKey(): Action[AnyContent] = authAction.async { implicit request =>
@@ -34,7 +34,7 @@ class SshKeyController @Inject() (
       .fold(
         formWithErrors =>
           sshRepository.listSshKeys(request.account).map { list =>
-            Ok(html.sshKeys(list, formWithErrors, deleteSshKeyForm))
+            Ok(html.sshkeys(list, formWithErrors, deleteSshKeyForm))
           },
         sshKeyData =>
           sshRepository.cardinalitySshKey(request.account).flatMap {
@@ -59,7 +59,7 @@ class SshKeyController @Inject() (
       .fold(
         formWithErrors =>
           sshRepository.listSshKeys(request.account).map { list =>
-            Ok(html.sshKeys(list, addSshKeyForm, formWithErrors))
+            Ok(html.sshkeys(list, addSshKeyForm, formWithErrors))
           },
         data =>
           sshRepository.getSshKey(data.id).flatMap {

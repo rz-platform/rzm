@@ -30,7 +30,7 @@ class FileViewController @Inject() (
 
   def raw(accountName: String, repositoryName: String, rev: String, path: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
-      git.rawFile(req.repository, rev, RzPathUrl.make(path).uri).flatMap {
+      git.rawFile(req.doc, rev, RzPathUrl.make(path).uri).flatMap {
         case Some(rawFile) =>
           val stream = StreamConverters.fromInputStream(() => rawFile.inputStream)
           Future(
@@ -45,18 +45,18 @@ class FileViewController @Inject() (
 
   def emptyTree(accountName: String, repositoryName: String, rev: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
-      metaGitRepository.getRzRepoLastFile(req.account, req.repository).flatMap {
+      metaGitRepository.getRzRepoLastFile(req.account, req.doc).flatMap {
         case Some(path) =>
           Future(
             Redirect(
-              routes.FileViewController.blob(req.repository.owner.username, req.repository.name, rev, path)
+              routes.FileViewController.blob(req.doc.owner.username, req.doc.name, rev, path)
             )
           )
         case _ =>
           for {
-            fileTree <- git.fileTree(req.repository, rev)
+            fileTree <- git.fileTree(req.doc, rev)
           } yield Ok(
-            html.repository.view(
+            html.document.view(
               editorForm,
               EmptyBlob,
               "",
@@ -73,9 +73,9 @@ class FileViewController @Inject() (
     implicit req: RepositoryRequest[AnyContent]
   ): Future[Result] =
     for {
-      _ <- metaGitRepository.setRzRepoLastFile(LastOpenedFile.asEntity(req.account, req.repository, path))
+      _ <- metaGitRepository.setRzRepoLastFile(LastOpenedFile.asEntity(req.account, req.doc, path))
     } yield Ok(
-      html.repository.view(
+      html.document.view(
         editorForm.fill(
           EditedItem(
             blob.content.content.getOrElse(""),
@@ -97,8 +97,8 @@ class FileViewController @Inject() (
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Viewer)).async { implicit req =>
       val rzPath: RzPathUrl = RzPathUrl.make(path)
       val result = for {
-        blobInfo <- git.blobFile(req.repository, rzPath.uri, rev)
-        fileTree <- git.fileTree(req.repository, rev)
+        blobInfo <- git.blobFile(req.doc, rzPath.uri, rev)
+        fileTree <- git.fileTree(req.doc, rev)
       } yield blobInfo match {
         case Some(blob: Blob) => renderBlob(blob, fileTree, rev, path, rzPath)
         case None             => errorHandler.onClientError(req, msg = Messages("error.notfound"))

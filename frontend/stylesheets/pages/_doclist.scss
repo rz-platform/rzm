@@ -1,0 +1,33 @@
+.doc-list-header {
+  margin-bottom: 20px;
+  margin-top: 20px;
+
+  display: flex;
+  flex-direction: row;
+
+  .tf-card {
+    margin-right: 20px;
+  }
+}
+
+.doc-list {
+  .doc-list-row {
+    a {
+      color: #0366d6;
+      text-decoration: none;
+      margin-bottom: 15px;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.doc-list-create-cont {
+  margin: auto;
+}
+
+.doc-list-create-icon {
+  width: 25px;
+  margin-right: 10px;
+}

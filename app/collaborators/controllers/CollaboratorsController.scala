@@ -29,10 +29,10 @@ class CollaboratorsController @Inject() (
   def page(accountName: String, repositoryName: String): Action[AnyContent] =
     authAction.andThen(repoAction.on(accountName, repositoryName, Role.Owner)).async { implicit req =>
       for {
-        list <- collaboratorRepository.getCollaborators(req.repository)
+        list <- collaboratorRepository.getCollaborators(req.doc)
 
         f = list.filter(c => c.role != Role.Owner)
-      } yield Ok(html.repository.collaboratorslist(addCollaboratorForm, f))
+      } yield Ok(html.document.collaboratorslist(addCollaboratorForm, f))
     }
 
   def add(accountName: String, repositoryName: String): Action[AnyContent] =
@@ -45,14 +45,14 @@ class CollaboratorsController @Inject() (
             data =>
               accountRepository.getByUsernameOrEmail(data.emailOrLogin).flatMap {
                 case Right(account: Account) =>
-                  collaboratorRepository.isAccountCollaborator(account, req.repository).flatMap {
-                    case true => pageRedirectWithError("repository.collaborator.error.alreadycollab")
+                  collaboratorRepository.isAccountCollaborator(account, req.doc).flatMap {
+                    case true => pageRedirectWithError("doc.collaborator.error.alreadycollab")
                     case false =>
                       for {
-                        _ <- collaboratorRepository.addCollaborator(account, data.role, req.repository)
+                        _ <- collaboratorRepository.addCollaborator(account, data.role, req.doc)
                       } yield pageRedirect(req)
                   }
-                case _ => pageRedirectWithError("repository.collaborator.error.nosuchuser")
+                case _ => pageRedirectWithError("doc.collaborator.error.nosuchuser")
               }
           )
     }
@@ -67,15 +67,15 @@ class CollaboratorsController @Inject() (
             accountRepository.getByUsernameOrEmail(data.id).flatMap {
               case Right(account: Account) =>
                 for {
-                  _ <- collaboratorRepository.removeCollaborator(account, req.repository)
+                  _ <- collaboratorRepository.removeCollaborator(account, req.doc)
                 } yield pageRedirect(req)
-              case _ => pageRedirectWithError("repository.collaborator.error.nosuchuser")
+              case _ => pageRedirectWithError("doc.collaborator.error.nosuchuser")
             }
         )
     }
 
   private def pageRedirect(req: RepositoryRequest[AnyContent]): Result =
-    Redirect(routes.CollaboratorsController.page(req.repository.owner.username, req.repository.name))
+    Redirect(routes.CollaboratorsController.page(req.doc.owner.username, req.doc.name))
 
   private def pageRedirectWithError(messageId: String)(implicit req: RepositoryRequest[AnyContent]): Future[Result] =
     Future(
@@ -87,6 +87,6 @@ class CollaboratorsController @Inject() (
     form: Form[NewCollaboratorDetails]
   )(implicit req: RepositoryRequest[AnyContent]): Future[Result] =
     for {
-      list <- collaboratorRepository.getCollaborators(req.repository)
-    } yield BadRequest(html.repository.collaboratorslist(form, list))
+      list <- collaboratorRepository.getCollaborators(req.doc)
+    } yield BadRequest(html.document.collaboratorslist(form, list))
 }

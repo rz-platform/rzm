@@ -2,13 +2,13 @@
 @import views.html.helper._
 @import print.date
 
-@form(documentsRoutes.FileEditController.edit(request.repository.owner.username,request.repository.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"tf-editor-form", Symbol("id")->"code-form") {
+@form(documentsRoutes.FileEditController.edit(request.doc.owner.username,request.doc.name), Symbol("enctype")->"application/x-www-form-urlencoded", Symbol("accept-charset")->"UTF-8", Symbol("class")->"tf-editor-form", Symbol("id")->"code-form") {
 
 @CSRF.formField
 <noscript>
 <div class="tf-editor-content-header">
   <div class="breadcrumbs">
-    <span class="breadcrumbs-repo-name">@request.repository.name</span>
+    <span class="breadcrumbs-repo-name">@request.doc.name</span>
     <span class="breadcrumbs-divider">/</span>
     @for(breadcrumb <- breadcrumbs.path){
       @breadcrumb.name
@@ -22,21 +22,21 @@
     <input
       type="submit"
       class="tf-button button-small"
-      value='@request.messages("repository.edit.submit")'
+      value='@request.messages("doc.edit.submit")'
       id="file-save-submit"
     />
     }
     }
     <a
       class="tf-button button-small"
-      href="@documentsRoutes.FileViewController.raw(request.repository.owner.username, request.repository.name, rev, path)"
+      href="@documentsRoutes.FileViewController.raw(request.doc.owner.username, request.doc.name, rev, path)"
     >
       <img src='@routes.Assets.at("images/download.svg")' class="svg-icon" />
-      @request.messages("repository.viewFile.raw")
+      @request.messages("doc.viewFile.raw")
     </a>
   </div>
   <div class="repo-header-last-modified">
-    @request.messages("repository.viewFile.lastModified", blob.latestCommit.committerName) 
+    @request.messages("doc.viewFile.lastModified", blob.latestCommit.committerName) 
     @date(blob.latestCommit.commitTime)
   </div>
 </div>
@@ -55,15 +55,15 @@
 }
 @if(blob.content.viewType == "image"){
   <img
-    src="@documentsRoutes.FileViewController.raw(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, path)"
+    src="@documentsRoutes.FileViewController.raw(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch, path)"
     class="tf-content-image"
   />
 }
 @if(blob.content.viewType == "large" || blob.content.viewType == "binary") {
   <a
-    href="@documentsRoutes.FileViewController.raw(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, path)"
+    href="@documentsRoutes.FileViewController.raw(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch, path)"
   >
-    @request.messages("repository.viewFile.cant")
+    @request.messages("doc.viewFile.cant")
   </a>
 }
 

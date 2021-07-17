@@ -1,0 +1,48 @@
+@(currentPage: List[RzRepository])(implicit request: AccountRequestHeader)
+
+@base.auth(request.messages("doc.list.title")){
+<div class="doc-list-header">
+  <a class="tf-card" href="@templatesRoutes.TemplateController.overview()">
+    <div class="tf-card-content">
+      <div class="tf-card-row">
+        <div class="doc-list-create-cont">
+          <img src='@routes.Assets.at("images/add-file.svg")' class="doc-list-create-icon" />
+        </div>
+        <div>
+          <h3>@request.messages("doc.list.newtex")</h3>
+          <p>@request.messages("doc.list.newtex.description")</p>
+        </div>
+      </div>
+    </div>
+  </a>
+
+  <a class="tf-card" href="@documentsRoutes.RzRepositoryController.createPage()">
+    <div class="tf-card-content">
+      <div class="tf-card-row">
+        <div class="doc-list-create-cont">
+          <img src='@routes.Assets.at("images/add-file.svg")' class="doc-list-create-icon" />
+        </div>
+        <div>
+          <h3>@request.messages("doc.list.newmd")</h3>
+          <p>@request.messages("doc.list.newmd.description")</p>
+        </div>
+      </div>
+    </div>
+  </a>
+</div>
+
+<div class="doc-list">
+  @Option(currentPage).filterNot(_.isEmpty).map {repositories => 
+    @repositories.map { case (repository) => 
+    <div class="doc-list-row">
+      <a
+        href="@documentsRoutes.FileViewController.emptyTree(repository.owner.username, repository.name, RzRepository.defaultBranch)"
+        class="tf-menu-link"
+        >  @repository.owner.username / @repository.name </a>
+    </div>
+    } 
+  }.getOrElse {
+  <p> @request.messages("doc.list.empty") </p>
+  }
+</div>
+}()()

@@ -4,7 +4,7 @@
 
 @currentFile = {
   <div class="breadcrumbs">
-    <span class="breadcrumbs-repo-name">@request.repository.name</span>
+    <span class="breadcrumbs-repo-name">@request.doc.name</span>
     <span class="breadcrumbs-divider">/</span>
     @for(breadcrumb <- breadcrumbs.path){
       @breadcrumb.name
@@ -33,26 +33,26 @@
           } 
         } 
         @if(node.isRoot) { 
-          <a href="@collaboratorsRoutes.CollaboratorsController.page(request.repository.owner.username, request.repository.name)"><img src='@routes.Assets.at("images/gear.svg")' class="svg-icon" /></a>
-          @request.repository.name 
+          <a href="@collaboratorsRoutes.CollaboratorsController.page(request.doc.owner.username, request.doc.name)"><img src='@routes.Assets.at("images/gear.svg")' class="svg-icon" /></a>
+          @request.doc.name 
         } else { @node.data }
         </div>
         @if(request.role == Role.Owner || request.role == Role.Editor) {
         <div class="action-buttons">
           <a
-            href="@documentsRoutes.FileEditController.addNewItemPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
+            href="@documentsRoutes.FileEditController.addNewItemPage(request.doc.owner.username, request.doc.name, rev, node.pathAsUrl)"
             class="add-file-button" 
           >
           <img src='@routes.Assets.at("images/add-file.svg")' class="svg-icon file-tree-icon add-file-button" />
           </a>
           <a
-            href="@documentsRoutes.FileEditController.addNewFolderPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
+            href="@documentsRoutes.FileEditController.addNewFolderPage(request.doc.owner.username, request.doc.name, rev, node.pathAsUrl)"
             class="add-folder-button"
           >
           <img src='@routes.Assets.at("images/add-folder.svg")' class="svg-icon file-tree-icon add-folder-button"  />
           </a>
           <a
-            href="@documentsRoutes.FileUploadController.uploadPage(request.repository.owner.username, request.repository.name, rev, node.pathAsUrl)"
+            href="@documentsRoutes.FileUploadController.uploadPage(request.doc.owner.username, request.doc.name, rev, node.pathAsUrl)"
           >
             <img src='@routes.Assets.at("images/upload.svg")' class="svg-icon" />
           </a>
@@ -77,7 +77,7 @@
       >
         <a
           class="tf-menu-link @if(file.pathWithoutRoot == path) { tf-menu-selected }"
-          href="@documentsRoutes.FileViewController.blob(request.repository.owner.username, request.repository.name, RzRepository.defaultBranch, file.pathAsUrl)"
+          href="@documentsRoutes.FileViewController.blob(request.doc.owner.username, request.doc.name, RzRepository.defaultBranch, file.pathAsUrl)"
         >
           <div class="tf-menu-file-tree-content tf-menu-file-tree-depth-@file.depth">
             <img src='@routes.Assets.at("images/document.svg")' class="svg-icon file-tree-icon" />
@@ -89,8 +89,8 @@
   }
 } 
 
-@base.auth(breadcrumbs.last.getOrElse(request.repository.name), true) {
-@form(documentsRoutes.FileEditController.addNewItem(request.repository.owner.username,request.repository.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
+@base.auth(breadcrumbs.last.getOrElse(request.doc.name), true) {
+@form(documentsRoutes.FileEditController.addNewItem(request.doc.owner.username,request.doc.name),Symbol("id")->"new-item-form",Symbol("class")->"hidden"){ 
 
 @CSRF.formField
 <img src='@routes.Assets.at("images/folder.svg")' class="svg-icon" id="folder-icon" />
@@ -109,7 +109,7 @@
   <div class="tf-editor-content">
     @{(blob, breadcrumbs) match {
       case (content:Blob, contentB:FilePath) => {
-        repository.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
+        document.editor(editorForm,content,path,rev,contentB,fileTree,newItemForm) 
       }
       case (EmptyRepository, _) => {""}
       case _=> {""}

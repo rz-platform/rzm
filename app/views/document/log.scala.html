@@ -1,0 +1,36 @@
+@(commitLog: Seq[CommitInfo], rev:String, hasNext:Boolean, page:Int)(implicit request: RepositoryRequestHeader)
+
+@base.auth(request.messages("doc.log.title")){
+@header.documentmenu(RzRepository.Page.CommitHistory)
+
+<h2>@request.messages("doc.log.header")</h2>
+
+@Option(commitLog).filterNot(_.isEmpty).map { commits =>
+  @commits.map { case (commit) =>
+  <p>
+    @commit.fullMessage
+    <span class="info">by</span>
+    @commit.authorName
+    <span class="info">on</span>
+    <span class="info">@print.date(commit.commitTime)</span>
+  </p>
+  }
+}.getOrElse {
+  <p> @request.messages("doc.log.empty") </p>
+}
+@if(page > 1) {
+  <a
+    class="tf-button"
+    href="@documentsRoutes.RzRepositoryController.commitLog(request.doc.owner.username, request.doc.name, rev, page - 1)"
+  >
+    @request.messages("doc.log.previousPage")
+  </a>
+}
+@if(hasNext) {
+  <a
+    class="tf-button"
+    href="@documentsRoutes.RzRepositoryController.commitLog(request.doc.owner.username, request.doc.name, rev, page + 1)"
+    >@request.messages("doc.log.nextPage")</a
+  >
+}
+}()()

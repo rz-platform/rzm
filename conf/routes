@@ -43,9 +43,9 @@ GET /repositories/:account/:repository/raw/:rev/*path documents.controllers.File
 
 GET /creator/:templateId/illustration templates.controllers.TemplateController.templatePdf(templateId: String)
 
-GET  /repositories/:account/:repository/creator templates.controllers.TemplateController.overview(account:String, repository:String)
-GET  /repositories/:account/:repository/creator/:templateId templates.controllers.TemplateController.view(account:String, repository:String, templateId: String)
-POST /repositories/:account/:repository/creator/build templates.controllers.TemplateController.build(account:String, repository:String)
+GET  /creator templates.controllers.TemplateController.overview()
+GET  /creator/:templateId templates.controllers.TemplateController.view(templateId: String)
+POST /creator/build templates.controllers.TemplateController.build()
 
 # File upload
 

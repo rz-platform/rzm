@@ -48,6 +48,8 @@ object RzRepository {
       RzDateTime.parseTimestamp(data.get("updatedAt"))
     )
 
+  def newName(n: Long, templateId: String) = s"$templateId-$n"
+
   sealed trait Page
   object Page {
     case object FileView      extends Page

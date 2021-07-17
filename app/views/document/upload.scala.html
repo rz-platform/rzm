@@ -1,34 +1,34 @@
 @(uploadForm: Form[UploadFileForm], rev: String, path: String)(implicit request:RepositoryRequestHeader) 
 @import views.html.helper._
 
-@base.auth(request.messages("repository.upload.title")){
-@header.repositoryMenu(RzRepository.Page.FileUpload)
+@base.auth(request.messages("doc.upload.title")){
+@header.documentmenu(RzRepository.Page.FileUpload)
 <div class="upload-page">
-  <h1> @request.messages("repository.upload.title") </h1>
+  <h1> @request.messages("doc.upload.title") </h1>
   @if(!path.isEmpty) {
-  <p> @request.messages("repository.upload.messagePath", path) </p>
+  <p> @request.messages("doc.upload.messagePath", path) </p>
   } else {
-  <p> @request.messages("repository.upload.messageRoot") </p>
+  <p> @request.messages("doc.upload.messageRoot") </p>
   } 
-  @form(documentsRoutes.FileUploadController.upload(request.repository.owner.username, request.repository.name,
+  @form(documentsRoutes.FileUploadController.upload(request.doc.owner.username, request.doc.name,
   rev),Symbol("enctype")->"multipart/form-data",Symbol("class")->"tf-form"){ 
   @CSRF.formField
 
   <label for="single" class="tf-radio">
     <input type="radio" name="inputtype" id="single" name="input-type" value="single" checked />
-    @request.messages("repository.upload.singleFile")
+    @request.messages("doc.upload.singleFile")
   </label>
 
   <label for="directory" class="tf-radio">
     <input type="radio" name="inputtype" id="directory" name="input-type" value="directory" />
-    @request.messages("repository.upload.completeDirectory")
+    @request.messages("doc.upload.completeDirectory")
   </label>
   <input type="file" id="filepicker" name="fileList" multiple accept="image/*,text/*" />
   <ul id="listing"></ul>
 
   <input type="hidden" name="path" value="@path" />
 
-  <input type="submit" class="tf-button" value='@request.messages("repository.upload.submit")' />
+  <input type="submit" class="tf-button" value='@request.messages("doc.upload.submit")' />
   }
 </div>
 }{
